@@ -1,0 +1,149 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-medium));
+  box-shadow: 0 4px 20px rgba(27, 60, 83, 0.1);
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--white);
+  text-decoration: none;
+}
+
+.navbar-logo h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.navbar-menu {
+  display: flex;
+  list-style: none;
+  gap: 32px;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-menu a {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  font-size: 16px;
+}
+
+.navbar-menu a:hover {
+  color: var(--secondary-light);
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar-login {
+  color: var(--white);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+}
+
+.navbar-login:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-register {
+  background-color: var(--white);
+  color: var(--primary-dark);
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.navbar-register:hover {
+  background-color: var(--gray-100);
+  transform: translateY(-1px);
+}
+
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.navbar-mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary-medium));
+  padding: 20px;
+  display: none;
+}
+
+.navbar-mobile-menu.active {
+  display: block;
+}
+
+.navbar-mobile-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-mobile-menu li {
+  margin-bottom: 16px;
+}
+
+.navbar-mobile-menu a {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 18px;
+  display: block;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar-mobile-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .navbar-menu,
+  .navbar-actions {
+    display: none;
+  }
+
+  .navbar-toggle {
+    display: block;
+  }
+}
