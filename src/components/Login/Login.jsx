@@ -1,57 +1,59 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, Truck, Shield } from 'lucide-react';
-import './Login.css';
+import React, { useState } from "react";
+import { Eye, EyeOff, Truck, Shield } from "lucide-react";
+import "./Login.css";
+import { Link } from 'react-router-dom';
+
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
-    
+
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters long';
+      newErrors.password = "Password must be at least 6 characters long";
     }
-    
+
     return newErrors;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const newErrors = validateForm();
-    
+
     if (Object.keys(newErrors).length === 0) {
       // Here you would typically handle the login logic
-      console.log('Login attempt:', formData);
-      alert('Login functionality would be implemented here');
+      console.log("Login attempt:", formData);
+      alert("Login functionality would be implemented here");
     } else {
       setErrors(newErrors);
     }
@@ -66,7 +68,7 @@ const Login = () => {
       <div className="login-background">
         <div className="background-pattern"></div>
       </div>
-      
+
       <div className="login-content">
         <div className="login-card">
           <div className="login-header">
@@ -74,14 +76,16 @@ const Login = () => {
               <div className="logo-icon">
                 <Truck size={32} />
               </div>
-              <h1>LogiTrans</h1>
+              <h1>NaviGo</h1>
               <p>Digital Logistics & Transport Platform</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
             <h2>Sign In to Your Account</h2>
-            <p className="form-subtitle">Enter your credentials to access the platform</p>
+            <p className="form-subtitle">
+              Enter your credentials to access the platform
+            </p>
 
             <div className="input-group">
               <label htmlFor="email">Email Address</label>
@@ -91,34 +95,38 @@ const Login = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={errors.email ? 'error' : ''}
+                className={errors.email ? "error" : ""}
                 placeholder="Enter your email address"
               />
-              {errors.email && <span className="error-message">{errors.email}</span>}
+              {errors.email && (
+                <span className="error-message">{errors.email}</span>
+              )}
             </div>
 
             <div className="input-group">
               <label htmlFor="password">Password</label>
               <div className="password-input-container">
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={errors.password ? 'error' : ''}
+                  className={errors.password ? "error" : ""}
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={togglePasswordVisibility}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              {errors.password && <span className="error-message">{errors.password}</span>}
+              {errors.password && (
+                <span className="error-message">{errors.password}</span>
+              )}
             </div>
 
             <div className="form-options">
@@ -127,7 +135,9 @@ const Login = () => {
                 <span className="checkmark"></span>
                 Remember me
               </label>
-              <a href="#" className="forgot-password">Forgot Password?</a>
+              <a href="#" className="forgot-password">
+                Forgot Password?
+              </a>
             </div>
 
             <button type="submit" className="btn btn-primary login-btn">
@@ -137,7 +147,9 @@ const Login = () => {
           </form>
 
           <div className="login-footer">
-            <p>Don't have an account? <a href="#">Contact Administrator</a></p>
+            <p>
+              Don't have an account? <Link to="/register">Register</Link>
+            </p>
           </div>
         </div>
 

@@ -80,7 +80,7 @@ const Footer = () => {
           <div className="footer-legal">
             <a href="/privacy-policy">Privacy Policy</a>
             <a href="/terms-of-service">Terms of Service</a>
-            <a href="#cookies">Cookies</a>
+            <a href="/cookies">Cookies</a>
           </div>
         </div>
       </div>
