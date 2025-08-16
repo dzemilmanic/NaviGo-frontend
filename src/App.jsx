@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 
 import Navbar from './components/Navbar/Navbar.jsx';
 import Home from './components/Home/Home.jsx';
@@ -11,26 +12,30 @@ import Register from './components/Register/Register.jsx';
 import Cookies from './pages/Cookies.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import TermsOfServices from './pages/TermsOfServices.jsx';
+import AddVehicle from './components/Vehicle/AddVehicle.jsx';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/cookies" element={<Cookies />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-service" element={<TermsOfServices />} />
-          <Route path="*" element={<Home />} />
-        </Routes>
-        <Footer />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/add-vehicle" element={<AddVehicle />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/cookies" element={<Cookies />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfServices />} />
+            <Route path="*" element={<Home />} />
+          </Routes>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, Truck, Shield } from "lucide-react";
+import { Eye, EyeOff, Truck, Shield, AlertCircle } from "lucide-react";
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import "./Login.css";
-import { Link } from 'react-router-dom';
-
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +11,11 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -19,12 +24,15 @@ const Login = () => {
       [name]: value,
     }));
 
-    // Clear error when user starts typing
+    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: "",
       }));
+    }
+    if (apiError) {
+      setApiError("");
     }
   };
 
@@ -46,14 +54,28 @@ const Login = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
 
     if (Object.keys(newErrors).length === 0) {
-      // Here you would typically handle the login logic
-      console.log("Login attempt:", formData);
-      alert("Login functionality would be implemented here");
+      setLoading(true);
+      setApiError("");
+      
+      try {
+        const result = await login(formData);
+        
+        if (result.success) {
+          // Redirect to dashboard or home page
+          navigate('/dashboard', { replace: true });
+        } else {
+          setApiError(result.message || 'Login failed. Please try again.');
+        }
+      } catch (error) {
+        setApiError('An unexpected error occurred. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     } else {
       setErrors(newErrors);
     }
@@ -87,6 +109,13 @@ const Login = () => {
               Enter your credentials to access the platform
             </p>
 
+            {apiError && (
+              <div className="error-banner">
+                <AlertCircle size={20} />
+                <span>{apiError}</span>
+              </div>
+            )}
+
             <div className="input-group">
               <label htmlFor="email">Email Address</label>
               <input
@@ -97,6 +126,7 @@ const Login = () => {
                 onChange={handleInputChange}
                 className={errors.email ? "error" : ""}
                 placeholder="Enter your email address"
+                disabled={loading}
               />
               {errors.email && (
                 <span className="error-message">{errors.email}</span>
@@ -114,12 +144,14 @@ const Login = () => {
                   onChange={handleInputChange}
                   className={errors.password ? "error" : ""}
                   placeholder="Enter your password"
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={togglePasswordVisibility}
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -131,7 +163,7 @@ const Login = () => {
 
             <div className="form-options">
               <label className="checkbox-container">
-                <input type="checkbox" />
+                <input type="checkbox" disabled={loading} />
                 <span className="checkmark"></span>
                 Remember me
               </label>
@@ -140,9 +172,19 @@ const Login = () => {
               </a>
             </div>
 
-            <button type="submit" className="btn btn-primary login-btn">
-              <Shield size={20} />
-              Sign In
+            <button 
+              type="submit" 
+              className="btn btn-primary login-btn"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="loading-spinner"></div>
+              ) : (
+                <>
+                  <Shield size={20} />
+                  Sign In
+                </>
+              )}
             </button>
           </form>
 

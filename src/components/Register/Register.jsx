@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Eye,
   EyeOff,
@@ -11,10 +11,12 @@ import {
 import CompanyModal from "./CompanyModal";
 import ClientTypeModal from "./ClientTypeModal";
 import "./Register.css";
-import { Link } from 'react-router-dom';
-
+import { Link, useNavigate } from 'react-router-dom';
+import { authService } from '../../services/authService';
+import { mapRegistrationData, validateRegistrationData } from '../../utils/userMapper';
 
 const Register = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -30,6 +32,11 @@ const Register = () => {
   const [isClientTypeModalOpen, setIsClientTypeModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [clientType, setClientType] = useState(null); // individual or company
+
+  // Registration state
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   // Real-time validations
   useEffect(() => {
@@ -123,6 +130,11 @@ const Register = () => {
       ...prev,
       [name]: value,
     }));
+    
+    // Clear any registration errors when user starts typing
+    if (registrationError) {
+      setRegistrationError('');
+    }
   };
 
   const handleUserTypeSelect = (type) => {
@@ -157,6 +169,7 @@ const Register = () => {
   };
 
   const handleCompanySelect = (company) => {
+    console.log('Selected company:', company);
     setSelectedCompany(company);
     setIsModalOpen(false);
   };
@@ -165,48 +178,54 @@ const Register = () => {
     setIsModalOpen(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Clear previous errors
+    setRegistrationError('');
+    setRegistrationSuccess(false);
 
-    const allValid = Object.values(validations).every((v) => v.valid);
-    const requiredFields = [
-      "firstName",
-      "lastName",
-      "email",
-      "password",
-      "phoneNumber",
-      "userType",
-    ];
-    const allFilled = requiredFields.every((field) => formData[field]);
+    // Validate all data
+    const validation = validateRegistrationData(formData, validations, clientType, selectedCompany);
+    
+    if (!validation.isValid) {
+      setRegistrationError(validation.errors.join('. '));
+      return;
+    }
 
-    // Proveri da li je potrebna kompanija
-    const needsCompany =
-      formData.userType === "shipper" ||
-      formData.userType === "transport" ||
-      (formData.userType === "client" && clientType === "company");
+    setIsRegistering(true);
 
-    // Proveri da li je potreban client type za klijente
-    const needsClientType = formData.userType === "client";
+    try {
+      // Map form data to backend format
+      const userCreateDto = mapRegistrationData(formData, clientType, selectedCompany);
+      
+      console.log('Sending registration data:', userCreateDto);
 
-    if (
-      allValid &&
-      allFilled &&
-      (!needsCompany || selectedCompany) &&
-      (!needsClientType || clientType)
-    ) {
-      const registrationData = {
-        personalInfo: formData,
-        clientType: formData.userType === "client" ? clientType : null,
-        companyInfo: selectedCompany,
-        timestamp: new Date().toISOString(),
-      };
+      // Call backend registration API
+      const result = await authService.register(userCreateDto);
 
-      console.log("Registration data for backend:", registrationData);
-      alert("Registration successful! Data ready for backend implementation.");
-    } else {
-      alert(
-        "Please fill in all fields correctly and complete all required selections"
-      );
+      if (result.success) {
+        setRegistrationSuccess(true);
+        setRegistrationError('');
+        
+        // Show success message briefly then redirect
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              message: 'Registration successful! Please check your email for verification before logging in.',
+              email: formData.email 
+            } 
+          });
+        }, 2000);
+        
+      } else {
+        setRegistrationError(result.message);
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setRegistrationError('Registration failed. Please check your connection and try again.');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -239,6 +258,33 @@ const Register = () => {
                 Fill in your information to get started
               </p>
 
+              {/* Registration Status Messages */}
+              {registrationError && (
+                <div className="error-message" style={{
+                  background: '#fee', 
+                  color: '#c53030', 
+                  padding: '12px', 
+                  borderRadius: '8px', 
+                  marginBottom: '20px',
+                  border: '1px solid #fed7d7'
+                }}>
+                  {registrationError}
+                </div>
+              )}
+
+              {registrationSuccess && (
+                <div className="success-message" style={{
+                  background: '#f0fff4', 
+                  color: '#2f855a', 
+                  padding: '12px', 
+                  borderRadius: '8px', 
+                  marginBottom: '20px',
+                  border: '1px solid #9ae6b4'
+                }}>
+                  Registration successful! Please check your email for verification. Redirecting to login...
+                </div>
+              )}
+
               <div className="input-row">
                 <div className="input-group">
                   <label htmlFor="firstName">First Name</label>
@@ -248,6 +294,7 @@ const Register = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
+                    disabled={isRegistering}
                     className={
                       validations.firstName
                         ? validations.firstName.valid
@@ -276,6 +323,7 @@ const Register = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
+                    disabled={isRegistering}
                     className={
                       validations.lastName
                         ? validations.lastName.valid
@@ -305,6 +353,7 @@ const Register = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
+                  disabled={isRegistering}
                   className={
                     validations.email
                       ? validations.email.valid
@@ -334,6 +383,7 @@ const Register = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
+                    disabled={isRegistering}
                     className={
                       validations.password
                         ? validations.password.valid
@@ -347,6 +397,7 @@ const Register = () => {
                     type="button"
                     className="password-toggle"
                     onClick={togglePasswordVisibility}
+                    disabled={isRegistering}
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
@@ -373,6 +424,7 @@ const Register = () => {
                   name="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
+                  disabled={isRegistering}
                   className={
                     validations.phoneNumber
                       ? validations.phoneNumber.valid
@@ -402,6 +454,7 @@ const Register = () => {
                       formData.userType === "client" ? "selected" : ""
                     }`}
                     onClick={() => handleUserTypeSelect("client")}
+                    disabled={isRegistering}
                   >
                     <User size={24} />
                     <span>Client</span>
@@ -413,6 +466,7 @@ const Register = () => {
                       formData.userType === "shipper" ? "selected" : ""
                     }`}
                     onClick={() => handleUserTypeSelect("shipper")}
+                    disabled={isRegistering}
                   >
                     <Package size={24} />
                     <span>Shipper</span>
@@ -424,6 +478,7 @@ const Register = () => {
                       formData.userType === "transport" ? "selected" : ""
                     }`}
                     onClick={() => handleUserTypeSelect("transport")}
+                    disabled={isRegistering}
                   >
                     <Building size={24} />
                     <span>Transport Company</span>
@@ -445,15 +500,36 @@ const Register = () => {
                 {selectedCompany && (
                   <div className="selected-company">
                     <h4>Selected Company:</h4>
-                    <p>{selectedCompany.name}</p>
+                    <p>{selectedCompany.companyName || selectedCompany.name}</p>
                     <small>{selectedCompany.address}</small>
+                    <small>PIB: {selectedCompany.pib || selectedCompany.PIB}</small>
                   </div>
                 )}
               </div>
 
-              <button type="submit" className="btn btn-primary register-btn">
-                <UserPlus size={20} />
-                Create Account
+              <button 
+                type="submit" 
+                className="btn btn-primary register-btn"
+                disabled={isRegistering}
+              >
+                {isRegistering ? (
+                  <>
+                    <div className="spinner" style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid #ffffff',
+                      borderTop: '2px solid transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }}></div>
+                    Creating Account...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={20} />
+                    Create Account
+                  </>
+                )}
               </button>
             </form>
 
@@ -496,7 +572,7 @@ const Register = () => {
               </div>
               <div className="feature-item">
                 <div className="feature-icon">🌍</div>
-                <div className="feature-text">
+                <div class="feature-text">
                   <h4>Global Network</h4>
                   <p>Connect with partners and customers worldwide</p>
                 </div>
@@ -520,6 +596,14 @@ const Register = () => {
           onClose={closeClientTypeModal}
         />
       )}
+
+      {/* CSS for spinner animation */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   );
 };

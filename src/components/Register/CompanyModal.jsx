@@ -1,20 +1,23 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, Plus, Building, X } from 'lucide-react';
+import { companyService } from '../../services/companyService';
 import './CompanyModal.css';
 
 const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
   const [step, setStep] = useState('search'); // 'search' or 'add'
   const [companyData, setCompanyData] = useState({
     pib: '',
-    name: '',
+    companyName: '',
     address: '',
-    email: '',
+    contactEmail: '',
     website: '',
     description: ''
   });
   const [searchResults, setSearchResults] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,72 +25,110 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear errors when user starts typing
+    if (error) setError('');
   };
 
   const searchCompanyByPIB = async () => {
     if (!companyData.pib) return;
     
     setIsSearching(true);
+    setError('');
     
-    // Simulacija API poziva
-    setTimeout(() => {
-      // Simulirani rezultati pretrage
-      const mockResults = [
-        { 
-          id: 1, 
-          pib: companyData.pib, 
-          name: 'LogiTrans d.o.o.', 
-          address: 'Bulevar Oslobođenja 123, Novi Sad',
-          email: 'info@logitrans.rs',
-          website: 'www.logitrans.rs'
-        },
-        { 
-          id: 2, 
-          pib: companyData.pib, 
-          name: 'Trans Express', 
-          address: 'Knez Mihailova 45, Beograd',
-          email: 'contact@transexpress.rs',
-          website: 'www.transexpress.rs'
-        }
-      ];
+    try {
+      const result = await companyService.searchByPib(companyData.pib);
       
-      if (companyData.pib === '123456789') {
-        setSearchResults(mockResults);
+      if (result.success) {
+        setSearchResults(result.data);
       } else {
         setSearchResults([]);
+        setError(result.message);
       }
+    } catch (error) {
+      console.error('Company search error:', error);
+      setSearchResults([]);
+      setError('Failed to search for companies. Please try again.');
+    } finally {
       setIsSearching(false);
-    }, 1000);
+    }
   };
 
   const selectCompany = (company) => {
     setSelectedCompany(company);
+    setError('');
   };
 
   const proceedWithNewCompany = () => {
     setStep('add');
     setSearchResults([]);
+    setError('');
   };
 
   const handleBackToSearch = () => {
     setStep('search');
     setSelectedCompany(null);
+    setError('');
   };
 
-  const handleSaveCompany = () => {
-    if (companyData.name && companyData.address && companyData.email) {
-      const newCompany = {
-        id: Date.now(),
+  const mapCompanyTypeToEnum = (userType) => {
+    switch (userType) {
+      case 'client':
+        return 1; // CompanyType.Client
+      case 'shipper':
+        return 2; // CompanyType.Forwarder
+      case 'transport':
+        return 3; // CompanyType.Carrier
+      default:
+        return 1;
+    }
+  };
+
+  const handleSaveCompany = async () => {
+    // Validate required fields
+    if (!companyData.companyName || !companyData.address || !companyData.contactEmail) {
+      setError('Please fill in all required fields (Company Name, Address, Email)');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(companyData.contactEmail)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setIsCreating(true);
+    setError('');
+
+    try {
+      const newCompanyDto = {
+        companyName: companyData.companyName,
         pib: companyData.pib,
-        name: companyData.name,
         address: companyData.address,
-        email: companyData.email,
-        website: companyData.website,
-        description: companyData.description
+        contactEmail: companyData.contactEmail,
+        website: companyData.website || null,
+        description: companyData.description || null,
+        companyType: mapCompanyTypeToEnum(userType),
+        maxCommissionRate: userType === 'shipper' ? null : null, // Only for forwarders, set via backend logic
+        proofFileUrl: null // TODO: Add file upload functionality later
       };
-      onCompanySelect(newCompany);
-    } else {
-      alert('Please fill in all required fields');
+
+      console.log('Creating company:', newCompanyDto);
+
+      const result = await companyService.create(newCompanyDto);
+
+      if (result.success) {
+        // Pass the created company with real backend ID
+        onCompanySelect(result.data);
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      console.error('Company creation error:', error);
+      setError('Failed to create company. Please try again.');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -110,6 +151,19 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
           </button>
         </div>
 
+        {error && (
+          <div style={{
+            background: '#fee',
+            color: '#c53030',
+            padding: '12px',
+            borderRadius: '8px',
+            margin: '0 20px 20px 20px',
+            border: '1px solid #fed7d7'
+          }}>
+            {error}
+          </div>
+        )}
+
         {step === 'search' && (
           <div className="modal-body">
             <div className="search-section">
@@ -122,7 +176,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                     name="pib"
                     value={companyData.pib}
                     onChange={handleInputChange}
-                    placeholder="Enter PIB number (try 123456789 for demo)"
+                    placeholder="Enter PIB number"
                   />
                   <button
                     type="button"
@@ -155,11 +209,11 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                       onClick={() => selectCompany(company)}
                     >
                       <div className="company-info">
-                        <h5>{company.name}</h5>
+                        <h5>{company.companyName}</h5>
                         <p>{company.address}</p>
                         <div className="company-details">
                           <small>PIB: {company.pib}</small>
-                          <small>Email: {company.email}</small>
+                          <small>Email: {company.contactEmail}</small>
                         </div>
                       </div>
                       {selectedCompany?.id === company.id && (
@@ -170,7 +224,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                 </div>
               )}
 
-              {companyData.pib && searchResults.length === 0 && !isSearching && (
+              {companyData.pib && searchResults.length === 0 && !isSearching && !error && (
                 <div className="no-results">
                   <div className="no-results-icon">🔍</div>
                   <p>No company found with PIB number: {companyData.pib}</p>
@@ -193,7 +247,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                   Cancel
                 </button>
                 <button type="button" className="btn btn-primary" onClick={handleContinueWithSelected}>
-                  Continue with {selectedCompany.name}
+                  Continue with {selectedCompany.companyName}
                 </button>
               </div>
             )}
@@ -212,8 +266,8 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                 <input
                   type="text"
                   id="companyName"
-                  name="name"
-                  value={companyData.name}
+                  name="companyName"
+                  value={companyData.companyName}
                   onChange={handleInputChange}
                   placeholder="Enter company name"
                   required
@@ -221,10 +275,10 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="companyAddress">Address *</label>
+                <label htmlFor="address">Address *</label>
                 <input
                   type="text"
-                  id="companyAddress"
+                  id="address"
                   name="address"
                   value={companyData.address}
                   onChange={handleInputChange}
@@ -234,12 +288,12 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="companyEmail">Email *</label>
+                <label htmlFor="contactEmail">Email *</label>
                 <input
                   type="email"
-                  id="companyEmail"
-                  name="email"
-                  value={companyData.email}
+                  id="contactEmail"
+                  name="contactEmail"
+                  value={companyData.contactEmail}
                   onChange={handleInputChange}
                   placeholder="Enter company email"
                   required
@@ -247,10 +301,10 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="companyWebsite">Website</label>
+                <label htmlFor="website">Website</label>
                 <input
                   type="url"
-                  id="companyWebsite"
+                  id="website"
                   name="website"
                   value={companyData.website}
                   onChange={handleInputChange}
@@ -259,9 +313,9 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="companyDescription">Description</label>
+                <label htmlFor="description">Description</label>
                 <textarea
-                  id="companyDescription"
+                  id="description"
                   name="description"
                   value={companyData.description}
                   onChange={handleInputChange}
@@ -279,9 +333,23 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                 type="button" 
                 className="btn btn-primary" 
                 onClick={handleSaveCompany}
-                disabled={!companyData.name || !companyData.address || !companyData.email}
+                disabled={isCreating || !companyData.companyName || !companyData.address || !companyData.contactEmail}
               >
-                Save Company
+                {isCreating ? (
+                  <>
+                    <div className="spinner" style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid #ffffff',
+                      borderTop: '2px solid transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }}></div>
+                    Creating...
+                  </>
+                ) : (
+                  'Save Company'
+                )}
               </button>
             </div>
           </div>
