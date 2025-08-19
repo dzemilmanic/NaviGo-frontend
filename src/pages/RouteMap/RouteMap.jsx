@@ -78,7 +78,7 @@ const RouteMap = () => {
       setError(null);
 
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/Route?SortBy=${sortBy}&SortDirection=${sortDirection}&Page=${page}&PageSize=${pageSize}`,
+        `${import.meta.env.VITE_API_URL}/Route?SortBy=${sortBy}&SortDirection=${sortDirection}&Page=${page}&PageSize=${pageSize}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

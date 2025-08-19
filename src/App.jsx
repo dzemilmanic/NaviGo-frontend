@@ -21,7 +21,6 @@ import Register from "./components/Register/Register.jsx";
 import Cookies from "./pages/Cookies.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import TermsOfServices from "./pages/TermsOfServices.jsx";
-import AddVehicle from "./components/Vehicle/AddVehicle.jsx";
 import RouteMap from "./pages/RouteMap/RouteMap.jsx";
 // SuperAdmin Pages
 import SuperAdminLayout from "./components/superadmin/SuperAdminLayout/SuperAdminLayout";
