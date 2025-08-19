@@ -1,8 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Menu, X, Truck, User, LogOut, Settings, ChevronDown } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import './Navbar.css';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Menu,
+  X,
+  Truck,
+  User,
+  LogOut,
+  Settings,
+  ChevronDown,
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import "./Navbar.css";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,10 +30,10 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
       setIsDropdownOpen(false);
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -37,45 +45,45 @@ const Navbar = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   // Get user display name
   const getUserDisplayName = () => {
-    if (!user) return 'User';
-    
+    if (!user) return "User";
+
     if (user.firstName && user.lastName) {
       return `${user.firstName} ${user.lastName}`;
     }
-    
+
     if (user.firstName) {
       return user.firstName;
     }
-    
+
     if (user.email) {
-      return user.email.split('@')[0];
+      return user.email.split("@")[0];
     }
-    
-    return 'User';
+
+    return "User";
   };
 
   // Get user role display - now using string roles
   const getUserRole = () => {
-    if (!user || !user.role) return '';
-    
+    if (!user || !user.role) return "";
+
     switch (user.role) {
-      case 'User':
-      case 'RegularUser':
-        return 'Client';
-      case 'CompanyUser':
-        return 'Company User';
-      case 'CompanyAdmin':
-        return 'Company Admin';
-      case 'SuperAdmin':
-        return 'Super Admin';
+      case "User":
+      case "RegularUser":
+        return "Client";
+      case "CompanyUser":
+        return "Company User";
+      case "CompanyAdmin":
+        return "Company Admin";
+      case "SuperAdmin":
+        return "Super Admin";
       default:
         return user.role; // Fallback to original role string
     }
@@ -97,17 +105,38 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <Link to="/" className="navbar-logo" onClick={() => setIsMenuOpen(false)}>
+        <Link
+          to="/"
+          className="navbar-logo"
+          onClick={() => setIsMenuOpen(false)}
+        >
           <Truck size={32} />
           <h1>NaviGo</h1>
         </Link>
 
         <ul className="navbar-menu">
-          <li><Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
+          <li>
+            <Link to="/" onClick={() => setIsMenuOpen(false)}>
+              Home
+            </Link>
+          </li>
           {isAuthenticated && (
             <>
-              <li><Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link></li>
-              <li><Link to="/shipments" onClick={() => setIsMenuOpen(false)}>Shipments</Link></li>
+              <li>
+                <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/shipments" onClick={() => setIsMenuOpen(false)}>
+                  Shipments
+                </Link>
+              </li>
+              <li>
+                <Link to="/routes" onClick={() => setIsMenuOpen(false)}>
+                  Routes
+                </Link>
+              </li>
             </>
           )}
         </ul>
@@ -115,11 +144,19 @@ const Navbar = () => {
         <div className="navbar-actions">
           {!isAuthenticated ? (
             <>
-              <Link to="/login" className="navbar-login" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                to="/login"
+                className="navbar-login"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 <User size={18} />
                 Login
               </Link>
-              <Link to="/register" className="navbar-register" onClick={() => setIsMenuOpen(false)}>
+              <Link
+                to="/register"
+                className="navbar-register"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Register
               </Link>
             </>
@@ -139,7 +176,7 @@ const Navbar = () => {
                 </div>
                 <ChevronDown
                   size={16}
-                  className={`chevron ${isDropdownOpen ? 'open' : ''}`}
+                  className={`chevron ${isDropdownOpen ? "open" : ""}`}
                 />
               </button>
 
@@ -150,13 +187,15 @@ const Navbar = () => {
                       {getUserDisplayName().charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <div className="dropdown-user-name">{getUserDisplayName()}</div>
+                      <div className="dropdown-user-name">
+                        {getUserDisplayName()}
+                      </div>
                       <div className="dropdown-user-email">{user.email}</div>
                     </div>
                   </div>
-                  
+
                   <div className="dropdown-divider"></div>
-                  
+
                   <div className="dropdown-menu">
                     <Link
                       to="/profile"
@@ -166,7 +205,7 @@ const Navbar = () => {
                       <Settings size={16} />
                       Profile Settings
                     </Link>
-                    
+
                     <button
                       onClick={handleLogout}
                       className="dropdown-item logout"
@@ -185,22 +224,51 @@ const Navbar = () => {
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
-        <div className={`navbar-mobile-menu ${isMenuOpen ? 'active' : ''}`}>
+        <div className={`navbar-mobile-menu ${isMenuOpen ? "active" : ""}`}>
           <ul>
-            <li><Link to="/" onClick={() => setIsMenuOpen(false)}>Home</Link></li>
+            <li>
+              <Link to="/" onClick={() => setIsMenuOpen(false)}>
+                Home
+              </Link>
+            </li>
             {isAuthenticated && (
               <>
-                <li><Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link></li>
-                <li><Link to="/shipments" onClick={() => setIsMenuOpen(false)}>Shipments</Link></li>
+                <li>
+                  <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/shipments" onClick={() => setIsMenuOpen(false)}>
+                    Shipments
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/routes" onClick={() => setIsMenuOpen(false)}>
+                    Routes
+                  </Link>
+                </li>
               </>
             )}
           </ul>
-          
+
           <div className="navbar-mobile-actions">
             {!isAuthenticated ? (
               <>
-                <Link to="/login" className="btn btn-secondary" onClick={() => setIsMenuOpen(false)}>Login</Link>
-                <Link to="/register" className="btn btn-primary" onClick={() => setIsMenuOpen(false)}>Register</Link>
+                <Link
+                  to="/login"
+                  className="btn btn-secondary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="btn btn-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Register
+                </Link>
               </>
             ) : (
               <div className="mobile-user-section">
@@ -209,11 +277,13 @@ const Navbar = () => {
                     {getUserDisplayName().charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <div className="mobile-user-name">{getUserDisplayName()}</div>
+                    <div className="mobile-user-name">
+                      {getUserDisplayName()}
+                    </div>
                     <div className="mobile-user-email">{user.email}</div>
                   </div>
                 </div>
-                
+
                 <div className="mobile-user-actions">
                   <Link
                     to="/profile"
@@ -223,10 +293,7 @@ const Navbar = () => {
                     <Settings size={16} />
                     Profile
                   </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="btn btn-outline"
-                  >
+                  <button onClick={handleLogout} className="btn btn-outline">
                     <LogOut size={16} />
                     Sign Out
                   </button>
