@@ -62,17 +62,22 @@ const Navbar = () => {
     return 'User';
   };
 
-  // Get user role display
+  // Get user role display - now using string roles
   const getUserRole = () => {
-    if (!user) return '';
+    if (!user || !user.role) return '';
     
-    switch (user.userRole) {
-      case 1:
+    switch (user.role) {
+      case 'User':
+      case 'RegularUser':
         return 'Client';
-      case 2:
+      case 'CompanyUser':
         return 'Company User';
+      case 'CompanyAdmin':
+        return 'Company Admin';
+      case 'SuperAdmin':
+        return 'Super Admin';
       default:
-        return 'User';
+        return user.role; // Fallback to original role string
     }
   };
 

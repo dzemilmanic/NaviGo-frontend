@@ -236,6 +236,22 @@
   justify-content: center;
 }
 
+/* Loading Spinner Styles */
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(69, 104, 130, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-medium);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .login-footer {
   text-align: center;
   padding-top: 25px;
@@ -321,6 +337,20 @@
   font-size: 16px;
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.5;
+}
+
+/* Error Banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 12px;
+  color: var(--error);
+  margin-bottom: 25px;
+  font-weight: 500;
 }
 
 /* Responsive Design */

@@ -1,0 +1,283 @@
+/* SuperAdmin Dashboard Styles */
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.dashboard-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.dashboard-header p {
+  color: var(--gray-600);
+  margin: 8px 0 0 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-card {
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+}
+
+.stat-icon {
+  padding: 8px;
+  border-radius: 8px;
+  margin-right: 16px;
+}
+
+.stat-icon.blue {
+  background-color: #DBEAFE;
+}
+
+.stat-icon.yellow {
+  background-color: #FEF3C7;
+}
+
+.stat-icon.green {
+  background-color: #D1FAE5;
+}
+
+.stat-icon.purple {
+  background-color: #EDE9FE;
+}
+
+.stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.stat-icon.blue svg {
+  color: var(--primary-medium);
+}
+
+.stat-icon.yellow svg {
+  color: var(--warning);
+}
+
+.stat-icon.green svg {
+  color: var(--success);
+}
+
+.stat-icon.purple svg {
+  color: #7C3AED;
+}
+
+.stat-info p:first-child {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.stat-info p:last-child {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.recent-companies {
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.recent-companies-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.recent-companies-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.recent-companies-body {
+  padding: 24px;
+}
+
+.companies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.company-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.company-item:hover {
+  background-color: var(--gray-100);
+}
+
+.company-item-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.company-item-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #EBF8FF;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.company-item-info h3 {
+  font-weight: 500;
+  color: var(--text-dark);
+  margin: 0;
+  font-size: 1rem;
+}
+
+.company-item-info p {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin: 0;
+}
+
+.company-item-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.company-item-date {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}
+
+.no-companies {
+  color: var(--gray-500);
+  text-align: center;
+  padding: 32px 0;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .quick-actions {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.quick-action-card {
+  background-color: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.quick-action-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 0 16px 0;
+}
+
+.quick-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quick-action-item span:first-child {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.quick-action-item span:last-child {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.quick-action-item .success {
+  color: var(--success);
+}
+
+.quick-action-item .warning {
+  color: var(--warning);
+}
+
+.quick-action-item .error {
+  color: var(--error);
+}
+
+.system-health-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.system-health-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--success);
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 256px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--gray-200);
+  border-top: 2px solid var(--primary-medium);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}

@@ -1,80 +1,135 @@
-import { apiClient, API_ENDPOINTS } from './api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7240/api';
+
+// Helper function to decode JWT token
+const decodeToken = (token) => {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
 
 export const authService = {
-  // Register user
-  register: async (userData) => {
+  // Check if user is authenticated
+  isAuthenticated() {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return false;
+
     try {
-      const response = await apiClient.post(API_ENDPOINTS.REGISTER, userData);
-      return {
-        success: true,
-        data: response,
-        message: 'Registration successful! Please check your email for verification.'
-      };
+      const decoded = decodeToken(token);
+      if (!decoded) return false;
+      
+      // Check if token is expired
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        this.clearTokens();
+        return false;
+      }
+      
+      return true;
     } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Registration failed. Please try again.',
-        error: error
+      console.error('Token validation error:', error);
+      this.clearTokens();
+      return false;
+    }
+  },
+
+  // Get current user from token
+  getCurrentUser() {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return null;
+
+    try {
+      const decoded = decodeToken(token);
+      if (!decoded) return null;
+
+      // Keep the role as string as returned from backend
+      const user = {
+        email: decoded.email || decoded.sub,
+        role: decoded.role, // Keep as string (e.g., "SuperAdmin", "CompanyAdmin", etc.)
+        firstName: decoded.firstName || '',
+        lastName: decoded.lastName || '',
+        jti: decoded.jti,
+        exp: decoded.exp
       };
+
+      console.log('Current user from token:', user);
+      return user;
+    } catch (error) {
+      console.error('Error getting current user:', error);
+      return null;
     }
   },
 
   // Login user
-  login: async (credentials) => {
+  async login(credentials) {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.LOGIN, credentials);
+      console.log('Attempting login with:', { email: credentials.email });
       
-      if (response.accessToken) {
-        // Store tokens in localStorage
-        localStorage.setItem('accessToken', response.accessToken);
-        localStorage.setItem('refreshToken', response.refreshToken);
-        
-        // Decode user info from token (basic implementation)
-        const userInfo = parseJwtToken(response.accessToken);
-        localStorage.setItem('userInfo', JSON.stringify(userInfo));
-        
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await response.json();
+      console.log('Login response:', data);
+
+      if (response.ok && data.accessToken) {
+        // Store tokens
+        localStorage.setItem('accessToken', data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+
+        console.log('Login successful, tokens stored');
         return {
           success: true,
-          data: response,
-          message: 'Login successful!'
+          user: this.getCurrentUser(),
+          message: 'Login successful'
         };
       } else {
-        throw new Error('No access token received');
+        console.error('Login failed:', data);
+        return {
+          success: false,
+          message: data.message || data.error || 'Login failed'
+        };
       }
     } catch (error) {
+      console.error('Login error:', error);
       return {
         success: false,
-        message: error.message || 'Login failed. Please check your credentials.',
-        error: error
+        message: 'Network error. Please try again.'
       };
     }
   },
 
   // Logout user
-  logout: async () => {
+  async logout() {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      
-      if (refreshToken) {
-        // Call backend logout endpoint
-        await apiClient.post(API_ENDPOINTS.LOGOUT, { token: refreshToken });
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        // Call logout endpoint if needed
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }).catch(() => {
+          // Ignore errors on logout endpoint
+        });
       }
-      
-      // Clear local storage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userInfo');
-      
-      return {
-        success: true,
-        message: 'Logged out successfully'
-      };
     } catch (error) {
-      // Even if backend call fails, clear local storage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userInfo');
-      
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear tokens
+      this.clearTokens();
       return {
         success: true,
         message: 'Logged out successfully'
@@ -82,73 +137,64 @@ export const authService = {
     }
   },
 
-  // Check if user is authenticated
-  isAuthenticated: () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return false;
-    
-    try {
-      const payload = parseJwtToken(token);
-      // Check if token is expired
-      return payload.exp * 1000 > Date.now();
-    } catch {
-      return false;
-    }
+  // Clear stored tokens
+  clearTokens() {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
   },
 
-  // Get current user info
-  getCurrentUser: () => {
-    try {
-      const userInfo = localStorage.getItem('userInfo');
-      return userInfo ? JSON.parse(userInfo) : null;
-    } catch {
-      return null;
-    }
+  // Get access token
+  getAccessToken() {
+    return localStorage.getItem('accessToken');
   },
 
-  // Refresh token
-  refreshToken: async () => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) throw new Error('No refresh token available');
+  // Get refresh token
+  getRefreshToken() {
+    return localStorage.getItem('refreshToken');
+  },
 
-      const response = await apiClient.post(API_ENDPOINTS.REFRESH, { token: refreshToken });
-      
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
-      
-      const userInfo = parseJwtToken(response.accessToken);
-      localStorage.setItem('userInfo', JSON.stringify(userInfo));
-      
-      return {
-        success: true,
-        data: response
-      };
+  // Refresh access token
+  async refreshAccessToken() {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return { success: false, message: 'No refresh token available' };
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+        
+        return {
+          success: true,
+          accessToken: data.accessToken
+        };
+      } else {
+        this.clearTokens();
+        return {
+          success: false,
+          message: data.message || 'Token refresh failed'
+        };
+      }
     } catch (error) {
-      // If refresh fails, logout user
-      authService.logout();
+      console.error('Token refresh error:', error);
+      this.clearTokens();
       return {
         success: false,
-        message: 'Session expired. Please login again.'
+        message: 'Network error during token refresh'
       };
     }
   }
 };
-
-// Helper function to parse JWT token
-function parseJwtToken(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error('Error parsing JWT token:', error);
-    return {};
-  }
-}

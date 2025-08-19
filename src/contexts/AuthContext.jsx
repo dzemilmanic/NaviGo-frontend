@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authService } from '../services/authService';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { authService } from "../services/authService";
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -20,10 +20,28 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     const authenticated = authService.isAuthenticated();
     const currentUser = authService.getCurrentUser();
-    
+
+    console.log('Auth status check:', { authenticated, currentUser });
+
     setIsAuthenticated(authenticated);
     setUser(currentUser);
     setLoading(false);
+  };
+
+  const isSuperAdmin = () => {
+    return user && user.role === "SuperAdmin";
+  };
+
+  const isCompanyAdmin = () => {
+    return user && user.role === "CompanyAdmin";
+  };
+
+  const isCompanyUser = () => {
+    return user && user.role === "CompanyUser";
+  };
+
+  const isRegularUser = () => {
+    return user && (user.role === "User" || user.role === "RegularUser");
   };
 
   const login = async (credentials) => {
@@ -36,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Login failed. Please try again.'
+        message: error.message || "Login failed. Please try again.",
       };
     }
   };
@@ -55,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       return {
         success: true,
-        message: 'Logged out successfully'
+        message: "Logged out successfully",
       };
     }
   };
@@ -70,12 +88,12 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    checkAuthStatus
+    checkAuthStatus,
+    isSuperAdmin,
+    isCompanyAdmin,
+    isCompanyUser,
+    isRegularUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

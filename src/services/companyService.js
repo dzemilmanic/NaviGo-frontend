@@ -1,53 +1,22 @@
 import { apiClient, API_ENDPOINTS } from './api';
 
 export const companyService = {
-  // Search company by PIB
-  searchByPib: async (pib) => {
+  // Get all companies with optional search parameters
+  getAll: async (searchParams = {}) => {
     try {
-      const response = await apiClient.get(`${API_ENDPOINTS.COMPANIES}/search?pib=${pib}`);
+      const queryString = new URLSearchParams(searchParams).toString();
+      const url = queryString ? `${API_ENDPOINTS.COMPANIES}?${queryString}` : API_ENDPOINTS.COMPANIES;
+      
+      const response = await apiClient.get(url);
       return {
         success: true,
-        data: response,
+        data: response
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Company search failed.',
-        data: []
-      };
-    }
-  },
-
-  // Create new company
-  create: async (companyData) => {
-    try {
-      const response = await apiClient.post(API_ENDPOINTS.COMPANIES, companyData);
-      return {
-        success: true,
-        data: response.company || response,
-        message: response.message || 'Company created successfully.'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to create company.',
-      };
-    }
-  },
-
-  // Get all companies
-  getAll: async () => {
-    try {
-      const response = await apiClient.get(API_ENDPOINTS.COMPANIES);
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to fetch companies.',
-        data: []
+        message: error.message || 'Failed to fetch companies',
+        error: error
       };
     }
   },
@@ -58,12 +27,50 @@ export const companyService = {
       const response = await apiClient.get(`${API_ENDPOINTS.COMPANIES}/${id}`);
       return {
         success: true,
-        data: response,
+        data: response
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch company.',
+        message: error.message || 'Failed to fetch company',
+        error: error
+      };
+    }
+  },
+
+  // Update company status (for SuperAdmin)
+  updateStatus: async (id, status) => {
+    try {
+      const response = await apiClient.patch(`${API_ENDPOINTS.COMPANIES}/${id}/status`, {
+        companyStatus: status
+      });
+      return {
+        success: true,
+        data: response,
+        message: 'Company status updated successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to update company status',
+        error: error
+      };
+    }
+  },
+
+  // Delete company
+  delete: async (id) => {
+    try {
+      await apiClient.delete(`${API_ENDPOINTS.COMPANIES}/${id}`);
+      return {
+        success: true,
+        message: 'Company deleted successfully'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to delete company',
+        error: error
       };
     }
   }

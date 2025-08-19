@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Truck, Shield, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import "./Login.css";
+import Loader from '../Loader/Loader';
 
 const Login = () => {
+  const [pageLoading, setPageLoading] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -16,6 +18,15 @@ const Login = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Handle page loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 1000); 
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -84,6 +95,11 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  // Show loader while page is loading
+  if (pageLoading) {
+    return <Loader message="Loading..." />;
+  }
 
   return (
     <div className="login-container">
