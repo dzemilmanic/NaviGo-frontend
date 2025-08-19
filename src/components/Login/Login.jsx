@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Truck, Shield, AlertCircle } from "lucide-react";
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import "./Login.css";
-import Loader from '../Loader/Loader';
-
+import Loader from "../Loader/Loader";
+import { GoogleLogin } from "@react-oauth/google";
 const Login = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -16,14 +16,14 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   // Handle page loading
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
-    }, 1000); 
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -72,18 +72,18 @@ const Login = () => {
     if (Object.keys(newErrors).length === 0) {
       setLoading(true);
       setApiError("");
-      
+
       try {
         const result = await login(formData);
-        
+
         if (result.success) {
           // Redirect to dashboard or home page
-          navigate('/dashboard', { replace: true });
+          navigate("/dashboard", { replace: true });
         } else {
-          setApiError(result.message || 'Login failed. Please try again.');
+          setApiError(result.message || "Login failed. Please try again.");
         }
       } catch (error) {
-        setApiError('An unexpected error occurred. Please try again.');
+        setApiError("An unexpected error occurred. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -95,7 +95,21 @@ const Login = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const idToken = credentialResponse.credential;
+      const result = await googleLogin(idToken);
 
+      if (!result.success) {
+        throw new Error(result.message || "Google login failed");
+      }
+
+      console.log("Login result:", result);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      console.error(err.message);
+    }
+  };
   // Show loader while page is loading
   if (pageLoading) {
     return <Loader message="Loading..." />;
@@ -186,10 +200,14 @@ const Login = () => {
               <a href="#" className="forgot-password">
                 Forgot Password?
               </a>
+              <GoogleLogin
+                onSuccess={handleGoogleLogin}
+                onError={() => console.log("Google login failed")}
+              />
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="btn btn-primary login-btn"
               disabled={loading}
             >
