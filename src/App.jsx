@@ -16,7 +16,6 @@ import Register from './components/Register/Register.jsx';
 import Cookies from './pages/Cookies.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import TermsOfServices from './pages/TermsOfServices.jsx';
-import AddVehicle from './components/Vehicle/AddVehicle.jsx';
 
 // SuperAdmin Pages
 import SuperAdminLayout from './components/superadmin/SuperAdminLayout/SuperAdminLayout';
@@ -59,7 +58,6 @@ const AppRoutes = () => {
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
         <Route path="/features" element={<Features />} />
-        <Route path="/add-vehicle" element={<AddVehicle />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/cookies" element={<Cookies />} />

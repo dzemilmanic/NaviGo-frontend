@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { authService } from "../services/authService";
 
-
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -21,8 +20,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     const authenticated = authService.isAuthenticated();
     const currentUser = authService.getCurrentUser();
-
-    console.log('Auth status check:', { authenticated, currentUser });
 
     setIsAuthenticated(authenticated);
     setUser(currentUser);
@@ -49,9 +46,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await authService.login(credentials);
       if (result.success) {
-        checkAuthStatus(); // Refresh auth state
-        
-        
+        checkAuthStatus();
       }
       return result;
     } catch (error) {
@@ -61,7 +56,8 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
-  const googleLogin = async (idToken) =>{
+
+  const googleLogin = async (idToken) => {
     try {
       const result = await authService.googleLogin(idToken);
       if (result.success) {
@@ -74,7 +70,8 @@ export const AuthProvider = ({ children }) => {
         message: error.message || "Login failed. Please try again.",
       };
     }
-  }
+  };
+
   const logout = async () => {
     try {
       const result = await authService.logout();
@@ -84,7 +81,6 @@ export const AuthProvider = ({ children }) => {
       }
       return result;
     } catch (error) {
-      // Clear state even if logout call fails
       setIsAuthenticated(false);
       setUser(null);
       return {

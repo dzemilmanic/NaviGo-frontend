@@ -267,7 +267,7 @@ const UserManagement = () => {
                       <XCircle className="verification-icon not-verified" />
                     )}
                   </td>
-                  <td className="table-cell" style={{ fontSize: '0.875rem', color: 'var(--gray-500)' }}>
+                  <td className="table-cell" style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
                   <td className="table-cell">
@@ -362,12 +362,12 @@ const UserManagement = () => {
                     {selectedUser.emailVerified ? (
                       <>
                         <CheckCircle className="verified" />
-                        <span style={{ color: 'var(--success)' }}>Verified</span>
+                        <span style={{ color: '#10b981' }}>Verified</span>
                       </>
                     ) : (
                       <>
                         <XCircle className="not-verified" />
-                        <span style={{ color: 'var(--error)' }}>Not Verified</span>
+                        <span style={{ color: '#ef4444' }}>Not Verified</span>
                       </>
                     )}
                   </div>

@@ -1,107 +1,104 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://navigoapi-fgguf3fkh6b4fqg3.italynorth-01.azurewebsites.net';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://navigoapi-fgguf3fkh6b4fqg3.italynorth-01.azurewebsites.net/api';
 
 export const API_ENDPOINTS = {
-  REGISTER: `${API_BASE_URL}/api/user`,
-  LOGIN: `${API_BASE_URL}/api/auth/login`,
-  LOGOUT: `${API_BASE_URL}/api/auth/logout`,
-  REFRESH: `${API_BASE_URL}/api/auth/refresh`,
-  GOOGLE_LOGIN: `${API_BASE_URL}/api/auth/google-login`,
-  VERIFY_EMAIL: `${API_BASE_URL}/api/user/verify-email`,
-  COMPANIES: `${API_BASE_URL}/api/company`,
+  // Auth endpoints
+  LOGIN: `${API_BASE_URL}/auth/login`,
+  LOGOUT: `${API_BASE_URL}/auth/logout`,
+  REFRESH: `${API_BASE_URL}/auth/refresh`,
+  GOOGLE_LOGIN: `${API_BASE_URL}/auth/google-login`,
+  
+  // User endpoints
+  USERS: `${API_BASE_URL}/user`,
+  SUPERADMIN: `${API_BASE_URL}/user/superadmin`,
+  VERIFY_EMAIL: `${API_BASE_URL}/user/verify-email`,
+  
+  // Company endpoints
+  COMPANIES: `${API_BASE_URL}/company`,
+  
+  // System configuration endpoints
+  CARGO_TYPES: `${API_BASE_URL}/cargotype`,
+  VEHICLE_TYPES: `${API_BASE_URL}/vehicletype`,
+  
+  // Other endpoints
+  LOCATIONS: `${API_BASE_URL}/location`,
+  ROUTES: `${API_BASE_URL}/route`,
+  VEHICLES: `${API_BASE_URL}/vehicle`,
+  DRIVERS: `${API_BASE_URL}/driver`,
+  CONTRACTS: `${API_BASE_URL}/contract`,
+  SHIPMENTS: `${API_BASE_URL}/shipment`,
+  PAYMENTS: `${API_BASE_URL}/payment`,
 };
 
-// HTTP client configuration
-export const apiClient = {
-  get: async (url) => {
+class ApiService {
+  constructor() {
+    this.baseURL = API_BASE_URL;
+  }
+
+  getAuthHeaders() {
+    const token = localStorage.getItem('accessToken');
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+  }
+
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    const config = {
+      headers: this.getAuthHeaders(),
+      ...options
+    };
+
     try {
-      const token = localStorage.getItem('accessToken');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+      const response = await fetch(url, config);
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers
-      });
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
-    } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
-    }
-  },
-
-  post: async (url, data) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
-    }
-  },
-
-  delete: async (url) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      // Handle 204 No Content response
+      // Handle empty responses (204 No Content)
       if (response.status === 204) {
-        return null;
+        return { success: true, data: null };
       }
 
-      return await response.json();
+      const data = await response.json();
+      return { success: true, data };
     } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
+      console.error(`API request failed: ${endpoint}`, error);
+      return { success: false, error: error.message };
     }
   }
-};
+
+  async get(endpoint) {
+    return this.request(endpoint, { method: 'GET' });
+  }
+
+  async post(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async put(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async patch(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async delete(endpoint) {
+    return this.request(endpoint, { method: 'DELETE' });
+  }
+}
+
+export const apiService = new ApiService();

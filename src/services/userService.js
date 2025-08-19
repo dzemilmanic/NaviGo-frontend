@@ -1,95 +1,51 @@
-import { apiClient, API_ENDPOINTS } from './api';
+import { apiService, API_ENDPOINTS } from './api';
 
-export const userService = {
-  // Get all users with optional search parameters
-  getAll: async (searchParams = {}) => {
-    try {
-      const queryString = new URLSearchParams(searchParams).toString();
-      const url = queryString ? `${API_ENDPOINTS.USERS}?${queryString}` : API_ENDPOINTS.USERS;
-      
-      const response = await apiClient.get(url);
-      return {
-        success: true,
-        data: response
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to fetch users',
-        error: error
-      };
-    }
-  },
-
-  // Get user by ID
-  getById: async (id) => {
-    try {
-      const response = await apiClient.get(`${API_ENDPOINTS.USERS}/${id}`);
-      return {
-        success: true,
-        data: response
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to fetch user',
-        error: error
-      };
-    }
-  },
-
-  // Activate/Deactivate user
-  updateStatus: async (id, status) => {
-    try {
-      const response = await apiClient.patch(`${API_ENDPOINTS.USERS}/activate/${id}`, {
-        userStatus: status
-      });
-      return {
-        success: true,
-        data: response,
-        message: 'User status updated successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to update user status',
-        error: error
-      };
-    }
-  },
-
-  // Create SuperAdmin
-  createSuperAdmin: async (userData) => {
-    try {
-      const response = await apiClient.post(API_ENDPOINTS.SUPERADMIN, userData);
-      return {
-        success: true,
-        data: response,
-        message: 'SuperAdmin created successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to create SuperAdmin',
-        error: error
-      };
-    }
-  },
-
-  // Delete user
-  delete: async (id) => {
-    try {
-      await apiClient.delete(`${API_ENDPOINTS.USERS}/${id}`);
-      return {
-        success: true,
-        message: 'User deleted successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to delete user',
-        error: error
-      };
-    }
+class UserService {
+  async getAll(searchParams = {}) {
+    const queryString = new URLSearchParams(searchParams).toString();
+    const endpoint = queryString ? `/user?${queryString}` : '/user';
+    return apiService.get(endpoint);
   }
-};
+
+  async getById(id) {
+    return apiService.get(`/user/${id}`);
+  }
+
+  async create(userData) {
+    return apiService.post('/user', userData);
+  }
+
+  async updateStatus(id, status) {
+    return apiService.patch(`/user/activate/${id}`, {
+      userStatus: status
+    });
+  }
+
+  async createSuperAdmin(userData) {
+    return apiService.post('/user/superadmin', userData);
+  }
+
+  async delete(id) {
+    return apiService.delete(`/user/${id}`);
+  }
+
+  async changePassword(currentPassword, newPassword) {
+    return apiService.post('/user/change-password', {
+      currentPassword,
+      newPassword
+    });
+  }
+
+  async forgotPassword(email) {
+    return apiService.post('/user/forgot-password', { email });
+  }
+
+  async resetPassword(token, newPassword) {
+    return apiService.post('/user/reset-password', {
+      token,
+      newPassword
+    });
+  }
+}
+
+export const userService = new UserService();

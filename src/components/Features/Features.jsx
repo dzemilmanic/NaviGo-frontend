@@ -37,8 +37,8 @@ const Features = () => {
   ];
 
   return (
-    <section className="features">
-      <div className="features-container">
+    <section className="features section">
+      <div className="container">
         <div className="features-header">
           <h2 className="features-title">Advanced Features</h2>
           <p className="features-subtitle">
@@ -50,7 +50,7 @@ const Features = () => {
         <div className="features-grid">
           {features.map((feature, index) => (
             <div key={index} className="feature-item">
-              <div className="service-icon">
+              <div className="feature-icon">
                 {feature.icon}
               </div>
               <h3 className="feature-title">{feature.title}</h3>

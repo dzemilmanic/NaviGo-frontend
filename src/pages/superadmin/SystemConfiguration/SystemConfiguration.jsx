@@ -9,6 +9,7 @@ import {
   Save,
   X
 } from 'lucide-react';
+import { systemService } from '../../../services/systemService';
 import './SystemConfiguration.css';
 
 const SystemConfiguration = () => {
@@ -32,8 +33,20 @@ const SystemConfiguration = () => {
   const loadSystemData = async () => {
     setLoading(true);
     try {
-      // TODO: Implement API calls for cargo types and vehicle types
-      // For now, using mock data
+      // Load cargo types
+      const cargoResult = await systemService.getCargoTypes();
+      if (cargoResult.success) {
+        setCargoTypes(cargoResult.data);
+      }
+      
+      // Load vehicle types
+      const vehicleResult = await systemService.getVehicleTypes();
+      if (vehicleResult.success) {
+        setVehicleTypes(vehicleResult.data);
+      }
+    } catch (error) {
+      console.error('Error loading system data:', error);
+      // Fallback to mock data if API fails
       setCargoTypes([
         { id: 1, typeName: 'General Cargo', description: 'Standard cargo without special requirements', requiresSpecialEquipment: false },
         { id: 2, typeName: 'Hazardous Materials', description: 'Dangerous goods requiring special handling', requiresSpecialEquipment: true },
@@ -45,8 +58,6 @@ const SystemConfiguration = () => {
         { id: 2, typeName: 'Refrigerated Truck', description: 'Temperature-controlled vehicle', requiresSpecialLicense: false },
         { id: 3, typeName: 'Hazmat Truck', description: 'Vehicle for dangerous goods', requiresSpecialLicense: true }
       ]);
-    } catch (error) {
-      console.error('Error loading system data:', error);
     } finally {
       setLoading(false);
     }
@@ -79,30 +90,21 @@ const SystemConfiguration = () => {
     try {
       if (editingItem) {
         // Update existing item
-        if (activeTab === 'cargo') {
-          setCargoTypes(prev => prev.map(item => 
-            item.id === editingItem.id 
-              ? { ...item, ...formData }
-              : item
-          ));
-        } else {
-          setVehicleTypes(prev => prev.map(item => 
-            item.id === editingItem.id 
-              ? { ...item, ...formData }
-              : item
-          ));
+        const result = activeTab === 'cargo' 
+          ? await systemService.updateCargoType(editingItem.id, formData)
+          : await systemService.updateVehicleType(editingItem.id, formData);
+        
+        if (result.success) {
+          await loadSystemData();
         }
       } else {
         // Add new item
-        const newItem = {
-          id: Date.now(), // Temporary ID
-          ...formData
-        };
+        const result = activeTab === 'cargo'
+          ? await systemService.createCargoType(formData)
+          : await systemService.createVehicleType(formData);
         
-        if (activeTab === 'cargo') {
-          setCargoTypes(prev => [...prev, newItem]);
-        } else {
-          setVehicleTypes(prev => [...prev, newItem]);
+        if (result.success) {
+          await loadSystemData();
         }
       }
       
@@ -116,10 +118,12 @@ const SystemConfiguration = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
-        if (activeTab === 'cargo') {
-          setCargoTypes(prev => prev.filter(item => item.id !== id));
-        } else {
-          setVehicleTypes(prev => prev.filter(item => item.id !== id));
+        const result = activeTab === 'cargo'
+          ? await systemService.deleteCargoType(id)
+          : await systemService.deleteVehicleType(id);
+        
+        if (result.success) {
+          await loadSystemData();
         }
       } catch (error) {
         console.error('Error deleting item:', error);

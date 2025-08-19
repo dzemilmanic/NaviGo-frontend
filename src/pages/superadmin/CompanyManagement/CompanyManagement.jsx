@@ -215,10 +215,10 @@ const CompanyManagement = () => {
                     {getStatusBadge(company.companyStatus)}
                   </td>
                   <td className="table-cell">
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-dark)' }}>{company.contactEmail}</div>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--gray-500)' }}>{company.address}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#1f2937' }}>{company.contactEmail}</div>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>{company.address}</div>
                   </td>
-                  <td className="table-cell" style={{ fontSize: '0.875rem', color: 'var(--gray-500)' }}>
+                  <td className="table-cell" style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                     {new Date(company.createdAt).toLocaleDateString()}
                   </td>
                   <td className="table-cell">
@@ -330,7 +330,7 @@ const CompanyManagement = () => {
                       <ExternalLink className="w-3 h-3 ml-1" />
                     </a>
                   ) : (
-                    <p style={{ color: 'var(--gray-500)' }}>Not provided</p>
+                    <p style={{ color: '#6b7280' }}>Not provided</p>
                   )}
                 </div>
                 
