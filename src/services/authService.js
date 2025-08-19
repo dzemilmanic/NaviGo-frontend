@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7240/api';
+import { API_ENDPOINTS } from './api.js';
 
 // Helper function to decode JWT token
 const decodeToken = (token) => {
@@ -69,12 +69,16 @@ export const authService = {
     try {
       console.log('Attempting login with:', { email: credentials.email });
       
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(API_ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({
+          email: credentials.email,
+          password: credentials.password
+        }),
       });
 
       const data = await response.json();
@@ -97,7 +101,7 @@ export const authService = {
         console.error('Login failed:', data);
         return {
           success: false,
-          message: data.message || data.error || 'Login failed'
+          message: data.message || data.error || 'Invalid email or password'
         };
       }
     } catch (error) {
@@ -109,20 +113,75 @@ export const authService = {
     }
   },
 
+  // Google login
+  async googleLogin(idToken) {
+    try {
+      console.log('Attempting Google login');
+      
+      const response = await fetch(API_ENDPOINTS.GOOGLE_LOGIN, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken: idToken
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Google login response:', data);
+
+      if (response.ok && data.accessToken) {
+        // Store tokens
+        localStorage.setItem('accessToken', data.accessToken);
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
+        }
+
+        console.log('Google login successful, tokens stored');
+        return {
+          success: true,
+          user: this.getCurrentUser(),
+          message: 'Google login successful'
+        };
+      } else {
+        console.error('Google login failed:', data);
+        return {
+          success: false,
+          message: data.message || data.error || 'Google login failed'
+        };
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please try again.'
+      };
+    }
+  },
+
   // Logout user
   async logout() {
     try {
       const token = localStorage.getItem('accessToken');
-      if (token) {
-        // Call logout endpoint if needed
-        await fetch(`${API_BASE_URL}/auth/logout`, {
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (token && refreshToken) {
+        // Call logout endpoint with refresh token as required by backend
+        await fetch(API_ENDPOINTS.LOGOUT, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
-        }).catch(() => {
-          // Ignore errors on logout endpoint
+          body: JSON.stringify({
+            token: refreshToken // Send refresh token for logout
+          }),
+        }).catch((error) => {
+          console.error('Logout endpoint error:', error);
+          // Continue with local cleanup even if server call fails
         });
       }
     } catch (error) {
@@ -161,12 +220,15 @@ export const authService = {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      const response = await fetch(API_ENDPOINTS.REFRESH, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({ 
+          token: refreshToken // Backend expects 'token' field
+        }),
       });
 
       const data = await response.json();

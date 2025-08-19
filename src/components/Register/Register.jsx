@@ -14,6 +14,7 @@ import "./Register.css";
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { mapRegistrationData, validateRegistrationData } from '../../utils/userMapper';
+import Loader from '../Loader/Loader';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const Register = () => {
     phoneNumber: "",
     userType: "", // client, shipper, transport
   });
-
+  const [pageLoading, setPageLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [validations, setValidations] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -233,6 +234,19 @@ const Register = () => {
     setShowPassword(!showPassword);
   };
 
+    // Handle page loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPageLoading(false);
+    }, 1000); 
+
+    return () => clearTimeout(timer);
+  }, []);
+
+    if (pageLoading) {
+    return <Loader message="Loading..." />;
+  }
+  
   return (
     <>
       <div className="register-container">

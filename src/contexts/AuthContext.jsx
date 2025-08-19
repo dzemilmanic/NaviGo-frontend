@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { authService } from "../services/authService";
 
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -49,6 +50,8 @@ export const AuthProvider = ({ children }) => {
       const result = await authService.login(credentials);
       if (result.success) {
         checkAuthStatus(); // Refresh auth state
+        
+        
       }
       return result;
     } catch (error) {

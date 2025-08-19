@@ -1,10 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://your-backend.azurewebsites.net';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://navigoapi-fgguf3fkh6b4fqg3.italynorth-01.azurewebsites.net';
 
 export const API_ENDPOINTS = {
   REGISTER: `${API_BASE_URL}/api/user`,
   LOGIN: `${API_BASE_URL}/api/auth/login`,
   LOGOUT: `${API_BASE_URL}/api/auth/logout`,
   REFRESH: `${API_BASE_URL}/api/auth/refresh`,
+  GOOGLE_LOGIN: `${API_BASE_URL}/api/auth/google-login`,
   VERIFY_EMAIL: `${API_BASE_URL}/api/user/verify-email`,
   COMPANIES: `${API_BASE_URL}/api/company`,
 };
@@ -61,6 +62,40 @@ export const apiClient = {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('API Request failed:', error);
+      throw error;
+    }
+  },
+
+  delete: async (url) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Handle 204 No Content response
+      if (response.status === 204) {
+        return null;
       }
 
       return await response.json();
