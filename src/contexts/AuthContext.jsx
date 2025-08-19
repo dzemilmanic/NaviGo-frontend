@@ -61,7 +61,20 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
-
+  const googleLogin = async (idToken) =>{
+    try {
+      const result = await authService.googleLogin(idToken);
+      if (result.success) {
+        checkAuthStatus(); 
+      }
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Login failed. Please try again.",
+      };
+    }
+  }
   const logout = async () => {
     try {
       const result = await authService.logout();
@@ -90,6 +103,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     loading,
     login,
+    googleLogin,
     logout,
     checkAuthStatus,
     isSuperAdmin,
