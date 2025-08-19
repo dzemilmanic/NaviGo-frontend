@@ -1,0 +1,211 @@
+.route-map-wrapper {
+  --primary-color: #4f46e5;
+  --primary-hover: #3730a3;
+  --text-primary: #1e293b;
+  --text-secondary: #334155;
+  --background-light: #f9f9f9;
+  --background-white: #fff;
+  --border-color: #ddd;
+  --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.2);
+  
+  display: flex;
+  height: 90vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.routes-sidebar {
+  width: 300px;
+  padding: 1rem;
+  margin-top: 20px;
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  background-color: var(--background-light);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.routes-sidebar h2 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.routes-sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.routes-sidebar li {
+  padding: 0.8rem;
+  margin-bottom: 0.7rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background-color: var(--background-white);
+  box-shadow: var(--shadow-light);
+}
+
+.routes-sidebar li:hover {
+  background-color: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.routes-sidebar li.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.routes-sidebar li p {
+  margin: 0.2rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.routes-sidebar li.active p {
+  color: white;
+}
+
+.map-container {
+  flex: 1;
+  position: relative;
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+.custom-div-icon .marker-pin {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  line-height: 30px;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+}
+
+.loading, 
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.leaflet-popup-content-wrapper {
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-medium);
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.leaflet-popup-tip {
+  background: white;
+}
+
+.sorting-controls,
+.paging-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.sorting-controls label,
+.paging-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.sorting-controls select,
+.paging-controls select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: var(--background-white);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.sorting-controls select:focus,
+.paging-controls select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.sorting-controls select:hover,
+.paging-controls select:hover {
+  border-color: var(--primary-color);
+}
+
+.paging-controls button {
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paging-controls button:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.paging-controls button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.paging-controls button:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .route-map-wrapper {
+    flex-direction: column;
+    height: auto;
+    min-height: 90vh;
+  }
+  
+  .routes-sidebar {
+    width: 100%;
+    margin-top: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .map-container {
+    height: 50vh;
+  }
+  
+  .sorting-controls,
+  .paging-controls {
+    justify-content: center;
+  }
+}
