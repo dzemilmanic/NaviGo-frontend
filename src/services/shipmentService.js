@@ -1,11 +1,11 @@
 import { apiClient, API_ENDPOINTS } from './api';
 
-export const vehicleService = {
-  // Get all vehicles with optional search parameters
+export const shipmentService = {
+  // Get all shipments with optional search parameters
   getAll: async (searchParams = {}) => {
     try {
       const queryString = new URLSearchParams(searchParams).toString();
-      const url = queryString ? `${API_ENDPOINTS.VEHICLES}?${queryString}` : API_ENDPOINTS.VEHICLES;
+      const url = queryString ? `${API_ENDPOINTS.SHIPMENTS}?${queryString}` : API_ENDPOINTS.SHIPMENTS;
       
       const response = await apiClient.get(url);
       return {
@@ -15,16 +15,16 @@ export const vehicleService = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch vehicles',
+        message: error.message || 'Failed to fetch shipments',
         error: error
       };
     }
   },
 
-  // Get vehicle by ID
+  // Get shipment by ID
   getById: async (id) => {
     try {
-      const response = await apiClient.get(`${API_ENDPOINTS.VEHICLES}/${id}`);
+      const response = await apiClient.get(`${API_ENDPOINTS.SHIPMENTS}/${id}`);
       return {
         success: true,
         data: response
@@ -32,60 +32,60 @@ export const vehicleService = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch vehicle',
+        message: error.message || 'Failed to fetch shipment',
         error: error
       };
     }
   },
 
-  // Create vehicle
-  create: async (vehicleData) => {
+  // Create shipment
+  create: async (shipmentData) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.VEHICLES, vehicleData);
+      const response = await apiClient.post(API_ENDPOINTS.SHIPMENTS, shipmentData);
       return {
         success: true,
         data: response,
-        message: 'Vehicle created successfully'
+        message: 'Shipment created successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to create vehicle',
+        message: error.message || 'Failed to create shipment',
         error: error
       };
     }
   },
 
-  // Update vehicle
-  update: async (id, vehicleData) => {
+  // Update shipment
+  update: async (id, shipmentData) => {
     try {
-      const response = await apiClient.put(`${API_ENDPOINTS.VEHICLES}/${id}`, vehicleData);
+      const response = await apiClient.put(`${API_ENDPOINTS.SHIPMENTS}/${id}`, shipmentData);
       return {
         success: true,
         data: response,
-        message: 'Vehicle updated successfully'
+        message: 'Shipment updated successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to update vehicle',
+        message: error.message || 'Failed to update shipment',
         error: error
       };
     }
   },
 
-  // Delete vehicle
+  // Delete shipment
   delete: async (id) => {
     try {
-      await apiClient.delete(`${API_ENDPOINTS.VEHICLES}/${id}`);
+      await apiClient.delete(`${API_ENDPOINTS.SHIPMENTS}/${id}`);
       return {
         success: true,
-        message: 'Vehicle deleted successfully'
+        message: 'Shipment deleted successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to delete vehicle',
+        message: error.message || 'Failed to delete shipment',
         error: error
       };
     }

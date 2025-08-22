@@ -1,11 +1,11 @@
 import { apiClient, API_ENDPOINTS } from './api';
 
-export const vehicleService = {
-  // Get all vehicles with optional search parameters
+export const routeService = {
+  // Get all routes with optional search parameters
   getAll: async (searchParams = {}) => {
     try {
       const queryString = new URLSearchParams(searchParams).toString();
-      const url = queryString ? `${API_ENDPOINTS.VEHICLES}?${queryString}` : API_ENDPOINTS.VEHICLES;
+      const url = queryString ? `${API_ENDPOINTS.ROUTES}?${queryString}` : API_ENDPOINTS.ROUTES;
       
       const response = await apiClient.get(url);
       return {
@@ -15,16 +15,16 @@ export const vehicleService = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch vehicles',
+        message: error.message || 'Failed to fetch routes',
         error: error
       };
     }
   },
 
-  // Get vehicle by ID
+  // Get route by ID
   getById: async (id) => {
     try {
-      const response = await apiClient.get(`${API_ENDPOINTS.VEHICLES}/${id}`);
+      const response = await apiClient.get(`${API_ENDPOINTS.ROUTES}/${id}`);
       return {
         success: true,
         data: response
@@ -32,60 +32,60 @@ export const vehicleService = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch vehicle',
+        message: error.message || 'Failed to fetch route',
         error: error
       };
     }
   },
 
-  // Create vehicle
-  create: async (vehicleData) => {
+  // Create route
+  create: async (routeData) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.VEHICLES, vehicleData);
+      const response = await apiClient.post(API_ENDPOINTS.ROUTES, routeData);
       return {
         success: true,
         data: response,
-        message: 'Vehicle created successfully'
+        message: 'Route created successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to create vehicle',
+        message: error.message || 'Failed to create route',
         error: error
       };
     }
   },
 
-  // Update vehicle
-  update: async (id, vehicleData) => {
+  // Update route
+  update: async (id, routeData) => {
     try {
-      const response = await apiClient.put(`${API_ENDPOINTS.VEHICLES}/${id}`, vehicleData);
+      const response = await apiClient.put(`${API_ENDPOINTS.ROUTES}/${id}`, routeData);
       return {
         success: true,
         data: response,
-        message: 'Vehicle updated successfully'
+        message: 'Route updated successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to update vehicle',
+        message: error.message || 'Failed to update route',
         error: error
       };
     }
   },
 
-  // Delete vehicle
+  // Delete route
   delete: async (id) => {
     try {
-      await apiClient.delete(`${API_ENDPOINTS.VEHICLES}/${id}`);
+      await apiClient.delete(`${API_ENDPOINTS.ROUTES}/${id}`);
       return {
         success: true,
-        message: 'Vehicle deleted successfully'
+        message: 'Route deleted successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to delete vehicle',
+        message: error.message || 'Failed to delete route',
         error: error
       };
     }

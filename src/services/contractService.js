@@ -1,11 +1,11 @@
 import { apiClient, API_ENDPOINTS } from './api';
 
-export const vehicleService = {
-  // Get all vehicles with optional search parameters
+export const contractService = {
+  // Get all contracts with optional search parameters
   getAll: async (searchParams = {}) => {
     try {
       const queryString = new URLSearchParams(searchParams).toString();
-      const url = queryString ? `${API_ENDPOINTS.VEHICLES}?${queryString}` : API_ENDPOINTS.VEHICLES;
+      const url = queryString ? `${API_ENDPOINTS.CONTRACTS}?${queryString}` : API_ENDPOINTS.CONTRACTS;
       
       const response = await apiClient.get(url);
       return {
@@ -15,16 +15,16 @@ export const vehicleService = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch vehicles',
+        message: error.message || 'Failed to fetch contracts',
         error: error
       };
     }
   },
 
-  // Get vehicle by ID
+  // Get contract by ID
   getById: async (id) => {
     try {
-      const response = await apiClient.get(`${API_ENDPOINTS.VEHICLES}/${id}`);
+      const response = await apiClient.get(`${API_ENDPOINTS.CONTRACTS}/${id}`);
       return {
         success: true,
         data: response
@@ -32,60 +32,60 @@ export const vehicleService = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to fetch vehicle',
+        message: error.message || 'Failed to fetch contract',
         error: error
       };
     }
   },
 
-  // Create vehicle
-  create: async (vehicleData) => {
+  // Create contract
+  create: async (contractData) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.VEHICLES, vehicleData);
+      const response = await apiClient.post(API_ENDPOINTS.CONTRACTS, contractData);
       return {
         success: true,
         data: response,
-        message: 'Vehicle created successfully'
+        message: 'Contract created successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to create vehicle',
+        message: error.message || 'Failed to create contract',
         error: error
       };
     }
   },
 
-  // Update vehicle
-  update: async (id, vehicleData) => {
+  // Update contract
+  update: async (id, contractData) => {
     try {
-      const response = await apiClient.put(`${API_ENDPOINTS.VEHICLES}/${id}`, vehicleData);
+      const response = await apiClient.put(`${API_ENDPOINTS.CONTRACTS}/${id}`, contractData);
       return {
         success: true,
         data: response,
-        message: 'Vehicle updated successfully'
+        message: 'Contract updated successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to update vehicle',
+        message: error.message || 'Failed to update contract',
         error: error
       };
     }
   },
 
-  // Delete vehicle
+  // Delete contract
   delete: async (id) => {
     try {
-      await apiClient.delete(`${API_ENDPOINTS.VEHICLES}/${id}`);
+      await apiClient.delete(`${API_ENDPOINTS.CONTRACTS}/${id}`);
       return {
         success: true,
-        message: 'Vehicle deleted successfully'
+        message: 'Contract deleted successfully'
       };
     } catch (error) {
       return {
         success: false,
-        message: error.message || 'Failed to delete vehicle',
+        message: error.message || 'Failed to delete contract',
         error: error
       };
     }
