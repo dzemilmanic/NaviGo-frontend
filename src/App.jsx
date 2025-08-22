@@ -28,7 +28,11 @@ import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard/SuperAdm
 import CompanyManagement from "./pages/superadmin/CompanyManagement/CompanyManagement";
 import UserManagement from "./pages/superadmin/UserManagement/UserManagement";
 import SystemConfiguration from "./pages/superadmin/SystemConfiguration/SystemConfiguration";
-
+// Company Admin Pages
+import CompanyAdminLayout from "./components/companyadmin/CompanyAdminLayout";
+import CompanyAdminDashboard from "./pages/companyadmin/CompanyAdminDashboard";
+import VehicleManagement from "./pages/companyadmin/VehicleManagement";
+import DriverManagement from "./pages/companyadmin/DriverManagement";
 // Auth placeholder pages
 const UnauthorizedPage = () => (
   <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -86,7 +90,19 @@ const AppRoutes = () => {
           <Route path="users" element={<UserManagement />} />
           <Route path="system" element={<SystemConfiguration />} />
         </Route>
-
+        {/* Company Admin Routes */}
+        <Route
+          path="/company-admin"
+          element={
+            <ProtectedRoute requiredRole={3}>
+              <CompanyAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<CompanyAdminDashboard />} />
+          <Route path="vehicles" element={<VehicleManagement />} />
+          <Route path="drivers" element={<DriverManagement />} />
+        </Route>
         {/* Default redirect based on user role - using string roles */}
         <Route
           path="/redirect"
