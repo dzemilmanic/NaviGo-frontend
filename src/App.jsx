@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
+  useNavigate,
+  useLocation,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
@@ -22,17 +24,20 @@ import Cookies from "./pages/Cookies.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import TermsOfServices from "./pages/TermsOfServices.jsx";
 import RouteMap from "./pages/RouteMap/RouteMap.jsx";
+
 // SuperAdmin Pages
 import SuperAdminLayout from "./components/superadmin/SuperAdminLayout/SuperAdminLayout";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard/SuperAdminDashboard";
 import CompanyManagement from "./pages/superadmin/CompanyManagement/CompanyManagement";
 import UserManagement from "./pages/superadmin/UserManagement/UserManagement";
 import SystemConfiguration from "./pages/superadmin/SystemConfiguration/SystemConfiguration";
+
 // Company Admin Pages
 import CompanyAdminLayout from "./components/companyadmin/CompanyAdminLayout";
 import CompanyAdminDashboard from "./pages/companyadmin/CompanyAdminDashboard";
 import VehicleManagement from "./pages/companyadmin/VehicleManagement";
 import DriverManagement from "./pages/companyadmin/DriverManagement";
+
 // Auth placeholder pages
 const UnauthorizedPage = () => (
   <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -47,6 +52,36 @@ const UnauthorizedPage = () => (
 
 const AppRoutes = () => {
   const { isAuthenticated, user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Automatsko redirektovanje na osnovu role nakon login-a
+  useEffect(() => {
+    if (!loading && isAuthenticated && user) {
+      const currentPath = location.pathname;
+      
+      // SuperAdmin redirektovanje
+      if (user.role === "SuperAdmin") {
+        // Ako nije već na SuperAdmin stranicama
+        if (!currentPath.startsWith("/superadmin")) {
+          // Izbegni redirektovanje sa javnih stranica ako korisnik svesno navigira
+          if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
+            navigate("/superadmin", { replace: true });
+          }
+        }
+      }
+      // CompanyAdmin redirektovanje  
+      else if (user.role === "CompanyAdmin") {
+        // Ako nije već na CompanyAdmin stranicama
+        if (!currentPath.startsWith("/company-admin")) {
+          // Izbegni redirektovanje sa javnih stranica ako korisnik svesno navigira
+          if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
+            navigate("/company-admin", { replace: true });
+          }
+        }
+      }
+    }
+  }, [isAuthenticated, user, loading, navigate, location.pathname]);
 
   if (loading) {
     return (
@@ -58,11 +93,12 @@ const AppRoutes = () => {
 
   // Check if user is SuperAdmin to conditionally render navbar
   const isSuperAdmin = isAuthenticated && user?.role === "SuperAdmin";
-
+  const isCompanyAdmin = isAuthenticated && user?.role === "CompanyAdmin";
+  
   return (
     <>
-      {/* Only show Navbar if user is not SuperAdmin */}
-      {!isSuperAdmin && <Navbar />}
+      {/* Only show Navbar if user is not SuperAdmin or CompanyAdmin */}
+      {!isSuperAdmin && !isCompanyAdmin && <Navbar />}
 
       <Routes>
         {/* Public routes */}
@@ -76,7 +112,8 @@ const AppRoutes = () => {
         <Route path="/terms-of-service" element={<TermsOfServices />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/routes" element={<RouteMap />} />
-        {/* SuperAdmin routes - now using string role */}
+        
+        {/* SuperAdmin routes */}
         <Route
           path="/superadmin"
           element={
@@ -90,11 +127,12 @@ const AppRoutes = () => {
           <Route path="users" element={<UserManagement />} />
           <Route path="system" element={<SystemConfiguration />} />
         </Route>
+        
         {/* Company Admin Routes */}
         <Route
           path="/company-admin"
           element={
-            <ProtectedRoute requiredRole={3}>
+            <ProtectedRoute requiredRole="CompanyAdmin">
               <CompanyAdminLayout />
             </ProtectedRoute>
           }
@@ -103,7 +141,8 @@ const AppRoutes = () => {
           <Route path="vehicles" element={<VehicleManagement />} />
           <Route path="drivers" element={<DriverManagement />} />
         </Route>
-        {/* Default redirect based on user role - using string roles */}
+        
+        {/* Manual redirect route (fallback) */}
         <Route
           path="/redirect"
           element={
@@ -127,8 +166,8 @@ const AppRoutes = () => {
         <Route path="*" element={<Home />} />
       </Routes>
 
-      {/* Only show Footer if user is not SuperAdmin */}
-      {!isSuperAdmin && <Footer />}
+      {/* Only show Footer if user is not SuperAdmin or CompanyAdmin */}
+      {!isSuperAdmin && !isCompanyAdmin && <Footer />}
     </>
   );
 };

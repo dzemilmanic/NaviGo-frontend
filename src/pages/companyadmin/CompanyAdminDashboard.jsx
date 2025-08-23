@@ -27,7 +27,7 @@ const CompanyAdminDashboard = () => {
       // Load vehicles
       const vehiclesResult = await vehicleService.getAll();
       if (vehiclesResult.success) {
-        const vehicles = vehiclesResult.data;
+        const vehicles = vehiclesResult.data || [];
         const availableCount = vehicles.filter(v => v.vehicleStatus === 0).length;
         setStats(prev => ({
           ...prev,
@@ -39,7 +39,7 @@ const CompanyAdminDashboard = () => {
       // Load drivers
       const driversResult = await driverService.getAll();
       if (driversResult.success) {
-        const drivers = driversResult.data;
+        const drivers = driversResult.data || [];
         const availableCount = drivers.filter(d => d.driverStatus === 0).length;
         setStats(prev => ({
           ...prev,
@@ -51,7 +51,7 @@ const CompanyAdminDashboard = () => {
       // Load shipments
       const shipmentsResult = await shipmentService.getAll();
       if (shipmentsResult.success) {
-        const shipments = shipmentsResult.data;
+        const shipments = shipmentsResult.data || [];
         const activeCount = shipments.filter(s => s.shipmentStatus === 1).length;
         setStats(prev => ({
           ...prev,
@@ -62,7 +62,7 @@ const CompanyAdminDashboard = () => {
       // Load contracts
       const contractsResult = await contractService.getAll();
       if (contractsResult.success) {
-        const contracts = contractsResult.data;
+        const contracts = contractsResult.data || [];
         const activeCount = contracts.filter(c => c.contractStatus === 1).length;
         setStats(prev => ({
           ...prev,

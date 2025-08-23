@@ -29,6 +29,13 @@ export const API_ENDPOINTS = {
   VEHICLE_TYPES: `${API_BASE_URL}/vehicletype`,
   LOCATIONS: `${API_BASE_URL}/location`,
   VEHICLE_MAINTENANCE: `${API_BASE_URL}/vehiclemaintenance`,
+  ROUTE_PRICES: `${API_BASE_URL}/routeprice`,
+  FORWARDER_OFFERS: `${API_BASE_URL}/forwarderoffer`,
+  PAYMENTS: `${API_BASE_URL}/payment`,
+  SHIPMENT_DOCUMENTS: `${API_BASE_URL}/shipmentdocument`,
+  SHIPMENT_STATUS_HISTORY: `${API_BASE_URL}/shipmentstatushistory`,
+  PICKUP_CHANGES: `${API_BASE_URL}/pickupchange`,
+  DELAY_PENALTIES: `${API_BASE_URL}/delaypenalty`,
 };
 
 class ApiService {

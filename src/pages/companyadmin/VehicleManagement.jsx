@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { vehicleService } from '../../services/vehicleService';
+import { vehicleTypeService } from '../../services/vehicleTypeService';
 import './VehicleManagement.css';
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -18,11 +20,13 @@ const VehicleManagement = () => {
     manufactureYear: '',
     vehicleTypeId: '',
     engineCapacityCc: '',
-    categories: ''
+    categories: '',
+    companyId: 0
   });
 
   useEffect(() => {
     loadVehicles();
+    loadVehicleTypes();
   }, []);
 
   const loadVehicles = async () => {
@@ -30,7 +34,7 @@ const VehicleManagement = () => {
     try {
       const result = await vehicleService.getAll();
       if (result.success) {
-        setVehicles(result.data);
+        setVehicles(result.data || []);
       }
     } catch (error) {
       console.error('Error loading vehicles:', error);
@@ -39,6 +43,16 @@ const VehicleManagement = () => {
     }
   };
 
+  const loadVehicleTypes = async () => {
+    try {
+      const result = await vehicleTypeService.getAll();
+      if (result.success) {
+        setVehicleTypes(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error loading vehicle types:', error);
+    }
+  };
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
@@ -54,7 +68,8 @@ const VehicleManagement = () => {
           manufactureYear: '',
           vehicleTypeId: '',
           engineCapacityCc: '',
-          categories: ''
+          categories: '',
+          companyId: 0
         });
       }
     } catch (error) {
@@ -375,4 +390,4 @@ const VehicleManagement = () => {
   );
 };
 
-export default VehicleManagement; 
+export default VehicleManagement;

@@ -29,7 +29,7 @@ const DriverManagement = () => {
     try {
       const result = await driverService.getAll();
       if (result.success) {
-        setDrivers(result.data);
+        setDrivers(result.data || []);
       }
     } catch (error) {
       console.error('Error loading drivers:', error);

@@ -1,93 +1,27 @@
-import { apiClient, API_ENDPOINTS } from './api';
+import { apiService } from './api';
 
-export const vehicleService = {
-  // Get all vehicles with optional search parameters
-  getAll: async (searchParams = {}) => {
-    try {
-      const queryString = new URLSearchParams(searchParams).toString();
-      const url = queryString ? `${API_ENDPOINTS.VEHICLES}?${queryString}` : API_ENDPOINTS.VEHICLES;
-      
-      const response = await apiClient.get(url);
-      return {
-        success: true,
-        data: response
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to fetch vehicles',
-        error: error
-      };
-    }
-  },
-
-  // Get vehicle by ID
-  getById: async (id) => {
-    try {
-      const response = await apiClient.get(`${API_ENDPOINTS.VEHICLES}/${id}`);
-      return {
-        success: true,
-        data: response
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to fetch vehicle',
-        error: error
-      };
-    }
-  },
-
-  // Create vehicle
-  create: async (vehicleData) => {
-    try {
-      const response = await apiClient.post(API_ENDPOINTS.VEHICLES, vehicleData);
-      return {
-        success: true,
-        data: response,
-        message: 'Vehicle created successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to create vehicle',
-        error: error
-      };
-    }
-  },
-
-  // Update vehicle
-  update: async (id, vehicleData) => {
-    try {
-      const response = await apiClient.put(`${API_ENDPOINTS.VEHICLES}/${id}`, vehicleData);
-      return {
-        success: true,
-        data: response,
-        message: 'Vehicle updated successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to update vehicle',
-        error: error
-      };
-    }
-  },
-
-  // Delete vehicle
-  delete: async (id) => {
-    try {
-      await apiClient.delete(`${API_ENDPOINTS.VEHICLES}/${id}`);
-      return {
-        success: true,
-        message: 'Vehicle deleted successfully'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error.message || 'Failed to delete vehicle',
-        error: error
-      };
-    }
+class VehicleService {
+  async getAll(searchParams = {}) {
+    const queryString = new URLSearchParams(searchParams).toString();
+    const endpoint = queryString ? `/vehicle?${queryString}` : '/vehicle';
+    return apiService.get(endpoint);
   }
-};
+
+  async getById(id) {
+    return apiService.get(`/vehicle/${id}`);
+  }
+
+  async create(vehicleData) {
+    return apiService.post('/vehicle', vehicleData);
+  }
+
+  async update(id, vehicleData) {
+    return apiService.put(`/vehicle/${id}`, vehicleData);
+  }
+
+  async delete(id) {
+    return apiService.delete(`/vehicle/${id}`);
+  }
+}
+
+export const vehicleService = new VehicleService();
