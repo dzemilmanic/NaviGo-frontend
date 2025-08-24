@@ -24,7 +24,7 @@ import Cookies from "./pages/Cookies.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import TermsOfServices from "./pages/TermsOfServices.jsx";
 import RouteMap from "./pages/RouteMap/RouteMap.jsx";
-
+import News from "./pages/News/News.jsx";
 // SuperAdmin Pages
 import SuperAdminLayout from "./components/superadmin/SuperAdminLayout/SuperAdminLayout";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard/SuperAdminDashboard";
@@ -59,23 +59,31 @@ const AppRoutes = () => {
   useEffect(() => {
     if (!loading && isAuthenticated && user) {
       const currentPath = location.pathname;
-      
+
       // SuperAdmin redirektovanje
       if (user.role === "SuperAdmin") {
         // Ako nije već na SuperAdmin stranicama
         if (!currentPath.startsWith("/superadmin")) {
           // Izbegni redirektovanje sa javnih stranica ako korisnik svesno navigira
-          if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
+          if (
+            currentPath === "/" ||
+            currentPath === "/login" ||
+            currentPath === "/register"
+          ) {
             navigate("/superadmin", { replace: true });
           }
         }
       }
-      // CompanyAdmin redirektovanje  
+      // CompanyAdmin redirektovanje
       else if (user.role === "CompanyAdmin") {
         // Ako nije već na CompanyAdmin stranicama
         if (!currentPath.startsWith("/company-admin")) {
           // Izbegni redirektovanje sa javnih stranica ako korisnik svesno navigira
-          if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
+          if (
+            currentPath === "/" ||
+            currentPath === "/login" ||
+            currentPath === "/register"
+          ) {
             navigate("/company-admin", { replace: true });
           }
         }
@@ -94,7 +102,7 @@ const AppRoutes = () => {
   // Check if user is SuperAdmin to conditionally render navbar
   const isSuperAdmin = isAuthenticated && user?.role === "SuperAdmin";
   const isCompanyAdmin = isAuthenticated && user?.role === "CompanyAdmin";
-  
+
   return (
     <>
       {/* Only show Navbar if user is not SuperAdmin or CompanyAdmin */}
@@ -112,7 +120,7 @@ const AppRoutes = () => {
         <Route path="/terms-of-service" element={<TermsOfServices />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/routes" element={<RouteMap />} />
-        
+        <Route path="/news" element={<News />} />
         {/* SuperAdmin routes */}
         <Route
           path="/superadmin"
@@ -127,7 +135,7 @@ const AppRoutes = () => {
           <Route path="users" element={<UserManagement />} />
           <Route path="system" element={<SystemConfiguration />} />
         </Route>
-        
+
         {/* Company Admin Routes */}
         <Route
           path="/company-admin"
@@ -141,7 +149,7 @@ const AppRoutes = () => {
           <Route path="vehicles" element={<VehicleManagement />} />
           <Route path="drivers" element={<DriverManagement />} />
         </Route>
-        
+
         {/* Manual redirect route (fallback) */}
         <Route
           path="/redirect"
