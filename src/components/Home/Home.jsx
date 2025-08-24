@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import Services from '../Services/Services';
 import Features from '../Features/Features';
 import './Home.css';
+import Partners from '../Partners/Partners';
 
 const Home = () => {
   return (
@@ -46,6 +47,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+      <Partners/>
       <Services />
       <Features />
     </>
