@@ -37,7 +37,7 @@ import CompanyAdminLayout from "./components/companyadmin/CompanyAdminLayout";
 import CompanyAdminDashboard from "./pages/companyadmin/CompanyAdminDashboard";
 import VehicleManagement from "./pages/companyadmin/VehicleManagement";
 import DriverManagement from "./pages/companyadmin/DriverManagement";
-
+import CompanyProfile from './pages/companyadmin/CompanyProfile';
 // Auth placeholder pages
 const UnauthorizedPage = () => (
   <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -140,6 +140,7 @@ const AppRoutes = () => {
           <Route index element={<CompanyAdminDashboard />} />
           <Route path="vehicles" element={<VehicleManagement />} />
           <Route path="drivers" element={<DriverManagement />} />
+          <Route path="company" element={<CompanyProfile />} />
         </Route>
         
         {/* Manual redirect route (fallback) */}

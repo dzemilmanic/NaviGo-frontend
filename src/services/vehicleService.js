@@ -1,9 +1,19 @@
-import { apiService } from './api';
+import { apiService } from "./api";
 
 class VehicleService {
   async getAll(searchParams = {}) {
-    const queryString = new URLSearchParams(searchParams).toString();
-    const endpoint = queryString ? `/vehicle?${queryString}` : '/vehicle';
+    // Default parametri koji su obavezni za API
+    const defaultParams = {
+      Brand: "",
+      SortBy: "1",
+      SortDirection: "asc",
+      Page: "1",
+      PageSize: "100",
+      ...searchParams, // Override default values sa proslijeđenim parametrima
+    };
+
+    const queryString = new URLSearchParams(defaultParams).toString();
+    const endpoint = `/vehicle?${queryString}`;
     return apiService.get(endpoint);
   }
 
@@ -12,7 +22,7 @@ class VehicleService {
   }
 
   async create(vehicleData) {
-    return apiService.post('/vehicle', vehicleData);
+    return apiService.post("/vehicle", vehicleData);
   }
 
   async update(id, vehicleData) {

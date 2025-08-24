@@ -136,12 +136,12 @@ const getAIResponse = async (userMessage) => {
       };
       setMessages((prev) => [...prev, reply]);
     } else {
-      throw new Error("Neočekivan format odgovora od AI");
+      throw new Error("Unexpected response format from AI.");
     }
   } catch (error) {
     console.error(error);
     const errorReply = {
-      message: "Greška u vezi sa AI asistentom. Pokušaj ponovo kasnije.",
+      message: "Error related to the AI assistant. Please try again later.",
       sender: "NaviGo Asistent",
       direction: "incoming",
       timestamp: new Date().toISOString(),

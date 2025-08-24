@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { LogOut } from 'lucide-react';
 import './CompanyAdminLayout.css';
 
 const CompanyAdminLayout = () => {
@@ -14,13 +15,13 @@ const CompanyAdminLayout = () => {
 
   const navItems = [
     { to: '/company-admin', label: 'Dashboard', end: true },
+    { to: '/company-admin/company', label: 'Company Profile' },
     { to: '/company-admin/vehicles', label: 'Vehicles' },
     { to: '/company-admin/drivers', label: 'Drivers' },
     { to: '/company-admin/routes', label: 'Routes' },
-    { to: '/company-admin/contracts', label: 'Contracts' },
     { to: '/company-admin/shipments', label: 'Shipments' },
+    { to: '/company-admin/contracts', label: 'Contracts' },
     { to: '/company-admin/maintenance', label: 'Maintenance' },
-    { to: '/company-admin/users', label: 'Company Users' },
   ];
 
   return (
@@ -57,7 +58,7 @@ const CompanyAdminLayout = () => {
             <p className="user-role">Company Admin</p>
           </div>
           <button onClick={handleLogout} className="logout-btn" title="Logout">
-            Logout
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </div>
