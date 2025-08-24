@@ -4,7 +4,7 @@ import Services from '../Services/Services';
 import Features from '../Features/Features';
 import './Home.css';
 import Partners from '../Partners/Partners';
-
+import SupportChat from '../SupportChat/SupportChat';
 const Home = () => {
   return (
     <>
@@ -50,6 +50,7 @@ const Home = () => {
       <Partners/>
       <Services />
       <Features />
+      <SupportChat />
     </>
   );
 };
