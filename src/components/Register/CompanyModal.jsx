@@ -1,44 +1,59 @@
-import { useState } from 'react';
-import { Search, Plus, Building, X } from 'lucide-react';
-import { companyService } from '../../services/companyService';
-import './CompanyModal.css';
+import { useState } from "react";
+import { Search, Plus, Building, X } from "lucide-react";
+import { companyService } from "../../services/companyService";
+import "./CompanyModal.css";
+import { apiService } from "../../services/api";
 
-const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
-  const [step, setStep] = useState('search'); // 'search' or 'add'
+const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
+  const [step, setStep] = useState("search"); // 'search' or 'add'
   const [companyData, setCompanyData] = useState({
-    pib: '',
-    companyName: '',
-    address: '',
-    contactEmail: '',
-    website: '',
-    description: ''
+    pib: "",
+    companyName: "",
+    address: "",
+    contactEmail: "",
+    website: null,
+    description: "",
+    maxCommissionRate: null,
+    proofFileUrl: null,
+    logoUrl: null,
+    companyType:
+      userType === "client"
+        ? 1
+        : userType === "shipper"
+        ? 2
+        : userType === "transport"
+        ? 3
+        : 1,
   });
   const [searchResults, setSearchResults] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCompanyData(prev => ({
+    const { name, type, files, value } = e.target;
+
+    setCompanyData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: type === "file" ? files[0] : value,
     }));
-    
-    // Clear errors when user starts typing
-    if (error) setError('');
+
+    if (error) setError("");
   };
 
   const searchCompanyByPIB = async () => {
     if (!companyData.pib) return;
-    
+
     setIsSearching(true);
-    setError('');
-    
+    setError("");
+
     try {
-      const result = await companyService.searchByPib(companyData.pib);
-      
+      const result = await companyService.searchByPib(
+        companyData.pib,
+        userType === "client" ? 1 : userType === "shipper" ? 2 : 3
+      );
+
       if (result.success) {
         setSearchResults(result.data);
       } else {
@@ -46,38 +61,53 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
         setError(result.message);
       }
     } catch (error) {
-      console.error('Company search error:', error);
+      console.error("Company search error:", error);
       setSearchResults([]);
-      setError('Failed to search for companies. Please try again.');
+      setError("Failed to search for companies. Please try again.");
     } finally {
       setIsSearching(false);
+    }
+  };
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await apiService.upload("/File/upload", formData);
+      if (!response.success) {
+        throw new Error(response.error || "File upload failed");
+      }
+      return response.data.url;
+    } catch (err) {
+      console.error("Upload error:", err);
+      throw err;
     }
   };
 
   const selectCompany = (company) => {
     setSelectedCompany(company);
-    setError('');
+    setError("");
   };
 
   const proceedWithNewCompany = () => {
-    setStep('add');
+    setStep("add");
     setSearchResults([]);
-    setError('');
+    setError("");
   };
 
   const handleBackToSearch = () => {
-    setStep('search');
+    setStep("search");
     setSelectedCompany(null);
-    setError('');
+    setError("");
   };
 
   const mapCompanyTypeToEnum = (userType) => {
     switch (userType) {
-      case 'client':
+      case "client":
         return 1; // CompanyType.Client
-      case 'shipper':
+      case "shipper":
         return 2; // CompanyType.Forwarder
-      case 'transport':
+      case "transport":
         return 3; // CompanyType.Carrier
       default:
         return 1;
@@ -85,50 +115,72 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
   };
 
   const handleSaveCompany = async () => {
-    // Validate required fields
-    if (!companyData.companyName || !companyData.address || !companyData.contactEmail) {
-      setError('Please fill in all required fields (Company Name, Address, Email)');
+    // Validacija obaveznih polja
+    if (
+      !companyData.companyName ||
+      !companyData.address ||
+      !companyData.contactEmail
+    ) {
+      setError(
+        "Please fill in all required fields (Company Name, Address, Email)"
+      );
       return;
     }
 
-    // Email validation
+    // Validacija email-a
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(companyData.contactEmail)) {
-      setError('Please enter a valid email address');
+      setError("Please enter a valid email address");
       return;
     }
 
     setIsCreating(true);
-    setError('');
+    setError(""); // resetuj prethodni error
 
     try {
+      // Upload fajlova ako su File objekti, inače koristi postojeće URL-ove
+      let logoUrl =
+        companyData.logoUrl instanceof File
+          ? await uploadFile(companyData.logoUrl)
+          : companyData.logoUrl;
+      let proofFileUrl =
+        companyData.proofFileUrl instanceof File
+          ? await uploadFile(companyData.proofFileUrl)
+          : companyData.proofFileUrl;
+
+      // DTO koji backend očekuje
       const newCompanyDto = {
-        companyName: companyData.companyName,
-        pib: companyData.pib,
-        address: companyData.address,
-        contactEmail: companyData.contactEmail,
-        website: companyData.website || null,
-        description: companyData.description || null,
-        companyType: mapCompanyTypeToEnum(userType),
-        maxCommissionRate: userType === 'shipper' ? null : null, // Only for forwarders, set via backend logic
-        proofFileUrl: null // TODO: Add file upload functionality later
+        CompanyName: companyData.companyName,
+        PIB: companyData.pib,
+        Address: companyData.address,
+        ContactEmail: companyData.contactEmail,
+        Website: companyData.website || null,
+        Description: companyData.description || null,
+        CompanyType: mapCompanyTypeToEnum(userType),
+        MaxCommissionRate:
+          userType === "shipper" ? Number(companyData.maxCommissionRate) : null,
+        ProofFileUrl: proofFileUrl,
+        LogoUrl: logoUrl,
       };
 
-      console.log('Creating company:', newCompanyDto);
+      console.log("Creating company:", newCompanyDto);
 
+      // Pošalji DTO ka backendu
       const result = await companyService.create(newCompanyDto);
 
       if (result.success) {
-        // Pass the created company with real backend ID
-        onCompanySelect(result.data);
+        onCompanySelect(result.data.company);
       } else {
-        setError(result.message);
+        // Backend error sada ide direktno u modal
+        console.log(result);
+        setError(result.error || "Failed to create company.");
       }
-    } catch (error) {
-      console.error('Company creation error:', error);
-      setError('Failed to create company. Please try again.');
+    } catch (err) {
+      console.error("Company creation error:", err);
+      setError("Failed to create company. Please try again.");
     } finally {
       setIsCreating(false);
+      companyAdmin(true);
     }
   };
 
@@ -137,14 +189,13 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
       onCompanySelect(selectedCompany);
     }
   };
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>
             <Building size={24} />
-            {step === 'search' ? 'Find Your Company' : 'Add New Company'}
+            {step === "search" ? "Find Your Company" : "Add New Company"}
           </h3>
           <button className="modal-close" onClick={onClose}>
             <X size={24} />
@@ -152,19 +203,21 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
         </div>
 
         {error && (
-          <div style={{
-            background: '#fee',
-            color: '#c53030',
-            padding: '12px',
-            borderRadius: '8px',
-            margin: '0 20px 20px 20px',
-            border: '1px solid #fed7d7'
-          }}>
+          <div
+            style={{
+              background: "#fee",
+              color: "#c53030",
+              padding: "12px",
+              borderRadius: "8px",
+              margin: "0 20px 20px 20px",
+              border: "1px solid #fed7d7",
+            }}
+          >
             {error}
           </div>
         )}
 
-        {step === 'search' && (
+        {step === "search" && (
           <div className="modal-body">
             <div className="search-section">
               <div className="input-group">
@@ -188,7 +241,8 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                   </button>
                 </div>
                 <small className="input-hint">
-                  Enter your company's PIB number to search for existing companies
+                  Enter your company's PIB number to search for existing
+                  companies
                 </small>
               </div>
 
@@ -202,10 +256,12 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
               {searchResults.length > 0 && (
                 <div className="search-results">
                   <h4>Found Companies:</h4>
-                  {searchResults.map(company => (
+                  {searchResults.map((company) => (
                     <div
                       key={company.id}
-                      className={`company-result ${selectedCompany?.id === company.id ? 'selected' : ''}`}
+                      className={`company-result ${
+                        selectedCompany?.id === company.id ? "selected" : ""
+                      }`}
                       onClick={() => selectCompany(company)}
                     >
                       <div className="company-info">
@@ -224,29 +280,40 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                 </div>
               )}
 
-              {companyData.pib && searchResults.length === 0 && !isSearching && !error && (
-                <div className="no-results">
-                  <div className="no-results-icon">🔍</div>
-                  <p>No company found with PIB number: {companyData.pib}</p>
-                  <p>Would you like to add your company to our database?</p>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={proceedWithNewCompany}
-                  >
-                    <Plus size={20} />
-                    Add New Company
-                  </button>
-                </div>
-              )}
+              {companyData.pib &&
+                searchResults.length === 0 &&
+                !isSearching &&
+                !error && (
+                  <div className="no-results">
+                    <div className="no-results-icon">🔍</div>
+                    <p>No company found with PIB number: {companyData.pib}</p>
+                    <p>Would you like to add your company to our database?</p>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={proceedWithNewCompany}
+                    >
+                      <Plus size={20} />
+                      Add New Company
+                    </button>
+                  </div>
+                )}
             </div>
 
             {selectedCompany && (
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={onClose}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={onClose}
+                >
                   Cancel
                 </button>
-                <button type="button" className="btn btn-primary" onClick={handleContinueWithSelected}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleContinueWithSelected}
+                >
                   Continue with {selectedCompany.companyName}
                 </button>
               </div>
@@ -254,12 +321,14 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
           </div>
         )}
 
-        {step === 'add' && (
+        {step === "add" && (
           <div className="modal-body">
             <div className="add-company-info">
-              <p>Adding new company with PIB: <strong>{companyData.pib}</strong></p>
+              <p>
+                Adding new company with PIB: <strong>{companyData.pib}</strong>
+              </p>
             </div>
-            
+
             <form className="company-form">
               <div className="input-group">
                 <label htmlFor="companyName">Company Name *</label>
@@ -273,7 +342,16 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                   required
                 />
               </div>
-
+              <div className="input-group">
+                <label htmlFor="logo">Company Logo</label>
+                <input
+                  type="file"
+                  id="logoUrl"
+                  name="logoUrl"
+                  onChange={handleInputChange}
+                  accept="image/*"
+                />
+              </div>
               <div className="input-group">
                 <label htmlFor="address">Address *</label>
                 <input
@@ -323,32 +401,69 @@ const CompanyModal = ({ userType, onCompanySelect, onClose }) => {
                   rows="4"
                 />
               </div>
+              <div className="input-group">
+                <label htmlFor="proofFile">Proof Document *</label>
+                <input
+                  type="file"
+                  id="proofFileUrl"
+                  name="proofFileUrl"
+                  onChange={handleInputChange}
+                  placeholder="Select proof document"
+                />
+              </div>
             </form>
-
+            {userType === "shipper" && (
+              <div className="input-group">
+                <label htmlFor="maxCommissionRate">Max Commission Rate *</label>
+                <input
+                  type="number"
+                  id="maxCommissionRate"
+                  name="maxCommissionRate"
+                  value={companyData.maxCommissionRate}
+                  onChange={handleInputChange}
+                  placeholder="Enter max commission rate as a percentage"
+                  min="0"
+                  max="100"
+                  required
+                />
+              </div>
+            )}
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={handleBackToSearch}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleBackToSearch}
+              >
                 Back to Search
               </button>
-              <button 
-                type="button" 
-                className="btn btn-primary" 
+              <button
+                type="button"
+                className="btn btn-primary"
                 onClick={handleSaveCompany}
-                disabled={isCreating || !companyData.companyName || !companyData.address || !companyData.contactEmail}
+                disabled={
+                  isCreating ||
+                  !companyData.companyName ||
+                  !companyData.address ||
+                  !companyData.contactEmail
+                }
               >
                 {isCreating ? (
                   <>
-                    <div className="spinner" style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid #ffffff',
-                      borderTop: '2px solid transparent',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }}></div>
+                    <div
+                      className="spinner"
+                      style={{
+                        width: "16px",
+                        height: "16px",
+                        border: "2px solid #ffffff",
+                        borderTop: "2px solid transparent",
+                        borderRadius: "50%",
+                        animation: "spin 1s linear infinite",
+                      }}
+                    ></div>
                     Creating...
                   </>
                 ) : (
-                  'Save Company'
+                  "Save Company"
                 )}
               </button>
             </div>
