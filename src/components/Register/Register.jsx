@@ -11,10 +11,13 @@ import {
 import CompanyModal from "./CompanyModal";
 import ClientTypeModal from "./ClientTypeModal";
 import "./Register.css";
-import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../../services/authService';
-import { mapRegistrationData, validateRegistrationData } from '../../utils/userMapper';
-import Loader from '../Loader/Loader';
+import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../../services/authService";
+import {
+  mapRegistrationData,
+  validateRegistrationData,
+} from "../../utils/userMapper";
+import Loader from "../Loader/Loader";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -24,19 +27,21 @@ const Register = () => {
     email: "",
     password: "",
     phoneNumber: "",
-    userType: "", // client, shipper, transport
+    userType: null,
   });
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [pageLoading, setPageLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validations, setValidations] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isClientTypeModalOpen, setIsClientTypeModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [clientType, setClientType] = useState(null); // individual or company
-
+  const [isCompanyAdmin, setIsCompanyAdmin] = useState(false);
   // Registration state
   const [isRegistering, setIsRegistering] = useState(false);
-  const [registrationError, setRegistrationError] = useState('');
+  const [registrationError, setRegistrationError] = useState("");
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   // Real-time validations
@@ -105,6 +110,20 @@ const Register = () => {
         };
       }
     }
+    // Potvrda lozinke validacija
+    if (confirmPassword) {
+      if (confirmPassword === formData.password) {
+        newValidations.confirmPassword = {
+          valid: true,
+          message: "Passwords match",
+        };
+      } else {
+        newValidations.confirmPassword = {
+          valid: false,
+          message: "Passwords must match",
+        };
+      }
+    }
 
     // Telefon validacija
     if (formData.phoneNumber) {
@@ -123,7 +142,7 @@ const Register = () => {
     }
 
     setValidations(newValidations);
-  }, [formData]);
+  }, [formData, confirmPassword]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -131,10 +150,10 @@ const Register = () => {
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear any registration errors when user starts typing
     if (registrationError) {
-      setRegistrationError('');
+      setRegistrationError("");
     }
   };
 
@@ -170,7 +189,7 @@ const Register = () => {
   };
 
   const handleCompanySelect = (company) => {
-    console.log('Selected company:', company);
+    console.log("Selected company:", company);
     setSelectedCompany(company);
     setIsModalOpen(false);
   };
@@ -178,75 +197,154 @@ const Register = () => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
+  const handleSetCompanyAdmin = (val)=>{
+    setIsCompanyAdmin(val);
+  }
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   // Clear previous errors
+  //   setRegistrationError("");
+  //   setRegistrationSuccess(false);
+
+  //   // Validate all data
+  //   const validation = validateRegistrationData(
+  //     formData,
+  //     validations,
+  //     clientType,
+  //     selectedCompany
+  //   );
+
+  //   if (!validation.isValid) {
+  //     setRegistrationError(validation.errors.join(". "));
+  //     return;
+  //   }
+
+  //   setIsRegistering(true);
+
+  //   try {
+  //     // Map form data to backend format
+  //     const userCreateDto = mapRegistrationData(
+  //       formData,
+  //       clientType,
+  //       selectedCompany
+  //     );
+
+  //     console.log("Sending registration data:", userCreateDto);
+
+  //     // Call backend registration API
+  //     const result = await authService.register(userCreateDto);
+
+  //     if (result.success) {
+  //       setRegistrationSuccess(true);
+  //       setRegistrationError("");
+
+  //       // Show success message briefly then redirect
+  //       setTimeout(() => {
+  //         navigate("/login", {
+  //           state: {
+  //             message:
+  //               "Registration successful! Please check your email for verification before logging in.",
+  //             email: formData.email,
+  //           },
+  //         });
+  //       }, 2000);
+  //     } else {
+  //       setRegistrationError(result.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Registration error:", error);
+  //     setRegistrationError(
+  //       "Registration failed. Please check your connection and try again."
+  //     );
+  //   } finally {
+  //     setIsRegistering(false);
+  //   }
+  // };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Clear previous errors
-    setRegistrationError('');
-    setRegistrationSuccess(false);
+  e.preventDefault();
 
-    // Validate all data
-    const validation = validateRegistrationData(formData, validations, clientType, selectedCompany);
-    
-    if (!validation.isValid) {
-      setRegistrationError(validation.errors.join('. '));
-      return;
+  // Clear previous errors
+  setRegistrationError("");
+  setRegistrationSuccess(false);
+
+  // Validate all data
+  const validation = validateRegistrationData(
+    formData,
+    validations,
+    clientType,
+    selectedCompany
+  );
+
+  if (!validation.isValid) {
+    setRegistrationError(validation.errors.join(". "));
+    return;
+  }
+
+  setIsRegistering(true);
+
+  try {
+    // Map form data to backend format, including isCompanyAdmin logic
+    const userCreateDto = mapRegistrationData(
+      formData,
+      clientType,
+      selectedCompany,
+      isCompanyAdmin
+    );
+
+    console.log("Sending registration data:", { ...userCreateDto, password: "[HIDDEN]" });
+
+    // Call backend registration API
+    const result = await authService.register(userCreateDto);
+
+    if (result.success) {
+      setRegistrationSuccess(true);
+      setRegistrationError("");
+
+      // Show success message briefly then redirect
+      setTimeout(() => {
+        navigate("/login", {
+          state: {
+            message:
+              "Registration successful! Please check your email for verification before logging in.",
+            email: formData.email,
+          },
+        });
+      }, 2000);
+    } else {
+      setRegistrationError(result.message);
     }
-
-    setIsRegistering(true);
-
-    try {
-      // Map form data to backend format
-      const userCreateDto = mapRegistrationData(formData, clientType, selectedCompany);
-      
-      console.log('Sending registration data:', userCreateDto);
-
-      // Call backend registration API
-      const result = await authService.register(userCreateDto);
-
-      if (result.success) {
-        setRegistrationSuccess(true);
-        setRegistrationError('');
-        
-        // Show success message briefly then redirect
-        setTimeout(() => {
-          navigate('/login', { 
-            state: { 
-              message: 'Registration successful! Please check your email for verification before logging in.',
-              email: formData.email 
-            } 
-          });
-        }, 2000);
-        
-      } else {
-        setRegistrationError(result.message);
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      setRegistrationError('Registration failed. Please check your connection and try again.');
-    } finally {
-      setIsRegistering(false);
-    }
-  };
+  } catch (error) {
+    console.error("Registration error:", error);
+    setRegistrationError(
+      "Registration failed. Please check your connection and try again."
+    );
+  } finally {
+    setIsRegistering(false);
+  }
+};
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
 
-    // Handle page loading
+  // Handle page loading
   useEffect(() => {
     const timer = setTimeout(() => {
       setPageLoading(false);
-    }, 1000); 
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
 
-    if (pageLoading) {
+  if (pageLoading) {
     return <Loader message="Loading..." />;
   }
-  
+
   return (
     <>
       <div className="register-container">
@@ -261,7 +359,7 @@ const Register = () => {
                 <div className="logo-icon">
                   <Truck size={32} />
                 </div>
-                <h1>LogiTrans</h1>
+                <h1>NaviGo</h1>
                 <p>Digital Logistics & Transport Platform</p>
               </div>
             </div>
@@ -274,28 +372,35 @@ const Register = () => {
 
               {/* Registration Status Messages */}
               {registrationError && (
-                <div className="error-message" style={{
-                  background: '#fee', 
-                  color: '#c53030', 
-                  padding: '12px', 
-                  borderRadius: '8px', 
-                  marginBottom: '20px',
-                  border: '1px solid #fed7d7'
-                }}>
+                <div
+                  className="error-message"
+                  style={{
+                    background: "#fee",
+                    color: "#c53030",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    marginBottom: "20px",
+                    border: "1px solid #fed7d7",
+                  }}
+                >
                   {registrationError}
                 </div>
               )}
 
               {registrationSuccess && (
-                <div className="success-message" style={{
-                  background: '#f0fff4', 
-                  color: '#2f855a', 
-                  padding: '12px', 
-                  borderRadius: '8px', 
-                  marginBottom: '20px',
-                  border: '1px solid #9ae6b4'
-                }}>
-                  Registration successful! Please check your email for verification. Redirecting to login...
+                <div
+                  className="success-message"
+                  style={{
+                    background: "#f0fff4",
+                    color: "#2f855a",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    marginBottom: "20px",
+                    border: "1px solid #9ae6b4",
+                  }}
+                >
+                  Registration successful! Please check your email for
+                  verification. Redirecting to login...
                 </div>
               )}
 
@@ -431,6 +536,48 @@ const Register = () => {
               </div>
 
               <div className="input-group">
+                <label htmlFor="confirm-password">Confirm Password</label>
+                <div className="password-input-container">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={isRegistering}
+                    className={
+                      validations.confirmPassword
+                        ? validations.confirmPassword.valid
+                          ? "valid"
+                          : "error"
+                        : ""
+                    }
+                    placeholder="Repeat your password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={toggleConfirmPasswordVisibility}
+                    disabled={isRegistering}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {validations.confirmPassword && (
+                  <span
+                    className={`validation-message ${
+                      validations.confirmPassword.valid ? "success" : "error"
+                    }`}
+                  >
+                    {validations.confirmPassword.message}
+                  </span>
+                )}
+              </div>
+
+              <div className="input-group">
                 <label htmlFor="phoneNumber">Phone Number</label>
                 <input
                   type="tel"
@@ -516,26 +663,31 @@ const Register = () => {
                     <h4>Selected Company:</h4>
                     <p>{selectedCompany.companyName || selectedCompany.name}</p>
                     <small>{selectedCompany.address}</small>
-                    <small>PIB: {selectedCompany.pib || selectedCompany.PIB}</small>
+                    <small>
+                      PIB: {selectedCompany.pib || selectedCompany.PIB}
+                    </small>
                   </div>
                 )}
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary register-btn"
                 disabled={isRegistering}
               >
                 {isRegistering ? (
                   <>
-                    <div className="spinner" style={{
-                      width: '20px',
-                      height: '20px',
-                      border: '2px solid #ffffff',
-                      borderTop: '2px solid transparent',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }}></div>
+                    <div
+                      className="spinner"
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        border: "2px solid #ffffff",
+                        borderTop: "2px solid transparent",
+                        borderRadius: "50%",
+                        animation: "spin 1s linear infinite",
+                      }}
+                    ></div>
                     Creating Account...
                   </>
                 ) : (
@@ -601,6 +753,7 @@ const Register = () => {
           userType={formData.userType}
           onCompanySelect={handleCompanySelect}
           onClose={closeModal}
+          companyAdmin={handleSetCompanyAdmin}
         />
       )}
 
@@ -614,8 +767,12 @@ const Register = () => {
       {/* CSS for spinner animation */}
       <style jsx>{`
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
       `}</style>
     </>

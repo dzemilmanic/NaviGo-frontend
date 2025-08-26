@@ -28,6 +28,9 @@ class CompanyService {
   async delete(id) {
     return apiService.delete(`/company/${id}`);
   }
+  async searchByPib(pib,type){
+    return apiService.get(`/company/?Pib=${pib}&CompanyType=${type}`);
+  }
 }
 
 export const companyService = new CompanyService();

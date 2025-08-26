@@ -6,7 +6,7 @@ export const API_ENDPOINTS = {
   LOGOUT: `${API_BASE_URL}/auth/logout`,
   REFRESH: `${API_BASE_URL}/auth/refresh`,
   GOOGLE_LOGIN: `${API_BASE_URL}/auth/google-login`,
-  
+  REGISTER: `${API_BASE_URL}/User`,
   // User endpoints
   USERS: `${API_BASE_URL}/user`,
   SUPERADMIN: `${API_BASE_URL}/user/superadmin`,
@@ -52,33 +52,44 @@ class ApiService {
     };
   }
 
-  async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
-    const config = {
-      headers: this.getAuthHeaders(),
-      ...options
-    };
+async request(endpoint, options = {}) {
+  const url = `${this.baseURL}${endpoint}`;
+  const { body, headers: customHeaders, ...rest } = options;
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
+  // Nabavi standardne header-e sa tokenom
+  let headers = { ...this.getAuthHeaders(), ...customHeaders };
 
-      // Handle empty responses (204 No Content)
-      if (response.status === 204) {
-        return { success: true, data: null };
-      }
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
-      return { success: false, error: error.message };
-    }
+  // Ne dodaj Content-Type ako šalješ FormData ili već string
+  if (body instanceof FormData) {
+    delete headers["Content-Type"];
+  } else if (typeof body === "string") {
+    headers["Content-Type"] = "application/json";
   }
+
+  const config = {
+    headers,
+    ...rest,
+    body: body instanceof FormData || typeof body === "string" ? body : JSON.stringify(body),
+  };
+
+  try {
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    if (response.status === 204) return { success: true, data: null };
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error(`API request failed: ${endpoint}`, error);
+    return { success: false, error: error.message };
+  }
+}
+
 
   async get(endpoint) {
     return this.request(endpoint, { method: 'GET' });
@@ -107,6 +118,12 @@ class ApiService {
 
   async delete(endpoint) {
     return this.request(endpoint, { method: 'DELETE' });
+  }
+  async upload(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: data
+    });
   }
 }
 
