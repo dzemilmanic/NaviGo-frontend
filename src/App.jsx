@@ -38,6 +38,7 @@ import CompanyAdminDashboard from "./pages/companyadmin/CompanyAdminDashboard";
 import VehicleManagement from "./pages/companyadmin/VehicleManagement";
 import DriverManagement from "./pages/companyadmin/DriverManagement";
 import CompanyProfile from './pages/companyadmin/CompanyProfile';
+import AboutUs from "./pages/AboutUs/AboutUs.jsx";
 // Auth placeholder pages
 const UnauthorizedPage = () => (
   <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -121,6 +122,7 @@ const AppRoutes = () => {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/routes" element={<RouteMap />} />
         <Route path="/news" element={<News />} />
+        <Route path="/about" element={<AboutUs/>} />
         {/* SuperAdmin routes */}
         <Route
           path="/superadmin"
