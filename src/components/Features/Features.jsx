@@ -39,7 +39,7 @@ const Features = () => {
   return (
     <section className="features section">
       <div className="container">
-        <div className="features-header">
+        <div className="features-header" id='features'>
           <h2 className="features-title">Advanced Features</h2>
           <p className="features-subtitle">
             NaviGo platform uses the latest technologies to provide the best solutions 

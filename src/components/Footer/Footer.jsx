@@ -36,21 +36,16 @@ const Footer = () => {
             <h4>Platform</h4>
             <ul className="footer-links">
               <li><a href="#services">Services</a></li>
-              <li><a href="#tracking">Tracking</a></li>
-              <li><a href="#pricing">Pricing</a></li>
-              <li><a href="#api">API</a></li>
-              <li><a href="#mobile">Mobile App</a></li>
+              <li><a href="#features">Advanced Features</a></li>
             </ul>
           </div>
 
           <div className="footer-column">
             <h4>Company</h4>
             <ul className="footer-links">
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#careers">Careers</a></li>
+              <li><a href="/about">About Us</a></li>
               <li><a href="/news">News</a></li>
               <li><a href="#partners">Partners</a></li>
-              <li><a href="#support">Support</a></li>
             </ul>
           </div>
 
