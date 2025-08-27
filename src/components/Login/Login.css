@@ -221,6 +221,7 @@
   font-weight: 600;
   font-size: 15px;
   transition: color 0.2s ease;
+  cursor: pointer;
 }
 
 .forgot-password:hover {
