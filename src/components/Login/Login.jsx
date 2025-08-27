@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import "./Login.css";
 import Loader from "../Loader/Loader";
 import { GoogleLogin } from "@react-oauth/google";
+import ForgotPassword from "../ForgotPassword/ForgotPassword";
 const Login = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
@@ -114,7 +115,6 @@ const Login = () => {
   if (pageLoading) {
     return <Loader message="Loading..." />;
   }
-
   return (
     <div className="login-container">
       <div className="login-background">
@@ -133,7 +133,7 @@ const Login = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="login-form">
+          {!isForgotPassword && <form onSubmit={handleSubmit} className="login-form">
             <h2>Sign In to Your Account</h2>
             <p className="form-subtitle">
               Enter your credentials to access the platform
@@ -197,7 +197,7 @@ const Login = () => {
                 <span className="checkmark"></span>
                 Remember me
               </label>
-              <a href="#" className="forgot-password">
+              <a className="forgot-password" onClick={()=>setIsForgotPassword(true)}>
                 Forgot Password?
               </a>
               <GoogleLogin
@@ -220,8 +220,8 @@ const Login = () => {
                 </>
               )}
             </button>
-          </form>
-
+          </form>}
+          {isForgotPassword && <ForgotPassword onClose={() => setIsForgotPassword(false)}/>}
           <div className="login-footer">
             <p>
               Don't have an account? <Link to="/register">Register</Link>
