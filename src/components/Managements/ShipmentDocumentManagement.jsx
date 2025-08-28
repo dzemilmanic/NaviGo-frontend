@@ -10,6 +10,7 @@ const ShipmentDocumentManagement = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [fileUrl, setFileUrl] = useState(null);
   const fetchData = async () => {
     try {
       const docsResponse = await shipmentDocumentService.getAll({ search });
@@ -46,14 +47,35 @@ const ShipmentDocumentManagement = () => {
       }
     }
   };
-
+  const handleFileChange = (e) => {
+    setFileUrl(e.target.files[0]);
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
+
+    // Početni URL: kod edit-a koristi stari URL, kod add je prazan
+    let fileUploadedUrl = selectedDocument?.fileUrl || "";
+
+    // Ako je korisnik izabrao novi fajl, uploaduj ga
+    if (fileUrl) {
+      try {
+        const uploadResponse = await shipmentDocumentService.uploadFile(
+          fileUrl
+        );
+        fileUploadedUrl = uploadResponse.data.url; // URL sa Azure-a
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        return;
+      }
+    }
+
+    // Kod dodavanja novog dokumenta fajl je obavezan
+
     const formData = {
       shipmentId: Number(form.shipmentId.value),
       documentType: Number(form.documentType.value),
-      fileUrl: form.fileUrl.value,
+      fileUrl: fileUploadedUrl, // URL koji se šalje u backend
     };
 
     try {
@@ -64,6 +86,7 @@ const ShipmentDocumentManagement = () => {
       }
       fetchData();
       closeModal();
+      setFileUrl(null); // reset fajla
     } catch (error) {
       console.error("Error saving document:", error);
     }
@@ -97,7 +120,11 @@ const ShipmentDocumentManagement = () => {
               <td>{doc.id}</td>
               <td>{doc.shipmentId}</td>
               <td>{doc.documentType}</td>
-              <td>{doc.fileUrl}</td>
+              <td>
+                <a href={doc.fileUrl} target="_blank">
+                  View
+                </a>{" "}
+              </td>
               <td>
                 <button onClick={() => openModal(doc)}>Edit</button>
                 <button onClick={() => handleDelete(doc.id)}>Delete</button>
@@ -139,16 +166,25 @@ const ShipmentDocumentManagement = () => {
                 <option value={99}>Other</option>
               </select>
 
-              <input
-                type="text"
-                name="fileUrl"
-                placeholder="File URL"
-                defaultValue={selectedDocument?.fileUrl || ""}
-                required
-              />
+              <div className="file-input-wrapper">
+                <label htmlFor="receiptFile">
+                  {fileUrl
+                    ? `Selected: ${fileUrl.name}`
+                    : "Select Receipt File"}
+                </label>
+                <input
+                  type="file"
+                  id="receiptFile"
+                  name="receiptFile"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                />
+              </div>
 
               <div className="modal-actions">
-                <button type="submit">{selectedDocument ? "Save" : "Add"}</button>
+                <button type="submit">
+                  {selectedDocument ? "Save" : "Add"}
+                </button>
                 <button type="button" onClick={closeModal}>
                   Cancel
                 </button>

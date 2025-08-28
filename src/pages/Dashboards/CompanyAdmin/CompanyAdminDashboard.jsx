@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import "../Dashboards.css";
 
 import VehicleManagement from "../../../components/Managements/VehicleManagement";
-import VehicleTypeManagement from "../../../components/Managements/VehicleTypeManagement";
 import DriverManagement from "../../../components/Managements/DriverManagement";
 import RouteManagement from "../../../components/Managements/RouteManagement";
 import RoutePriceManagement from "../../../components/Managements/RoutePriceManagement";
@@ -11,7 +10,7 @@ import ContractManagement from "../../../components/Managements/ContractManageme
 import ShipmentManagement from "../../../components/Managements/ShipmentManagement";
 import PaymentManagement from "../../../components/Managements/PaymentManagement";
 import PickupChangeManagement from "../../../components/Managements/PickupChangeManagement";
-
+import ShipmentDocumentManagement from "../../../components/Managements/ShipmentDocumentManagement";
 import { LogOut } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -42,12 +41,14 @@ const CompanyAdminDashboard = ({ companyType }) => {
         "Contracts",
         "Shipments",
         "Payments",
+        "Shipment Documents"
       ],
       components: {
         "Forwarder Offers": <ForwarderOfferManagement />,
         Contracts: <ContractManagement />,
         Shipments: <ShipmentManagement />,
         Payments: <PaymentManagement />,
+        "Shipment Documents": <ShipmentDocumentManagement />,
       },
     },
     Client: {
