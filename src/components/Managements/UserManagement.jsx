@@ -92,7 +92,7 @@ const UserManagement = () => {
       <table className="management-table">
         <thead>
           <tr>
-            <th>ID</th>
+            
             <th>Email</th>
             <th>Name</th>
             <th>Phone</th>
@@ -104,14 +104,14 @@ const UserManagement = () => {
         <tbody>
           {filteredUsers.map((u) => (
             <tr key={u.id}>
-              <td>{u.id}</td>
+              
               <td>{u.email}</td>
               <td>{`${u.firstName} ${u.lastName}`}</td>
               <td>{u.phoneNumber}</td>
               <td>{u.userRole}</td>
               <td>{u.companyId ? companies.find(c => c.id === u.companyId)?.companyName : "-"}</td>
               <td>
-                <button onClick={() => openModal(u)}>Edit</button>
+                
                 <button onClick={() => handleDelete(u.id)}>Delete</button>
               </td>
             </tr>
