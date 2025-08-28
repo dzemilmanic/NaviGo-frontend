@@ -79,7 +79,7 @@ const VehicleTypeManagement = () => {
       <table className="management-table">
         <thead>
           <tr>
-            <th>ID</th>
+            
             <th>Type Name</th>
             <th>Description</th>
             <th>Special License</th>
@@ -89,7 +89,7 @@ const VehicleTypeManagement = () => {
         <tbody>
           {vehicleTypes.map((t) => (
             <tr key={t.id}>
-              <td>{t.id}</td>
+              
               <td>{t.typeName}</td>
               <td>{t.description}</td>
               <td>{t.requiresSpecialLicense ? "Yes" : "No"}</td>

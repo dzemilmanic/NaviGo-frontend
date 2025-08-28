@@ -154,7 +154,7 @@ const handleSubmit = async (e) => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button onClick={() => openModal()}>Add Company</button>
+        
       </div>
 
       <table className="management-table">
@@ -179,7 +179,7 @@ const handleSubmit = async (e) => {
               <td>{company.companyType}</td>
               <td>{company.companyStatus}</td>
               <td>
-                <button onClick={() => openModal(company)}>Edit</button>
+                
                 <button onClick={() => handleDelete(company.id)}>Delete</button>
               </td>
             </tr>
