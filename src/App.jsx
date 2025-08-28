@@ -30,6 +30,7 @@ import CompanyAdminDashboard from "./pages/Dashboards/CompanyAdmin/CompanyAdminD
 import RegularUserLayout from "./components/Layouts/RegularUser/RegularUserLayout.jsx";
 import RegularUserDashboard from "./pages/Dashboards/RegularUser/RegularUserDashboard.jsx";
 import AboutUs from "./pages/AboutUs/AboutUs.jsx";
+import Error from './pages/Error/Error.jsx'
 const UnauthorizedPage = () => (
   <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
     <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "10px", boxShadow: "0 0 10px rgba(0,0,0,0.1)" }}>
@@ -156,7 +157,7 @@ useEffect(() => {
         />
 
         {/* Catch-all */}
-        <Route path="*" element={<Home />} />
+        <Route path="*" element={<Error />} />
       </Routes>
 
       {/* Only show Footer if user is not SuperAdmin or CompanyAdmin */}
