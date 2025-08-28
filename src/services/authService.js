@@ -83,6 +83,7 @@ class AuthService {
       const user = {
         email: decoded.email || decoded.sub,
         role: decoded.role,
+        companyType: decoded.companyType || "",
         firstName: decoded.firstName || "",
         lastName: decoded.lastName || "",
         jti: decoded.jti,
@@ -118,7 +119,7 @@ class AuthService {
         if (data.refreshToken) {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
-
+        console.log(this.getCurrentUser());
         return {
           success: true,
           user: this.getCurrentUser(),
@@ -160,7 +161,7 @@ class AuthService {
         if (data.refreshToken) {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
-
+        console.log(this.getCurrentUser());
         return {
           success: true,
           user: this.getCurrentUser(),

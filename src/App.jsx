@@ -140,7 +140,7 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<CompanyAdminDashboard />} />
+          <Route index element={<CompanyAdminDashboard companyType={user?.companyType} />} />
         </Route>
 
         {/* Manual redirect route (fallback) */}
