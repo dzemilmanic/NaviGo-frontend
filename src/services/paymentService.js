@@ -22,6 +22,11 @@ class PaymentService {
   async delete(id) {
     return apiService.delete(`/payment/${id}`);
   }
+  async uploadFile(file) {
+    const formData = new FormData();
+    formData.append("file", file); // "file" je ime parametra koje server očekuje
+    return apiService.upload("/File/upload", formData);
+  }
 }
 
 export const paymentService = new PaymentService();

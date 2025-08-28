@@ -3,6 +3,7 @@ import { paymentService } from "../../services/paymentService";
 import { contractService } from "../../services/contractService";
 import { userService } from "../../services/userService"; // za klijente
 import "./Managements.css";
+import { useAuth } from "../../contexts/AuthContext";
 
 const PaymentManagement = () => {
   const [payments, setPayments] = useState([]);
@@ -11,7 +12,8 @@ const PaymentManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contracts, setContracts] = useState([]);
   const [clients, setClients] = useState([]);
-
+  const { user } = useAuth();
+  const [fileUrl, setFileUrl] = useState(null);
   const fetchPayments = async () => {
     try {
       const response = await paymentService.getAll({ search });
@@ -32,7 +34,7 @@ const PaymentManagement = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await userService.getAll({ userRole: 1 }); // regular users / clients
+      const response = await userService.getAll();
       setClients(response.data);
     } catch (error) {
       console.error("Error fetching clients:", error);
@@ -66,30 +68,44 @@ const PaymentManagement = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = {
-      contractId: Number(form.contractId.value),
-      amount: Number(form.amount.value),
-      paymentStatus: Number(form.paymentStatus.value),
-      receiptUrl: form.receiptUrl.value,
-      clientId: Number(form.clientId.value),
-    };
-
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  let receiptUrl = selectedPayment?.receiptUrl || "";
+  if (fileUrl) {
     try {
-      if (selectedPayment) {
-        await paymentService.update(selectedPayment.id, formData);
-      } else {
-        await paymentService.create(formData);
-      }
-      fetchPayments();
-      closeModal();
+      const uploadResponse = await paymentService.uploadFile(fileUrl);
+      receiptUrl = uploadResponse.data.url; // URL sa Azure-a(
+      console.log(receiptUrl);
     } catch (error) {
-      console.error("Error saving payment:", error);
+      console.error("Error uploading file:", error);
+      return;
     }
+  }
+  const formData = {
+    contractId: Number(e.target.contractId.value),
+    receiptUrl, // ovo se uvek šalje
   };
 
+  try {
+    if (selectedPayment) {
+      await paymentService.update(selectedPayment.id, formData);
+    } else {
+      await paymentService.create(formData);
+    }
+    fetchPayments();
+    closeModal();
+    setFileUrl(null); // reset fajla
+  } catch (error) {
+    console.error("Error saving payment:", error);
+  }
+};
+
+
+
+
+  const handleFileChange = (e) => {
+    setFileUrl(e.target.files[0]);
+  };
   return (
     <div className="management-container">
       <div className="management-header">
@@ -124,7 +140,11 @@ const PaymentManagement = () => {
               <td>{p.paymentStatus}</td>
               <td>
                 {p.receiptUrl ? (
-                  <a href={p.receiptUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={p.receiptUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View
                   </a>
                 ) : (
@@ -145,7 +165,11 @@ const PaymentManagement = () => {
           <div className="modal-content">
             <h3>{selectedPayment ? "Edit Payment" : "Add Payment"}</h3>
             <form onSubmit={handleSubmit}>
-              <select name="contractId" defaultValue={selectedPayment?.contractId || ""} required>
+              <select
+                name="contractId"
+                defaultValue={selectedPayment?.contractId || ""}
+                required
+              >
                 <option value="">Select Contract</option>
                 {contracts.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -154,42 +178,25 @@ const PaymentManagement = () => {
                 ))}
               </select>
 
-              <select name="clientId" defaultValue={selectedPayment?.clientId || ""} required>
-                <option value="">Select Client</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.firstName} {c.lastName}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="number"
-                name="amount"
-                placeholder="Amount"
-                defaultValue={selectedPayment?.amount || 0}
-                required
-              />
-
-              <select
-                name="paymentStatus"
-                defaultValue={selectedPayment?.paymentStatus || 0}
-                required
-              >
-                <option value={0}>Pending</option>
-                <option value={1}>Verified</option>
-                <option value={2}>Rejected</option>
-              </select>
-
-              <input
-                type="text"
-                name="receiptUrl"
-                placeholder="Receipt URL"
-                defaultValue={selectedPayment?.receiptUrl || ""}
-              />
+              <div className="file-input-wrapper">
+                <label htmlFor="receiptFile">
+                  {fileUrl
+                    ? `Selected: ${fileUrl.name}`
+                    : "Select Receipt File"}
+                </label>
+                <input
+                  type="file"
+                  id="receiptFile"
+                  name="receiptFile"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                />
+              </div>
 
               <div className="modal-actions">
-                <button type="submit">{selectedPayment ? "Save" : "Add"}</button>
+                <button type="submit">
+                  {selectedPayment ? "Save" : "Add"}
+                </button>
                 <button type="button" onClick={closeModal}>
                   Cancel
                 </button>
