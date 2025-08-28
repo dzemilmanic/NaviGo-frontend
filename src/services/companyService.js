@@ -31,6 +31,12 @@ class CompanyService {
   async searchByPib(pib,type){
     return apiService.get(`/company/?Pib=${pib}&CompanyType=${type}`);
   }
+async uploadFile(file) {
+  const formData = new FormData();
+  formData.append("file", file); // "file" je ime parametra koje server očekuje
+  return apiService.upload("/File/upload", formData);
+}
+
 }
 
 export const companyService = new CompanyService();

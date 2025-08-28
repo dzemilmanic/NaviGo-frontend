@@ -200,68 +200,7 @@ const Register = () => {
   const handleSetCompanyAdmin = (val)=>{
     setIsCompanyAdmin(val);
   }
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   // Clear previous errors
-  //   setRegistrationError("");
-  //   setRegistrationSuccess(false);
-
-  //   // Validate all data
-  //   const validation = validateRegistrationData(
-  //     formData,
-  //     validations,
-  //     clientType,
-  //     selectedCompany
-  //   );
-
-  //   if (!validation.isValid) {
-  //     setRegistrationError(validation.errors.join(". "));
-  //     return;
-  //   }
-
-  //   setIsRegistering(true);
-
-  //   try {
-  //     // Map form data to backend format
-  //     const userCreateDto = mapRegistrationData(
-  //       formData,
-  //       clientType,
-  //       selectedCompany
-  //     );
-
-  //     console.log("Sending registration data:", userCreateDto);
-
-  //     // Call backend registration API
-  //     const result = await authService.register(userCreateDto);
-
-  //     if (result.success) {
-  //       setRegistrationSuccess(true);
-  //       setRegistrationError("");
-
-  //       // Show success message briefly then redirect
-  //       setTimeout(() => {
-  //         navigate("/login", {
-  //           state: {
-  //             message:
-  //               "Registration successful! Please check your email for verification before logging in.",
-  //             email: formData.email,
-  //           },
-  //         });
-  //       }, 2000);
-  //     } else {
-  //       setRegistrationError(result.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Registration error:", error);
-  //     setRegistrationError(
-  //       "Registration failed. Please check your connection and try again."
-  //     );
-  //   } finally {
-  //     setIsRegistering(false);
-  //   }
-  // };
-
+ 
   const handleSubmit = async (e) => {
   e.preventDefault();
 

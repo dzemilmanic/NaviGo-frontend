@@ -68,21 +68,6 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
       setIsSearching(false);
     }
   };
-  const uploadFile = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await apiService.upload("/File/upload", formData);
-      if (!response.success) {
-        throw new Error(response.error || "File upload failed");
-      }
-      return response.data.url;
-    } catch (err) {
-      console.error("Upload error:", err);
-      throw err;
-    }
-  };
 
   const selectCompany = (company) => {
     setSelectedCompany(company);
@@ -139,14 +124,15 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
 
     try {
       // Upload fajlova ako su File objekti, inače koristi postojeće URL-ove
-      let logoUrl =
-        companyData.logoUrl instanceof File
-          ? await uploadFile(companyData.logoUrl)
-          : companyData.logoUrl;
       let proofFileUrl =
         companyData.proofFileUrl instanceof File
-          ? await uploadFile(companyData.proofFileUrl)
+          ? (await companyService.uploadFile(companyData.proofFileUrl)).url
           : companyData.proofFileUrl;
+
+      let logoUrl =
+        companyData.logoUrl instanceof File
+          ? (await companyService.uploadFile(companyData.logoUrl)).url
+          : companyData.logoUrl;
 
       // DTO koji backend očekuje
       const newCompanyDto = {

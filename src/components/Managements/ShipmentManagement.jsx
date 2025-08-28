@@ -216,13 +216,14 @@ const ShipmentManagement = () => {
                 placeholder="Description"
                 defaultValue={selectedShipment?.description || ""}
               />
-
+<label htmlFor="scheduledDeparture">Choose date and time:</label>
               <input
                 type="datetime-local"
                 name="scheduledDeparture"
                 defaultValue={selectedShipment?.scheduledDeparture || ""}
                 required
               />
+              <label htmlFor="scheduledArrival">Choose date and time:</label>
               <input
                 type="datetime-local"
                 name="scheduledArrival"
