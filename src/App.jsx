@@ -47,35 +47,27 @@ const AppRoutes = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    if (!loading && isAuthenticated && user) {
-      const currentPath = location.pathname;
+useEffect(() => {
+  if (!loading && isAuthenticated && user) {
+    const currentPath = location.pathname;
 
-      if (user.role === "SuperAdmin") {
-        if (!currentPath.startsWith("/superadmin")) {
-          if (
-            currentPath === "/" ||
-            currentPath === "/login" ||
-            currentPath === "/register"
-          ) {
-            navigate("/superadmin", { replace: true });
-          }
-        }
-      }
-      // CompanyAdmin redirektovanje
-      else if (user.role === "CompanyAdmin") {
-        if (!currentPath.startsWith("/companyadmin")) {
-          if (
-            currentPath === "/" ||
-            currentPath === "/login" ||
-            currentPath === "/register"
-          ) {
-            navigate("/companyadmin", { replace: true });
-          }
+    if (user.role === "SuperAdmin") {
+      if (!currentPath.startsWith("/superadmin")) {
+        if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
+          navigate("/superadmin", { replace: true });
         }
       }
     }
-  }, [isAuthenticated, user, loading, navigate, location.pathname]);
+    else if (user.role === "CompanyAdmin") {
+      if (!currentPath.startsWith("/companyadmin")) {
+        if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
+          navigate("/companyadmin", { replace: true });
+        }
+      }
+    }
+  }
+}, [isAuthenticated, user, loading, navigate, location.pathname]);
+
 
     if (loading) {
     return (

@@ -78,8 +78,14 @@ const Login = () => {
         const result = await login(formData);
 
         if (result.success) {
-          // Redirect to dashboard or home page
-          navigate("/dashboard", { replace: true });
+          const rolePaths = {
+            SuperAdmin: "/superadmin",
+            CompanyAdmin: "/companyadmin",
+            RegularUser: "/regularuser",
+          };
+
+          const userRole = result.user.role;
+          navigate(rolePaths[userRole] || "/", { replace: true });
         } else {
           setApiError(result.message || "Login failed. Please try again.");
         }
@@ -104,9 +110,14 @@ const Login = () => {
       if (!result.success) {
         throw new Error(result.message || "Google login failed");
       }
+      const rolePaths = {
+        SuperAdmin: "/superadmin",
+        CompanyAdmin: "/companyadmin",
+        RegularUser: "/regularuser",
+      };
 
-      console.log("Login result:", result);
-      navigate("/dashboard", { replace: true });
+      const userRole = result.user.role;
+      navigate(rolePaths[userRole] || "/", { replace: true });
     } catch (err) {
       console.error(err.message);
     }
@@ -133,95 +144,104 @@ const Login = () => {
             </div>
           </div>
 
-          {!isForgotPassword && <form onSubmit={handleSubmit} className="login-form">
-            <h2>Sign In to Your Account</h2>
-            <p className="form-subtitle">
-              Enter your credentials to access the platform
-            </p>
+          {!isForgotPassword && (
+            <form onSubmit={handleSubmit} className="login-form">
+              <h2>Sign In to Your Account</h2>
+              <p className="form-subtitle">
+                Enter your credentials to access the platform
+              </p>
 
-            {apiError && (
-              <div className="error-banner">
-                <AlertCircle size={20} />
-                <span>{apiError}</span>
-              </div>
-            )}
-
-            <div className="input-group">
-              <label htmlFor="email">Email Address</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className={errors.email ? "error" : ""}
-                placeholder="Enter your email address"
-                disabled={loading}
-              />
-              {errors.email && (
-                <span className="error-message">{errors.email}</span>
+              {apiError && (
+                <div className="error-banner">
+                  <AlertCircle size={20} />
+                  <span>{apiError}</span>
+                </div>
               )}
-            </div>
 
-            <div className="input-group">
-              <label htmlFor="password">Password</label>
-              <div className="password-input-container">
+              <div className="input-group">
+                <label htmlFor="email">Email Address</label>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  value={formData.password}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
-                  className={errors.password ? "error" : ""}
-                  placeholder="Enter your password"
+                  className={errors.email ? "error" : ""}
+                  placeholder="Enter your email address"
                   disabled={loading}
                 />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={togglePasswordVisibility}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  disabled={loading}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+                {errors.email && (
+                  <span className="error-message">{errors.email}</span>
+                )}
               </div>
-              {errors.password && (
-                <span className="error-message">{errors.password}</span>
-              )}
-            </div>
 
-            <div className="form-options">
-              <label className="checkbox-container">
-                <input type="checkbox" disabled={loading} />
-                <span className="checkmark"></span>
-                Remember me
-              </label>
-              <a className="forgot-password" onClick={()=>setIsForgotPassword(true)}>
-                Forgot Password?
-              </a>
-              <GoogleLogin
-                onSuccess={handleGoogleLogin}
-                onError={() => console.log("Google login failed")}
-              />
-            </div>
+              <div className="input-group">
+                <label htmlFor="password">Password</label>
+                <div className="password-input-container">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={errors.password ? "error" : ""}
+                    placeholder="Enter your password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={togglePasswordVisibility}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                    disabled={loading}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <span className="error-message">{errors.password}</span>
+                )}
+              </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary login-btn"
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="loading-spinner"></div>
-              ) : (
-                <>
-                  <Shield size={20} />
-                  Sign In
-                </>
-              )}
-            </button>
-          </form>}
-          {isForgotPassword && <ForgotPassword onClose={() => setIsForgotPassword(false)}/>}
+              <div className="form-options">
+                <label className="checkbox-container">
+                  <input type="checkbox" disabled={loading} />
+                  <span className="checkmark"></span>
+                  Remember me
+                </label>
+                <a
+                  className="forgot-password"
+                  onClick={() => setIsForgotPassword(true)}
+                >
+                  Forgot Password?
+                </a>
+                <GoogleLogin
+                  onSuccess={handleGoogleLogin}
+                  onError={() => console.log("Google login failed")}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary login-btn"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="loading-spinner"></div>
+                ) : (
+                  <>
+                    <Shield size={20} />
+                    Sign In
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+          {isForgotPassword && (
+            <ForgotPassword onClose={() => setIsForgotPassword(false)} />
+          )}
           <div className="login-footer">
             <p>
               Don't have an account? <Link to="/register">Register</Link>
