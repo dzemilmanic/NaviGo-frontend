@@ -214,6 +214,7 @@
   min-height: 20px;  
   line-height: 20px;  
   overflow: hidden;  
+  max-height: max-content;
 }
 
 .input-group .validation-message.error {
