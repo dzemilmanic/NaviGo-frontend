@@ -4,25 +4,30 @@ class ShipmentDocumentService {
   async getAll(searchParams = {}) {
     const queryString = new URLSearchParams(searchParams).toString();
     const endpoint = queryString
-      ? `/shipment-document?${queryString}`
-      : "/shipment-document";
+      ? `/shipmentdocument?${queryString}`
+      : "/shipmentdocument";
     return apiService.get(endpoint);
   }
 
   async getById(id) {
-    return apiService.get(`/shipment-document/${id}`);
+    return apiService.get(`/shipmentdocument/${id}`);
   }
 
   async create(data) {
-    return apiService.post("/shipment-document", data);
+    return apiService.post("/shipmentdocument", data);
   }
 
   async update(id, data) {
-    return apiService.put(`/shipment-document/${id}`, data);
+    return apiService.put(`/shipmentdocument/${id}`, data);
   }
 
   async delete(id) {
-    return apiService.delete(`/shipment-document/${id}`);
+    return apiService.delete(`/shipmentdocument/${id}`);
+  }
+  async uploadFile(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiService.upload("/File/upload", formData);
   }
 }
 
