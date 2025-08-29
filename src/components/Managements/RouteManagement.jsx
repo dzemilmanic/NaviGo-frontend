@@ -12,8 +12,12 @@ const RouteManagement = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [locations, setLocations] = useState([]);
-  const {user} = useAuth();
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(false); // ✅ dodato
+  const { user } = useAuth();
+
   const fetchRoutes = async () => {
+    setLoading(true);
     try {
       const [routeResponse, locationResponse, companyResponse] = await Promise.all([
         routeService.getAll(),
@@ -31,7 +35,7 @@ const RouteManagement = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchRoutes(); // ✅ poziv prave funkcije
   }, []);
 
   const openModal = (route = null) => {
@@ -46,10 +50,10 @@ const RouteManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this route?")) {
+      setLoading(true);
       try {
-        setLoading(true);
         await routeService.delete(id);
-        await fetchData();
+        await fetchRoutes(); // ✅ poziv prave funkcije
       } catch (error) {
         console.error("Error deleting route:", error);
       } finally {
@@ -71,13 +75,14 @@ const RouteManagement = () => {
       availableTo: form.availableTo.value,
     };
 
+    try {
       if (selectedRoute) {
         await routeService.update(selectedRoute.id, formData);
       } else {
         await routeService.create(formData);
       }
-      
-      await fetchData();
+
+      await fetchRoutes();
       closeModal();
     } catch (error) {
       console.error("Error saving route:", error);
@@ -86,7 +91,6 @@ const RouteManagement = () => {
     }
   };
 
-  // Filter routes on frontend
   const filteredRoutes = routes.filter((r) =>
     r.startLocationName?.toLowerCase().includes(search.toLowerCase()) ||
     r.endLocationName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -199,6 +203,7 @@ const RouteManagement = () => {
                   </option>
                 ))}
               </select>
+
               <label htmlFor="endLocationId">End Location:</label>
               <select name="endLocationId" defaultValue={selectedRoute?.endLocationId || ""} required>
                 <option value="">Select End Location</option>
@@ -217,19 +222,19 @@ const RouteManagement = () => {
                   defaultChecked={selectedRoute?.isActive || false}
                 />
               </label>
-                <label htmlFor="availableFrom">Available From:</label>
+
+              <label htmlFor="availableFrom">Available From:</label>
               <input
                 type="datetime-local"
                 name="availableFrom"
-                placeholder="Available From"
                 defaultValue={selectedRoute?.availableFrom?.slice(0, 16) || ""}
                 required
               />
+
               <label htmlFor="availableTo">Available To:</label>
               <input
                 type="datetime-local"
                 name="availableTo"
-                placeholder="Available To"
                 defaultValue={selectedRoute?.availableTo?.slice(0, 16) || ""}
                 required
               />
