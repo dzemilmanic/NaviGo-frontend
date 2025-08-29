@@ -12,9 +12,11 @@ const DriverManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
-  const {user} = useAuth();
+  const { user } = useAuth();
+
   // Fetch drivers
   const fetchDrivers = async () => {
+    setLoading(true);
     try {
       const [driverResponse, companyResponse] = await Promise.all([
         driverService.getAll(),
@@ -30,7 +32,7 @@ const DriverManagement = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchDrivers();
   }, []);
 
   const openModal = (driver = null) => {
@@ -45,10 +47,10 @@ const DriverManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this driver?")) {
+      setLoading(true);
       try {
-        setLoading(true);
         await driverService.delete(id);
-        await fetchData();
+        await fetchDrivers();
       } catch (error) {
         console.error("Error deleting driver:", error);
       } finally {
@@ -72,13 +74,14 @@ const DriverManagement = () => {
       hireDate: form.hireDate.value,
     };
 
+    try {
       if (selectedDriver) {
         await driverService.update(selectedDriver.id, formData);
       } else {
         await driverService.create(formData);
       }
       
-      await fetchData();
+      await fetchDrivers();
       closeModal();
     } catch (error) {
       console.error("Error saving driver:", error);
@@ -115,7 +118,9 @@ const DriverManagement = () => {
         />
         <button onClick={() => openModal()}>Add Driver</button>
       </div>
-{loading && <Loader/>}
+
+      {loading && <Loader />}
+
       <table className="management-table">
         <thead>
           <tr>
@@ -133,7 +138,7 @@ const DriverManagement = () => {
           {filteredDrivers.map((d) => (
             <tr key={d.id}>
               <td>{d.id}</td>
-              <td>{d.companyName}</td>
+              <td>{d.companyName || getCompanyName(d.companyId)}</td>
               <td>{d.firstName}</td>
               <td>{d.lastName}</td>
               <td>{d.phoneNumber}</td>
@@ -202,7 +207,6 @@ const DriverManagement = () => {
               <input
                 type="date"
                 name="hireDate"
-                placeholder="Hire Date"
                 defaultValue={selectedDriver?.hireDate?.split("T")[0] || ""}
               />
 
