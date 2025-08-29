@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { routeService } from "../../services/routeService";
 import { locationService } from "../../services/locationService"; // za start i end lokacije
 import "./Managements.css";
+import { useAuth } from "../../contexts/AuthContext";
 
 const RouteManagement = () => {
   const [routes, setRoutes] = useState([]);
@@ -9,7 +10,7 @@ const RouteManagement = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [locations, setLocations] = useState([]);
-
+  const {user} = useAuth();
   const fetchRoutes = async () => {
     try {
       const response = await routeService.getAll({ search });
@@ -58,7 +59,7 @@ const RouteManagement = () => {
     e.preventDefault();
     const form = e.target;
     const formData = {
-      companyId: Number(form.companyId.value),
+      companyId: +user.companyId,
       startLocationId: Number(form.startLocationId.value),
       endLocationId: Number(form.endLocationId.value),
       isActive: form.isActive.checked,
@@ -128,13 +129,7 @@ const RouteManagement = () => {
           <div className="modal-content">
             <h3>{selectedRoute ? "Edit Route" : "Add Route"}</h3>
             <form onSubmit={handleSubmit}>
-              <input
-                type="number"
-                name="companyId"
-                defaultValue={selectedRoute?.companyId || ""}
-                placeholder="Company ID"
-                required
-              />
+              <label htmlFor="startLocationId">Start Location:</label>
               <select name="startLocationId" defaultValue={selectedRoute?.startLocationId || ""} required>
                 <option value="">Select Start Location</option>
                 {locations.map((l) => (
@@ -143,7 +138,7 @@ const RouteManagement = () => {
                   </option>
                 ))}
               </select>
-
+              <label htmlFor="endLocationId">End Location:</label>
               <select name="endLocationId" defaultValue={selectedRoute?.endLocationId || ""} required>
                 <option value="">Select End Location</option>
                 {locations.map((l) => (
@@ -161,13 +156,14 @@ const RouteManagement = () => {
                   defaultChecked={selectedRoute?.isActive || false}
                 />
               </label>
-
+                <label htmlFor="availableFrom">Available From:</label>
               <input
                 type="datetime-local"
                 name="availableFrom"
                 defaultValue={selectedRoute?.availableFrom || ""}
                 required
               />
+              <label htmlFor="availableTo">Available To:</label>
               <input
                 type="datetime-local"
                 name="availableTo"

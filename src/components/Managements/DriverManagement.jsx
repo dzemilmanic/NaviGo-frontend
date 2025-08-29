@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { driverService } from "../../services/driverService";
 import { companyService } from "../../services/companyService"; // za dropdown kompanija
 import "./Managements.css";
+import { useAuth } from "../../contexts/AuthContext";
 
 const DriverManagement = () => {
   const [drivers, setDrivers] = useState([]);
@@ -9,7 +10,7 @@ const DriverManagement = () => {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
-
+  const {user} = useAuth();
   // Fetch drivers
   const fetchDrivers = async () => {
     try {
@@ -60,7 +61,7 @@ const DriverManagement = () => {
     e.preventDefault();
     const form = e.target;
     const formData = {
-      companyId: Number(form.companyId.value),
+      companyId: user.companyId,
       firstName: form.firstName.value,
       lastName: form.lastName.value,
       phoneNumber: form.phoneNumber.value,
@@ -117,7 +118,7 @@ const DriverManagement = () => {
           {filteredDrivers.map((d) => (
             <tr key={d.id}>
               <td>{d.id}</td>
-              <td>{companies.find(c => c.id === d.companyId)?.companyName || d.companyId}</td>
+              <td>{d.companyName}</td>
               <td>{d.firstName}</td>
               <td>{d.lastName}</td>
               <td>{d.phoneNumber}</td>
@@ -137,14 +138,7 @@ const DriverManagement = () => {
           <div className="modal-content">
             <h3>{selectedDriver ? "Edit Driver" : "Add Driver"}</h3>
             <form onSubmit={handleSubmit}>
-              <select name="companyId" defaultValue={selectedDriver?.companyId || ""} required>
-                <option value="">Select Company</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.companyName}
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="firstName">First Name</label>
               <input
                 type="text"
                 name="firstName"
@@ -152,6 +146,7 @@ const DriverManagement = () => {
                 defaultValue={selectedDriver?.firstName || ""}
                 required
               />
+              <label htmlFor="lastName">Last Name</label>
               <input
                 type="text"
                 name="lastName"
@@ -159,29 +154,34 @@ const DriverManagement = () => {
                 defaultValue={selectedDriver?.lastName || ""}
                 required
               />
+              <label htmlFor="phoneNumber">Phone Number</label>
               <input
                 type="text"
                 name="phoneNumber"
                 placeholder="Phone Number"
                 defaultValue={selectedDriver?.phoneNumber || ""}
               />
+              <label htmlFor="licenseNumber">License Number</label>
               <input
                 type="text"
                 name="licenseNumber"
                 placeholder="License Number"
                 defaultValue={selectedDriver?.licenseNumber || ""}
               />
-              <input
-                type="date"
-                name="licenseExpiry"
-                defaultValue={selectedDriver?.licenseExpiry?.split("T")[0] || ""}
-              />
+              <label htmlFor="licenseCategories">License Categories</label>
               <input
                 type="text"
                 name="licenseCategories"
                 placeholder="License Categories"
                 defaultValue={selectedDriver?.licenseCategories || ""}
               />
+              <label htmlFor="licenseExpiry">License Expiry</label>
+              <input
+                type="date"
+                name="licenseExpiry"
+                defaultValue={selectedDriver?.licenseExpiry?.split("T")[0] || ""}
+              />
+              <label htmlFor="hireDate">Hire Date</label>
               <input
                 type="date"
                 name="hireDate"

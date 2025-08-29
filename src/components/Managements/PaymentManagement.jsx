@@ -165,6 +165,7 @@ const handleSubmit = async (e) => {
           <div className="modal-content">
             <h3>{selectedPayment ? "Edit Payment" : "Add Payment"}</h3>
             <form onSubmit={handleSubmit}>
+              <label htmlFor="contractId">Contract:</label>
               <select
                 name="contractId"
                 defaultValue={selectedPayment?.contractId || ""}

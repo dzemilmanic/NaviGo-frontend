@@ -114,6 +114,7 @@ const CargoTypeManagement = () => {
           <div className="modal-content">
             <h3>{selectedCargoType ? "Edit Cargo Type" : "Add Cargo Type"}</h3>
             <form onSubmit={handleSubmit}>
+              <label htmlFor="typeName">Type Name</label>
               <input
                 type="text"
                 placeholder="Type Name"
@@ -121,6 +122,7 @@ const CargoTypeManagement = () => {
                 onChange={(e) => setFormData({ ...formData, typeName: e.target.value })}
                 required
               />
+              <label htmlFor="description">Description</label>
               <textarea
                 placeholder="Description"
                 value={formData.description}

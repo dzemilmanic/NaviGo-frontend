@@ -142,6 +142,7 @@ const ShipmentManagement = () => {
           <div className="modal-content">
             <h3>{selectedShipment ? "Edit Shipment" : "Add Shipment"}</h3>
             <form onSubmit={handleSubmit}>
+              <label htmlFor="contractId">Contract ID:</label>
               <select
                 name="contractId"
                 defaultValue={selectedShipment?.contractId || ""}
@@ -154,7 +155,7 @@ const ShipmentManagement = () => {
                   </option>
                 ))}
               </select>
-
+              <label htmlFor="vehicleId">Vehicle</label>
               <select
                 name="vehicleId"
                 defaultValue={selectedShipment?.vehicleId || ""}
@@ -167,7 +168,7 @@ const ShipmentManagement = () => {
                   </option>
                 ))}
               </select>
-
+              <label htmlFor="driverId">Driver</label>
               <select
                 name="driverId"
                 defaultValue={selectedShipment?.driverId || ""}
@@ -180,7 +181,7 @@ const ShipmentManagement = () => {
                   </option>
                 ))}
               </select>
-
+              <label htmlFor="cargoTypeId">Cargo Type</label>
               <select
                 name="cargoTypeId"
                 defaultValue={selectedShipment?.cargoTypeId || ""}
@@ -193,7 +194,7 @@ const ShipmentManagement = () => {
                   </option>
                 ))}
               </select>
-
+              <label htmlFor="weightKg">Weight (kg)</label>
               <input
                 type="number"
                 name="weightKg"
@@ -201,7 +202,7 @@ const ShipmentManagement = () => {
                 defaultValue={selectedShipment?.weightKg || ""}
                 required
               />
-
+              <label htmlFor="priority">Priority</label>
               <input
                 type="number"
                 name="priority"
@@ -209,14 +210,14 @@ const ShipmentManagement = () => {
                 defaultValue={selectedShipment?.priority || 0}
                 required
               />
-
+              <label htmlFor="description">Description</label>
               <input
                 type="text"
                 name="description"
                 placeholder="Description"
                 defaultValue={selectedShipment?.description || ""}
               />
-<label htmlFor="scheduledDeparture">Choose date and time:</label>
+              <label htmlFor="scheduledDeparture">Choose date and time:</label>
               <input
                 type="datetime-local"
                 name="scheduledDeparture"
@@ -232,7 +233,9 @@ const ShipmentManagement = () => {
               />
 
               <div className="modal-actions">
-                <button type="submit">{selectedShipment ? "Save" : "Add"}</button>
+                <button type="submit">
+                  {selectedShipment ? "Save" : "Add"}
+                </button>
                 <button type="button" onClick={closeModal}>
                   Cancel
                 </button>

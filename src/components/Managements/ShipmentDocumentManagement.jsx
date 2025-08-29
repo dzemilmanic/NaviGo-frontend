@@ -139,6 +139,7 @@ const ShipmentDocumentManagement = () => {
           <div className="modal-content">
             <h3>{selectedDocument ? "Edit Document" : "Add Document"}</h3>
             <form onSubmit={handleSubmit}>
+              <label htmlFor="shipmentId">Shipment</label>
               <select
                 name="shipmentId"
                 defaultValue={selectedDocument?.shipmentId || ""}
@@ -151,7 +152,7 @@ const ShipmentDocumentManagement = () => {
                   </option>
                 ))}
               </select>
-
+                <label htmlFor="documentType">Document Type</label>
               <select
                 name="documentType"
                 defaultValue={selectedDocument?.documentType || ""}

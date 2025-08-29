@@ -192,6 +192,7 @@ const handleSubmit = async (e) => {
           <div className="modal-content">
             <h3>{companyData.id ? "Edit Company" : "Add Company"}</h3>
             <form onSubmit={handleSubmit} className="company-form">
+              <label htmlFor="companyName">Company Name</label>
               <input
                 type="text"
                 name="companyName"
@@ -200,6 +201,7 @@ const handleSubmit = async (e) => {
                 onChange={handleInputChange}
                 required
               />
+              <label htmlFor="pib">PIB</label>
               <input
                 type="text"
                 name="pib"
@@ -208,6 +210,7 @@ const handleSubmit = async (e) => {
                 onChange={handleInputChange}
                 required
               />
+              <label htmlFor="address">Address</label>
               <input
                 type="text"
                 name="address"
@@ -215,6 +218,7 @@ const handleSubmit = async (e) => {
                 value={companyData.address}
                 onChange={handleInputChange}
               />
+              <label htmlFor="contactEmail">Contact Email</label>
               <input
                 type="email"
                 name="contactEmail"
@@ -222,6 +226,7 @@ const handleSubmit = async (e) => {
                 value={companyData.contactEmail}
                 onChange={handleInputChange}
               />
+              <label htmlFor="website">Website</label>
               <input
                 type="url"
                 name="website"
@@ -229,13 +234,15 @@ const handleSubmit = async (e) => {
                 value={companyData.website}
                 onChange={handleInputChange}
               />
+              <label htmlFor="description">Description</label>
               <textarea
                 name="description"
                 placeholder="Description"
                 value={companyData.description}
                 onChange={handleInputChange}
               />
-              {userType === "shipper" && (
+              {userType === "shipper" && <>
+                <label htmlFor="maxCommissionRate">Max Commission Rate</label>
                 <input
                   type="number"
                   name="maxCommissionRate"
@@ -246,7 +253,7 @@ const handleSubmit = async (e) => {
                   max="100"
                   required
                 />
-              )}
+              </>}
 
               <div className="file-input-wrapper">
                 <label htmlFor="proofFileUrl">
@@ -273,7 +280,7 @@ const handleSubmit = async (e) => {
                   onChange={handleLogoChange}
                 />
               </div>
-
+              <label htmlFor="companyType">Company Type</label>
               <select
                 name="companyType"
                 value={companyData.companyType}
