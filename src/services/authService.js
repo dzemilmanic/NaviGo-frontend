@@ -88,6 +88,7 @@ class AuthService {
         lastName: decoded.lastName || "",
         jti: decoded.jti,
         exp: decoded.exp,
+        companyId:decoded.companyId || "",
         id: decoded.id,
       };
 

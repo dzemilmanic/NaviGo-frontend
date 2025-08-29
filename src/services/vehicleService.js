@@ -32,6 +32,11 @@ class VehicleService {
   async delete(id) {
     return apiService.delete(`/vehicle/${id}`);
   }
+  async uploadFile(file) {
+  const formData = new FormData();
+  formData.append("file", file); 
+  return apiService.upload("/File/upload", formData);
+}
 }
 
 export const vehicleService = new VehicleService();

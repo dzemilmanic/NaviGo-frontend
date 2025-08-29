@@ -4,6 +4,7 @@ import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
 import Loader from "../Loader/Loader";
+import {useAuth } from "../../contexts/AuthContext";
 // import "./Managements.css";
 import "./VehicleManagement.css";
 const VehicleManagement = () => {
@@ -16,6 +17,8 @@ const VehicleManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
+  const [pictureUrl, setPictureUrl] = useState(null);
+  const {user}  = useAuth();
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -38,7 +41,6 @@ const VehicleManagement = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
   const openModal = (vehicle = null) => {
     setSelectedVehicle(vehicle);
     setIsModalOpen(true);
@@ -60,37 +62,56 @@ const VehicleManagement = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
     const form = e.target;
+    let vehiclePicture = pictureUrl;
+
+    // Upload vehicle picture ako postoji URL
+    if (vehiclePicture) {
+      const pictureResponse = await vehicleService.uploadFile(vehiclePicture);
+      vehiclePicture = pictureResponse.data.url;
+    }
+
+    // Funkcija za formatiranje datuma u yyyy-MM-dd
+    const formatDate = (dateString) => {
+      if (!dateString) return null;
+      const d = new Date(dateString);
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${d.getFullYear()}-${month}-${day}`;
+    };
+
     const formData = {
       brand: form.brand.value,
       model: form.model.value,
       engineCapacityCc: Number(form.engineCapacityCc.value),
-      vehiclePicture: form.vehiclePicture.value,
-      companyId: Number(form.companyId.value),
+      vehiclePicture,
+      companyId: +user.companyId,
       vehicleTypeId: Number(form.vehicleTypeId.value),
       registrationNumber: form.registrationNumber.value,
       capacityKg: Number(form.capacityKg.value),
       manufactureYear: Number(form.manufactureYear.value),
-      lastInspectionDate: form.lastInspectionDate.value,
-      insuranceExpiry: form.insuranceExpiry.value,
+      lastInspectionDate: formatDate(form.lastInspectionDate.value),
+      insuranceExpiry: formatDate(form.insuranceExpiry.value),
       currentLocationId: Number(form.currentLocationId.value),
       categories: form.categories.value,
     };
 
-    try {
-      if (selectedVehicle) {
-        await vehicleService.update(selectedVehicle.id, formData);
-      } else {
-        await vehicleService.create(formData);
-      }
-      fetchData();
-      closeModal();
-    } catch (error) {
-      console.error("Error saving vehicle:", error);
+    if (selectedVehicle) {
+      await vehicleService.update(selectedVehicle.id, formData);
+    } else {
+      await vehicleService.create(formData);
     }
-  };
+
+    fetchData();
+    closeModal();
+  } catch (error) {
+    console.error("Error saving vehicle:", error);
+  }
+};
+
   const handleSearch = (e) => {
     setSearch(e.target.value);
     const filtered = vehicles.filter((vehicle) => {
@@ -103,6 +124,9 @@ const VehicleManagement = () => {
       );
     });
     setFilteredVehicles(filtered);
+  };
+  const handleFileChange = (e) => {
+    setPictureUrl(e.target.files[0]);
   };
   return (
     <div className="vehicle-management">
@@ -324,23 +348,6 @@ const VehicleManagement = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="companyId">Company</label>
-                  <select
-                    name="companyId"
-                    id="companyId"
-                    defaultValue={selectedVehicle?.companyId || ""}
-                    required
-                  >
-                    <option value="">Select Company</option>
-                    {companies.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.companyName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
                   <label htmlFor="vehicleTypeId">Vehicle Type</label>
                   <select
                     name="vehicleTypeId"
@@ -398,15 +405,17 @@ const VehicleManagement = () => {
                     }
                   />
                 </div>
-
-                <div className="form-group full-width">
-                  <label htmlFor="vehiclePicture">Vehicle Picture URL</label>
+                <div className="file-input-wrapper">
+                  <label htmlFor="vehiclePicture">
+                    {pictureUrl
+                      ? `Selected: ${pictureUrl.name}`
+                      : "Select Picture"}
+                  </label>
                   <input
-                    type="text"
+                    type="file"
                     id="vehiclePicture"
                     name="vehiclePicture"
-                    placeholder="Enter vehicle picture URL"
-                    defaultValue={selectedVehicle?.vehiclePicture || ""}
+                    onChange={handleFileChange}
                   />
                 </div>
 
