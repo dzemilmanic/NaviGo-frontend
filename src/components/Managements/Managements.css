@@ -513,3 +513,75 @@
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
+.vehcile-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+}
+/* === VehicleManagement specific === */
+.vehicle-management .vehicle-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.vehicle-management .vehicle-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease;
+}
+
+.vehicle-management .vehicle-card:hover {
+  transform: translateY(-4px);
+}
+
+.vehicle-management .vehicle-card-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.vehicle-management .vehicle-card-body {
+  padding: 12px;
+  flex-grow: 1;
+}
+
+.vehicle-management .vehicle-card-body h4 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.vehicle-management .vehicle-card-body p {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.vehicle-management .vehicle-card-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-top: 1px solid #eee;
+}
+
+.vehicle-management .vehicle-card-actions button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.vehicle-management .vehicle-card-actions button:first-child {
+  background: #3498db;
+  color: white;
+}
+
+.vehicle-management .vehicle-card-actions button:last-child {
+  background: #e74c3c;
+  color: white;
+}

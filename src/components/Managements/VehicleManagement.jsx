@@ -3,8 +3,9 @@ import { vehicleService } from "../../services/vehicleService";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
-import "./Managements.css";
-
+import Loader from "../Loader/Loader";
+// import "./Managements.css";
+import "./VehicleManagement.css";
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
@@ -13,8 +14,9 @@ const VehicleManagement = () => {
   const [search, setSearch] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [loading,setLoading] = useState(false);
   const fetchData = async () => {
+    setLoading(true);
     try {
       const vehicleResponse = await vehicleService.getAll({ search });
       const typeResponse = await vehicleTypeService.getAll();
@@ -26,12 +28,14 @@ const VehicleManagement = () => {
       setLocations(locationResponse.data);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const openModal = (vehicle = null) => {
     setSelectedVehicle(vehicle);
@@ -87,83 +91,281 @@ const VehicleManagement = () => {
   };
 
   return (
-    <div className="management-container">
-      <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search vehicles..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={() => openModal()}>Add Vehicle</button>
+    <div className="vehicle-management">
+      <div className="page-header">
+        <h1>Vehicle Management</h1>
+        <div className="header-controls">
+          <div className="search-container">
+            <input
+              type="text"
+              placeholder="Search vehicles by brand, model, or registration..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <button className="add-button" onClick={() => openModal()}>
+            + Add Vehicle
+          </button>
+        </div>
       </div>
 
-      <table className="management-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Brand</th>
-            <th>Model</th>
-            <th>Registration</th>
-            <th>Type</th>
-            <th>Company</th>
-            <th>Location</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {vehicles.map((v) => (
-            <tr key={v.id}>
-              <td>{v.id}</td>
-              <td>{v.brand}</td>
-              <td>{v.model}</td>
-              <td>{v.registrationNumber}</td>
-              <td>{v.vehicleTypeName}</td>
-              <td>{v.companyName}</td>
-              <td>{v.currentLocationName}</td>
-              <td>
-                <button onClick={() => openModal(v)}>Edit</button>
-                <button onClick={() => handleDelete(v.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="vehicles-grid">
+        {vehicles.map((vehicle) => (
+          <div key={vehicle.id} className="vehicle-card">
+            <div className="vehicle-image-container">
+              <img
+                src={vehicle.vehiclePicture || 'https://t4.ftcdn.net/jpg/16/24/39/73/360_F_1624397305_9anhxAqBjO0u24bLzRnOe9l97SWjaPXU.jpg'}
+                alt={`${vehicle.brand} ${vehicle.model}`}
+                className="vehicle-image"
+                onError={(e) => {
+                  e.target.src = 'https://t4.ftcdn.net/jpg/16/24/39/73/360_F_1624397305_9anhxAqBjO0u24bLzRnOe9l97SWjaPXU.jpg';
+                }}
+              />
+              <div className="vehicle-type-badge">
+                {vehicle.vehicleTypeName}
+              </div>
+            </div>
+            
+            <div className="vehicle-info">
+              <div className="vehicle-header">
+                <h3 className="vehicle-title">{vehicle.brand} {vehicle.model}</h3>
+                <span className="vehicle-year">{vehicle.manufactureYear}</span>
+              </div>
+              
+              <div className="vehicle-details">
+                <div className="detail-row">
+                  <span className="detail-label">Registration:</span>
+                  <span className="detail-value">{vehicle.registrationNumber}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Company:</span>
+                  <span className="detail-value">{vehicle.companyName}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Location:</span>
+                  <span className="detail-value">{vehicle.currentLocationName}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Engine:</span>
+                  <span className="detail-value">{vehicle.engineCapacityCc} cc</span>
+                </div>
+                {vehicle.capacityKg && (
+                  <div className="detail-row">
+                    <span className="detail-label">Capacity:</span>
+                    <span className="detail-value">{vehicle.capacityKg} kg</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="vehicle-dates">
+                {vehicle.lastInspectionDate && (
+                  <div className="date-info">
+                    <span className="date-label">Last Inspection:</span>
+                    <span className="date-value">
+                      {new Date(vehicle.lastInspectionDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                {vehicle.insuranceExpiry && (
+                  <div className="date-info">
+                    <span className="date-label">Insurance Expires:</span>
+                    <span className="date-value">
+                      {new Date(vehicle.insuranceExpiry).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="vehicle-actions">
+              <button className="edit-button" onClick={() => openModal(vehicle)}>
+                Edit
+              </button>
+              <button className="delete-button" onClick={() => handleDelete(vehicle.id)}>
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+        {loading && <Loader />}
+      {vehicles.length === 0 && !loading && (
+        <div className="empty-state">
+          <div className="empty-icon">🚗</div>
+          <h3>No vehicles found</h3>
+          <p>Start by adding your first vehicle to the fleet</p>
+          <button className="empty-add-button" onClick={() => openModal()}>
+            Add Vehicle
+          </button>
+        </div>
+      )}
 
       {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{selectedVehicle ? "Edit Vehicle" : "Add Vehicle"}</h3>
-            <form onSubmit={handleSubmit}>
-              <input type="text" name="brand" placeholder="Brand" defaultValue={selectedVehicle?.brand || ""} required />
-              <input type="text" name="model" placeholder="Model" defaultValue={selectedVehicle?.model || ""} required />
-              <input type="number" name="engineCapacityCc" placeholder="Engine Capacity" defaultValue={selectedVehicle?.engineCapacityCc || ""} required />
-              <input type="text" name="vehiclePicture" placeholder="Vehicle Picture URL" defaultValue={selectedVehicle?.vehiclePicture || ""} />
-              <select name="companyId" defaultValue={selectedVehicle?.companyId || ""} required>
-                <option value="">Select Company</option>
-                {companies.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
-              </select>
-              <select name="vehicleTypeId" defaultValue={selectedVehicle?.vehicleTypeId || ""} required>
-                <option value="">Select Vehicle Type</option>
-                {vehicleTypes.map(t => <option key={t.id} value={t.id}>{t.typeName}</option>)}
-              </select>
-              <input type="text" name="registrationNumber" placeholder="Registration Number" defaultValue={selectedVehicle?.registrationNumber || ""} required />
-              <input type="number" name="capacityKg" placeholder="Capacity (Kg)" defaultValue={selectedVehicle?.capacityKg || ""} />
-              <input type="number" name="manufactureYear" placeholder="Manufacture Year" defaultValue={selectedVehicle?.manufactureYear || ""} />
-              <input type="date" name="lastInspectionDate" defaultValue={selectedVehicle?.lastInspectionDate?.split("T")[0] || ""} />
-              <input type="date" name="insuranceExpiry" defaultValue={selectedVehicle?.insuranceExpiry?.split("T")[0] || ""} />
-              <select name="currentLocationId" defaultValue={selectedVehicle?.currentLocationId || ""}>
-                <option value="">Select Location</option>
-                {locations.map(l => <option key={l.id} value={l.id}>{l.fullAddress}</option>)}
-              </select>
-              <input type="text" name="categories" placeholder="Categories" defaultValue={selectedVehicle?.categories || ""} />
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedVehicle ? "Edit Vehicle" : "Add New Vehicle"}</h3>
+              <button className="close-button" onClick={closeModal}>×</button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="vehicle-form">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label htmlFor="brand">Brand</label>
+                  <input 
+                    type="text" 
+                    id="brand"
+                    name="brand" 
+                    placeholder="Enter vehicle brand" 
+                    defaultValue={selectedVehicle?.brand || ""} 
+                    required 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="model">Model</label>
+                  <input 
+                    type="text" 
+                    id="model"
+                    name="model" 
+                    placeholder="Enter vehicle model" 
+                    defaultValue={selectedVehicle?.model || ""} 
+                    required 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="registrationNumber">Registration Number</label>
+                  <input 
+                    type="text" 
+                    id="registrationNumber"
+                    name="registrationNumber" 
+                    placeholder="Enter registration number" 
+                    defaultValue={selectedVehicle?.registrationNumber || ""} 
+                    required 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="engineCapacityCc">Engine Capacity (cc)</label>
+                  <input 
+                    type="number" 
+                    id="engineCapacityCc"
+                    name="engineCapacityCc" 
+                    placeholder="Enter engine capacity" 
+                    defaultValue={selectedVehicle?.engineCapacityCc || ""} 
+                    required 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="manufactureYear">Manufacture Year</label>
+                  <input 
+                    type="number" 
+                    id="manufactureYear"
+                    name="manufactureYear" 
+                    placeholder="Enter manufacture year" 
+                    defaultValue={selectedVehicle?.manufactureYear || ""} 
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="capacityKg">Capacity (kg)</label>
+                  <input 
+                    type="number" 
+                    id="capacityKg"
+                    name="capacityKg" 
+                    placeholder="Enter capacity in kg" 
+                    defaultValue={selectedVehicle?.capacityKg || ""} 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="companyId">Company</label>
+                  <select name="companyId" id="companyId" defaultValue={selectedVehicle?.companyId || ""} required>
+                    <option value="">Select Company</option>
+                    {companies.map(c => (
+                      <option key={c.id} value={c.id}>{c.companyName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="vehicleTypeId">Vehicle Type</label>
+                  <select name="vehicleTypeId" id="vehicleTypeId" defaultValue={selectedVehicle?.vehicleTypeId || ""} required>
+                    <option value="">Select Vehicle Type</option>
+                    {vehicleTypes.map(t => (
+                      <option key={t.id} value={t.id}>{t.typeName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="currentLocationId">Current Location</label>
+                  <select name="currentLocationId" id="currentLocationId" defaultValue={selectedVehicle?.currentLocationId || ""}>
+                    <option value="">Select Location</option>
+                    {locations.map(l => (
+                      <option key={l.id} value={l.id}>{l.fullAddress}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="lastInspectionDate">Last Inspection Date</label>
+                  <input 
+                    type="date" 
+                    id="lastInspectionDate"
+                    name="lastInspectionDate" 
+                    defaultValue={selectedVehicle?.lastInspectionDate?.split("T")[0] || ""} 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="insuranceExpiry">Insurance Expiry</label>
+                  <input 
+                    type="date" 
+                    id="insuranceExpiry"
+                    name="insuranceExpiry" 
+                    defaultValue={selectedVehicle?.insuranceExpiry?.split("T")[0] || ""} 
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label htmlFor="vehiclePicture">Vehicle Picture URL</label>
+                  <input 
+                    type="text" 
+                    id="vehiclePicture"
+                    name="vehiclePicture" 
+                    placeholder="Enter vehicle picture URL" 
+                    defaultValue={selectedVehicle?.vehiclePicture || ""} 
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label htmlFor="categories">Categories</label>
+                  <input 
+                    type="text" 
+                    id="categories"
+                    name="categories" 
+                    placeholder="Enter categories (comma separated)" 
+                    defaultValue={selectedVehicle?.categories || ""} 
+                  />
+                </div>
+              </div>
 
               <div className="modal-actions">
-                <button type="submit">{selectedVehicle ? "Save" : "Add"}</button>
-                <button type="button" onClick={closeModal}>Cancel</button>
+                <button type="submit" className="submit-button">
+                  {selectedVehicle ? "Save Changes" : "Add Vehicle"}
+                </button>
+                <button type="button" className="cancel-button" onClick={closeModal}>
+                  Cancel
+                </button>
               </div>
             </form>
-          </div>
+          </div> 
         </div>
       )}
     </div>
