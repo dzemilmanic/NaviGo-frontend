@@ -321,7 +321,6 @@
   align-items: center;
   z-index: 1000;
   padding: 16px;
-  height: 150vh;
   animation: modalFadeIn 0.2s ease-out;
 }
 

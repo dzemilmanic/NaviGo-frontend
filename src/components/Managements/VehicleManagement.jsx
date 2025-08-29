@@ -14,7 +14,8 @@ const VehicleManagement = () => {
   const [search, setSearch] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [filteredVehicles, setFilteredVehicles] = useState([]);
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -23,12 +24,13 @@ const VehicleManagement = () => {
       const companyResponse = await companyService.getAll();
       const locationResponse = await locationService.getAll();
       setVehicles(vehicleResponse.data);
+      setFilteredVehicles(vehicleResponse.data);
       setVehicleTypes(typeResponse.data);
       setCompanies(companyResponse.data);
       setLocations(locationResponse.data);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -89,7 +91,19 @@ const VehicleManagement = () => {
       console.error("Error saving vehicle:", error);
     }
   };
-
+  const handleSearch = (e) => {
+    setSearch(e.target.value);
+    const filtered = vehicles.filter((vehicle) => {
+      return (
+        vehicle.brand.toLowerCase().includes(e.target.value.toLowerCase()) ||
+        vehicle.model.toLowerCase().includes(e.target.value.toLowerCase()) ||
+        vehicle.registrationNumber
+          .toLowerCase()
+          .includes(e.target.value.toLowerCase())
+      );
+    });
+    setFilteredVehicles(filtered);
+  };
   return (
     <div className="vehicle-management">
       <div className="page-header">
@@ -100,7 +114,7 @@ const VehicleManagement = () => {
               type="text"
               placeholder="Search vehicles by brand, model, or registration..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearch(e)}
               className="search-input"
             />
           </div>
@@ -111,32 +125,40 @@ const VehicleManagement = () => {
       </div>
 
       <div className="vehicles-grid">
-        {vehicles.map((vehicle) => (
+        {filteredVehicles.map((vehicle) => (
           <div key={vehicle.id} className="vehicle-card">
             <div className="vehicle-image-container">
               <img
-                src={vehicle.vehiclePicture || 'https://t4.ftcdn.net/jpg/16/24/39/73/360_F_1624397305_9anhxAqBjO0u24bLzRnOe9l97SWjaPXU.jpg'}
+                src={
+                  vehicle.vehiclePicture ||
+                  "https://t4.ftcdn.net/jpg/16/24/39/73/360_F_1624397305_9anhxAqBjO0u24bLzRnOe9l97SWjaPXU.jpg"
+                }
                 alt={`${vehicle.brand} ${vehicle.model}`}
                 className="vehicle-image"
                 onError={(e) => {
-                  e.target.src = 'https://t4.ftcdn.net/jpg/16/24/39/73/360_F_1624397305_9anhxAqBjO0u24bLzRnOe9l97SWjaPXU.jpg';
+                  e.target.src =
+                    "https://t4.ftcdn.net/jpg/16/24/39/73/360_F_1624397305_9anhxAqBjO0u24bLzRnOe9l97SWjaPXU.jpg";
                 }}
               />
               <div className="vehicle-type-badge">
                 {vehicle.vehicleTypeName}
               </div>
             </div>
-            
+
             <div className="vehicle-info">
               <div className="vehicle-header">
-                <h3 className="vehicle-title">{vehicle.brand} {vehicle.model}</h3>
+                <h3 className="vehicle-title">
+                  {vehicle.brand} {vehicle.model}
+                </h3>
                 <span className="vehicle-year">{vehicle.manufactureYear}</span>
               </div>
-              
+
               <div className="vehicle-details">
                 <div className="detail-row">
                   <span className="detail-label">Registration:</span>
-                  <span className="detail-value">{vehicle.registrationNumber}</span>
+                  <span className="detail-value">
+                    {vehicle.registrationNumber}
+                  </span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Company:</span>
@@ -144,26 +166,34 @@ const VehicleManagement = () => {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Location:</span>
-                  <span className="detail-value">{vehicle.currentLocationName}</span>
+                  <span className="detail-value">
+                    {vehicle.currentLocationName}
+                  </span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Engine:</span>
-                  <span className="detail-value">{vehicle.engineCapacityCc} cc</span>
+                  <span className="detail-value">
+                    {vehicle.engineCapacityCc} cc
+                  </span>
                 </div>
                 {vehicle.capacityKg && (
                   <div className="detail-row">
                     <span className="detail-label">Capacity:</span>
-                    <span className="detail-value">{vehicle.capacityKg} kg</span>
+                    <span className="detail-value">
+                      {vehicle.capacityKg} kg
+                    </span>
                   </div>
                 )}
               </div>
-              
+
               <div className="vehicle-dates">
                 {vehicle.lastInspectionDate && (
                   <div className="date-info">
                     <span className="date-label">Last Inspection:</span>
                     <span className="date-value">
-                      {new Date(vehicle.lastInspectionDate).toLocaleDateString()}
+                      {new Date(
+                        vehicle.lastInspectionDate
+                      ).toLocaleDateString()}
                     </span>
                   </div>
                 )}
@@ -179,18 +209,24 @@ const VehicleManagement = () => {
             </div>
 
             <div className="vehicle-actions">
-              <button className="edit-button" onClick={() => openModal(vehicle)}>
+              <button
+                className="edit-button"
+                onClick={() => openModal(vehicle)}
+              >
                 Edit
               </button>
-              <button className="delete-button" onClick={() => handleDelete(vehicle.id)}>
+              <button
+                className="delete-button"
+                onClick={() => handleDelete(vehicle.id)}
+              >
                 Delete
               </button>
             </div>
           </div>
         ))}
       </div>
-        {loading && <Loader />}
-      {vehicles.length === 0 && !loading && (
+      {loading && <Loader />}
+      {filteredVehicles.length === 0 && !loading && (
         <div className="empty-state">
           <div className="empty-icon">🚗</div>
           <h3>No vehicles found</h3>
@@ -206,67 +242,71 @@ const VehicleManagement = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{selectedVehicle ? "Edit Vehicle" : "Add New Vehicle"}</h3>
-              <button className="close-button" onClick={closeModal}>×</button>
+              <button className="close-button" onClick={closeModal}>
+                ×
+              </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="vehicle-form">
               <div className="form-grid">
                 <div className="form-group">
                   <label htmlFor="brand">Brand</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="brand"
-                    name="brand" 
-                    placeholder="Enter vehicle brand" 
-                    defaultValue={selectedVehicle?.brand || ""} 
-                    required 
+                    name="brand"
+                    placeholder="Enter vehicle brand"
+                    defaultValue={selectedVehicle?.brand || ""}
+                    required
                   />
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="model">Model</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="model"
-                    name="model" 
-                    placeholder="Enter vehicle model" 
-                    defaultValue={selectedVehicle?.model || ""} 
-                    required 
+                    name="model"
+                    placeholder="Enter vehicle model"
+                    defaultValue={selectedVehicle?.model || ""}
+                    required
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="registrationNumber">Registration Number</label>
-                  <input 
-                    type="text" 
+                  <label htmlFor="registrationNumber">
+                    Registration Number
+                  </label>
+                  <input
+                    type="text"
                     id="registrationNumber"
-                    name="registrationNumber" 
-                    placeholder="Enter registration number" 
-                    defaultValue={selectedVehicle?.registrationNumber || ""} 
-                    required 
+                    name="registrationNumber"
+                    placeholder="Enter registration number"
+                    defaultValue={selectedVehicle?.registrationNumber || ""}
+                    required
                   />
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="engineCapacityCc">Engine Capacity (cc)</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     id="engineCapacityCc"
-                    name="engineCapacityCc" 
-                    placeholder="Enter engine capacity" 
-                    defaultValue={selectedVehicle?.engineCapacityCc || ""} 
-                    required 
+                    name="engineCapacityCc"
+                    placeholder="Enter engine capacity"
+                    defaultValue={selectedVehicle?.engineCapacityCc || ""}
+                    required
                   />
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="manufactureYear">Manufacture Year</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     id="manufactureYear"
-                    name="manufactureYear" 
-                    placeholder="Enter manufacture year" 
-                    defaultValue={selectedVehicle?.manufactureYear || ""} 
+                    name="manufactureYear"
+                    placeholder="Enter manufacture year"
+                    defaultValue={selectedVehicle?.manufactureYear || ""}
                     min="1900"
                     max={new Date().getFullYear()}
                   />
@@ -274,84 +314,110 @@ const VehicleManagement = () => {
 
                 <div className="form-group">
                   <label htmlFor="capacityKg">Capacity (kg)</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     id="capacityKg"
-                    name="capacityKg" 
-                    placeholder="Enter capacity in kg" 
-                    defaultValue={selectedVehicle?.capacityKg || ""} 
+                    name="capacityKg"
+                    placeholder="Enter capacity in kg"
+                    defaultValue={selectedVehicle?.capacityKg || ""}
                   />
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="companyId">Company</label>
-                  <select name="companyId" id="companyId" defaultValue={selectedVehicle?.companyId || ""} required>
+                  <select
+                    name="companyId"
+                    id="companyId"
+                    defaultValue={selectedVehicle?.companyId || ""}
+                    required
+                  >
                     <option value="">Select Company</option>
-                    {companies.map(c => (
-                      <option key={c.id} value={c.id}>{c.companyName}</option>
+                    {companies.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.companyName}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="vehicleTypeId">Vehicle Type</label>
-                  <select name="vehicleTypeId" id="vehicleTypeId" defaultValue={selectedVehicle?.vehicleTypeId || ""} required>
+                  <select
+                    name="vehicleTypeId"
+                    id="vehicleTypeId"
+                    defaultValue={selectedVehicle?.vehicleTypeId || ""}
+                    required
+                  >
                     <option value="">Select Vehicle Type</option>
-                    {vehicleTypes.map(t => (
-                      <option key={t.id} value={t.id}>{t.typeName}</option>
+                    {vehicleTypes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.typeName}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="currentLocationId">Current Location</label>
-                  <select name="currentLocationId" id="currentLocationId" defaultValue={selectedVehicle?.currentLocationId || ""}>
+                  <select
+                    name="currentLocationId"
+                    id="currentLocationId"
+                    defaultValue={selectedVehicle?.currentLocationId || ""}
+                  >
                     <option value="">Select Location</option>
-                    {locations.map(l => (
-                      <option key={l.id} value={l.id}>{l.fullAddress}</option>
+                    {locations.map((l) => (
+                      <option key={l.id} value={l.id}>
+                        {l.fullAddress}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="lastInspectionDate">Last Inspection Date</label>
-                  <input 
-                    type="date" 
+                  <label htmlFor="lastInspectionDate">
+                    Last Inspection Date
+                  </label>
+                  <input
+                    type="date"
                     id="lastInspectionDate"
-                    name="lastInspectionDate" 
-                    defaultValue={selectedVehicle?.lastInspectionDate?.split("T")[0] || ""} 
+                    name="lastInspectionDate"
+                    defaultValue={
+                      selectedVehicle?.lastInspectionDate?.split("T")[0] || ""
+                    }
                   />
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="insuranceExpiry">Insurance Expiry</label>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     id="insuranceExpiry"
-                    name="insuranceExpiry" 
-                    defaultValue={selectedVehicle?.insuranceExpiry?.split("T")[0] || ""} 
+                    name="insuranceExpiry"
+                    defaultValue={
+                      selectedVehicle?.insuranceExpiry?.split("T")[0] || ""
+                    }
                   />
                 </div>
 
                 <div className="form-group full-width">
                   <label htmlFor="vehiclePicture">Vehicle Picture URL</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="vehiclePicture"
-                    name="vehiclePicture" 
-                    placeholder="Enter vehicle picture URL" 
-                    defaultValue={selectedVehicle?.vehiclePicture || ""} 
+                    name="vehiclePicture"
+                    placeholder="Enter vehicle picture URL"
+                    defaultValue={selectedVehicle?.vehiclePicture || ""}
                   />
                 </div>
 
                 <div className="form-group full-width">
                   <label htmlFor="categories">Categories</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="categories"
-                    name="categories" 
-                    placeholder="Enter categories (comma separated)" 
-                    defaultValue={selectedVehicle?.categories || ""} 
+                    name="categories"
+                    placeholder="Enter categories (comma separated)"
+                    defaultValue={selectedVehicle?.categories || ""}
                   />
                 </div>
               </div>
@@ -360,12 +426,16 @@ const VehicleManagement = () => {
                 <button type="submit" className="submit-button">
                   {selectedVehicle ? "Save Changes" : "Add Vehicle"}
                 </button>
-                <button type="button" className="cancel-button" onClick={closeModal}>
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={closeModal}
+                >
                   Cancel
                 </button>
               </div>
             </form>
-          </div> 
+          </div>
         </div>
       )}
     </div>
