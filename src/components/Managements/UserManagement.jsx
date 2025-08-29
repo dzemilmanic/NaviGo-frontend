@@ -98,6 +98,7 @@ const UserManagement = () => {
             <th>Phone</th>
             <th>Role</th>
             <th>Company</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -110,8 +111,8 @@ const UserManagement = () => {
               <td>{u.phoneNumber}</td>
               <td>{u.userRole}</td>
               <td>{u.companyId ? companies.find(c => c.id === u.companyId)?.companyName : "-"}</td>
+              <td>{u.userStatus}</td>
               <td>
-                
                 <button onClick={() => handleDelete(u.id)}>Delete</button>
               </td>
             </tr>
