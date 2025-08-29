@@ -134,8 +134,8 @@ const handleSubmit = async (e) => {
           {payments.map((p) => (
             <tr key={p.id}>
               <td>{p.id}</td>
-              <td>{p.contractId}</td>
-              <td>{p.clientId}</td>
+              <td>{p.contract}</td>
+              <td>{p.client}</td>
               <td>{p.amount}</td>
               <td>{p.paymentStatus}</td>
               <td>

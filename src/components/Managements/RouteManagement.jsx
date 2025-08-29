@@ -108,9 +108,9 @@ const RouteManagement = () => {
           {routes.map((r) => (
             <tr key={r.id}>
               <td>{r.id}</td>
-              <td>{r.companyId}</td>
-              <td>{r.startLocationId}</td>
-              <td>{r.endLocationId}</td>
+              <td>{r.companyName}</td>
+              <td>{r.startLocationName}</td>
+              <td>{r.endLocationName}</td>
               <td>{r.isActive ? "Yes" : "No"}</td>
               <td>{r.availableFrom}</td>
               <td>{r.availableTo}</td>
