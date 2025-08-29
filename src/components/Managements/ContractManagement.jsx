@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { contractService } from "../../services/contractService"; // pretpostavljam da postoji
-import { companyService } from "../../services/companyService"; // za dropdown ako treba
-import { forwarderOfferService } from "../../services/forwarderOfferService"; // za dropdown
-import { routePriceService } from "../../services/routePriceService"; // za dropdown
+import { contractService } from "../../services/contractService";
+import { companyService } from "../../services/companyService";
+import { forwarderOfferService } from "../../services/forwarderOfferService";
+import { routePriceService } from "../../services/routePriceService";
+import { routeService } from "../../services/routeService";
+import { userService } from "../../services/userService";
+import { useAuth } from "../../contexts/AuthContext";
 import "./Managements.css";
 
 const ContractManagement = () => {
@@ -10,10 +13,13 @@ const ContractManagement = () => {
   const [search, setSearch] = useState("");
   const [selectedContract, setSelectedContract] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [clients, setClients] = useState([]);
+  const [clientsCompany, setClientsCompany] = useState([]);
+  const [clientsRegular, setClientsRegular] = useState([]);
   const [forwarders, setForwarders] = useState([]);
   const [routePrices, setRoutePrices] = useState([]);
   const [forwarderOffers, setForwarderOffers] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const { user } = useAuth();
 
   // Fetch contracts
   const fetchContracts = async () => {
@@ -28,15 +34,49 @@ const ContractManagement = () => {
   // Fetch dropdown data
   const fetchDropdownData = async () => {
     try {
-      const clientsData = await companyService.getAll({ companyType: 1 });
-      const forwardersData = await companyService.getAll({ companyType: 2 });
-      const routePricesData = await routePriceService.getAll();
-      const forwarderOffersData = await forwarderOfferService.getAll();
+      const [clientsCompanyData, allUsersData, forwardersData, routePricesData, forwarderOffersData, routesData] = await Promise.all([
+        companyService.getAll({ companyType: 1 }),
+        userService.getAll(),
+        companyService.getAll({ companyType: 2 }),
+        routePriceService.getAll(),
+        forwarderOfferService.getAll(),
+        routeService.getAll()
+      ]);
 
-      setClients(clientsData.data);
+      setClientsCompany(clientsCompanyData.data);
       setForwarders(forwardersData.data);
       setRoutePrices(routePricesData.data);
       setForwarderOffers(forwarderOffersData.data);
+      setRoutes(routesData.data);
+
+      // Kombinujemo Regular i CompanyAdmin u jednu listu za dropdown
+const combinedUsers = allUsersData.data
+  .filter(u => {
+    if (u.userRole === "RegularUser" && !u.companyId) {
+      // fizičko lice
+      return true;
+    }
+    if (
+      u.userRole === "CompanyAdmin" &&
+      u.companyId &&
+      clientsCompanyData.data.find(c => c.id === u.companyId && c.companyType === "Client")
+    ) {
+      // pravno lice
+      return true;
+    }
+    return false; // sve ostalo filtriramo
+  })
+  .map(u => {
+    const company = clientsCompanyData.data.find(c => c.id === u.companyId);
+    return {
+      id: u.id,
+      fullName: `${u.firstName} ${u.lastName}${company ? ` (${company.companyName})` : ""}`
+    };
+  });
+
+setClientsRegular(combinedUsers);
+
+
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
     }
@@ -68,33 +108,52 @@ const ContractManagement = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = {
-      clientId: Number(form.clientId.value),
-      forwarderId: Number(form.forwarderId.value),
-      routeId: Number(form.routeId.value),
-      routePriceId: Number(form.routePriceId.value),
-      forwarderOfferId: Number(form.forwarderOfferId.value),
-      contractNumber: form.contractNumber.value,
-      terms: form.terms.value,
-      penaltyRatePerHour: Number(form.penaltyRatePerHour.value),
-      maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
-    };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const form = e.target;
 
-    try {
-      if (selectedContract) {
-        await contractService.update(selectedContract.id, formData);
-      } else {
-        await contractService.create(formData);
-      }
-      fetchContracts();
-      closeModal();
-    } catch (error) {
-      console.error("Error saving contract:", error);
+  try {
+    if (selectedContract) {
+      // Map string value to enum number
+      const statusMap = {
+        Pending: 0,
+        Active: 1,
+        Completed: 2,
+        Cancelled: 3
+      };
+
+      const updateData = {
+        terms: form.terms.value,
+        contractStatus: form.contractStatus?.value
+          ? statusMap[form.contractStatus.value]
+          : selectedContract.contractStatus,
+        penaltyRatePerHour: Number(form.penaltyRatePerHour.value),
+        maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
+      };
+
+      await contractService.update(selectedContract.id, updateData);
+    } else {
+      const createData = {
+        clientId: Number(form.clientId.value),
+        forwarderId: Number(user.companyId),
+        routeId: Number(form.routeId.value),
+        routePriceId: Number(form.routePriceId.value),
+        forwarderOfferId: Number(form.forwarderOfferId.value),
+        contractNumber: form.contractNumber.value,
+        terms: form.terms.value,
+        penaltyRatePerHour: Number(form.penaltyRatePerHour.value),
+        maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
+      };
+      await contractService.create(createData);
     }
-  };
+
+    fetchContracts();
+    closeModal();
+  } catch (error) {
+    console.error("Error saving contract:", error);
+  }
+};
+
 
   return (
     <div className="management-container">
@@ -125,7 +184,15 @@ const ContractManagement = () => {
             <tr key={c.id}>
               <td>{c.id}</td>
               <td>{c.contractNumber}</td>
-              <td>{c.clientFullName} {clients.find((client) => client.id === c.clientId)?.companyName ? '(' + clients.find((client) => client.id === c.clientId)?.companyName + ')' : ''}</td>
+              <td>
+                {c.clientFullName}{" "}
+                {clientsCompany.find((client) => client.id === c.clientId)?.companyName
+                  ? "(" +
+                    clientsCompany.find((client) => client.id === c.clientId)
+                      ?.companyName +
+                    ")"
+                  : ""}
+              </td>
               <td>{c.forwarderCompanyName}</td>
               <td>{c.routeId}</td>
               <td>{c.contractStatus}</td>
@@ -138,75 +205,118 @@ const ContractManagement = () => {
         </tbody>
       </table>
 
-      {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{selectedContract ? "Edit Contract" : "Add Contract"}</h3>
-            <form onSubmit={handleSubmit}>
-              <select name="clientId" defaultValue={selectedContract?.clientId || ""} required>
-                <option value="">Select Client</option>
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.companyName}
-                  </option>
-                ))}
-              </select>
-              <select name="forwarderId" defaultValue={selectedContract?.forwarderId || ""} required>
-                <option value="">Select Forwarder</option>
-                {forwarders.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.companyName}
-                  </option>
-                ))}
-              </select>
-              <select name="routePriceId" defaultValue={selectedContract?.routePriceId || ""} required>
-                <option value="">Select Route Price</option>
-                {routePrices.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    Route {r.routeId} - {r.pricePerKm} per km
-                  </option>
-                ))}
-              </select>
-              <select name="forwarderOfferId" defaultValue={selectedContract?.forwarderOfferId || ""}>
-                <option value="">Select Forwarder Offer</option>
-                {forwarderOffers.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    Offer {o.id} - {o.commissionRate}%
-                  </option>
-                ))}
-              </select>
-              <input
-                type="text"
-                name="contractNumber"
-                placeholder="Contract Number"
-                defaultValue={selectedContract?.contractNumber || ""}
-                required
-              />
-              <textarea
-                name="terms"
-                placeholder="Terms"
-                defaultValue={selectedContract?.terms || ""}
-              />
-              <input
-                type="number"
-                name="penaltyRatePerHour"
-                placeholder="Penalty Rate per Hour"
-                defaultValue={selectedContract?.penaltyRatePerHour || 0}
-              />
-              <input
-                type="number"
-                name="maxPenaltyPercent"
-                placeholder="Max Penalty Percent"
-                defaultValue={selectedContract?.maxPenaltyPercent || 0}
-              />
-              <div className="modal-actions">
-                <button type="submit">{selectedContract ? "Save" : "Add"}</button>
-                <button type="button" onClick={closeModal}>Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
+{isModalOpen && (
+  <div className="modal">
+    <div className="modal-content">
+      {selectedContract ? (
+        <>
+          <h3>Edit Contract</h3>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="terms">Terms:</label>
+            <textarea
+              name="terms"
+              placeholder="Terms"
+              defaultValue={selectedContract?.terms || ""}
+            />
+
+            <label htmlFor="contractStatus">Status:</label>
+            <select name="contractStatus" defaultValue={selectedContract?.contractStatus || ""}>
+              <option value="">Select Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Active">Active</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+
+            <label htmlFor="penaltyRatePerHour">Penalty Rate per Hour:</label>
+            <input
+              type="number"
+              name="penaltyRatePerHour"
+              placeholder="Penalty Rate per Hour"
+              defaultValue={selectedContract?.penaltyRatePerHour || ""}
+            />
+
+            <label htmlFor="maxPenaltyPercent">Max Penalty Percent:</label>
+            <input
+              type="number"
+              name="maxPenaltyPercent"
+              placeholder="Max Penalty Percent"
+              defaultValue={selectedContract?.maxPenaltyPercent || ""}
+            />
+
+            <div className="modal-actions">
+              <button type="submit">Save</button>
+              <button type="button" onClick={closeModal}>Cancel</button>
+            </div>
+          </form>
+        </>
+      ) : (
+        <>
+          <h3>Add Contract</h3>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="clientId">Client:</label>
+            <select name="clientId" required>
+              <option value="">Select Client</option>
+              {clientsRegular.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.fullName}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="routeId">Route:</label>
+            <select name="routeId" required>
+              <option value="">Select Route</option>
+              {routes.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.id}: {r.startLocationName} - {r.endLocationName}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="routePriceId">Route Prices</label>
+            <select name="routePriceId" required>
+              <option value="">Select Route Price</option>
+              {routePrices.map((r) => (
+                <option key={r.id} value={r.id}>
+                  Route {r.routeId} - {r.pricePerKm} per km
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="forwarderOfferId">Forwarder Offers</label>
+            <select name="forwarderOfferId">
+              <option value="">Select Forwarder Offer</option>
+              {forwarderOffers.map((o) => (
+                <option key={o.id} value={o.id}>
+                  Offer {o.id} - {o.commissionRate}%
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="contractNumber">Contract Number:</label>
+            <input type="text" name="contractNumber" placeholder="Contract Number" required />
+
+            <label htmlFor="terms">Terms:</label>
+            <textarea name="terms" placeholder="Terms" />
+
+            <label htmlFor="penaltyRatePerHour">Penalty Rate per Hour:</label>
+            <input type="number" name="penaltyRatePerHour" placeholder="Penalty Rate per Hour" />
+
+            <label htmlFor="maxPenaltyPercent">Max Penalty Percent:</label>
+            <input type="number" name="maxPenaltyPercent" placeholder="Max Penalty Percent" />
+
+            <div className="modal-actions">
+              <button type="submit">Add</button>
+              <button type="button" onClick={closeModal}>Cancel</button>
+            </div>
+          </form>
+        </>
       )}
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

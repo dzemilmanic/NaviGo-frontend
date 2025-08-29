@@ -381,7 +381,8 @@ const CompanyManagement = ({ userType }) => {
                 value={companyData.description}
                 onChange={handleInputChange}
               />
-              {userType === "shipper" && (
+              {userType === "shipper" && <>
+                <label htmlFor="maxCommissionRate">Max Commission Rate</label>
                 <input
                   type="number"
                   name="maxCommissionRate"
@@ -392,7 +393,7 @@ const CompanyManagement = ({ userType }) => {
                   max="100"
                   required
                 />
-              )}
+              </>}
 
               <div className="file-inputs">
                 <div className="file-input-wrapper">

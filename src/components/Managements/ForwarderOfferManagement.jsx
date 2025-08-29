@@ -3,7 +3,7 @@ import { forwarderOfferService } from "../../services/forwarderOfferService";
 import { routeService } from "../../services/routeService";
 import { companyService } from "../../services/companyService"; // za forwardere
 import "./Managements.css";
-
+import { useAuth } from "../../contexts/AuthContext";
 const ForwarderOfferManagement = () => {
   const [offers, setOffers] = useState([]);
   const [search, setSearch] = useState("");
@@ -11,7 +11,7 @@ const ForwarderOfferManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [routes, setRoutes] = useState([]);
   const [forwarders, setForwarders] = useState([]);
-
+  const {user} = useAuth();
   const fetchOffers = async () => {
     try {
       const response = await forwarderOfferService.getAll({ search });
@@ -71,7 +71,7 @@ const ForwarderOfferManagement = () => {
     const form = e.target;
     const formData = {
       routeId: Number(form.routeId.value),
-      forwarderId: Number(form.forwarderId.value),
+      forwarderId: +user.companyId,
       commissionRate: Number(form.commissionRate.value),
       discountRate: Number(form.discountRate.value),
       expiresAt: form.expiresAt.value,
@@ -139,6 +139,7 @@ const ForwarderOfferManagement = () => {
           <div className="modal-content">
             <h3>{selectedOffer ? "Edit Offer" : "Add Offer"}</h3>
             <form onSubmit={handleSubmit}>
+              <label htmlFor="routeId">Route</label>
               <select name="routeId" defaultValue={selectedOffer?.routeId || ""} required>
                 <option value="">Select Route</option>
                 {routes.map((r) => (
@@ -147,33 +148,22 @@ const ForwarderOfferManagement = () => {
                   </option>
                 ))}
               </select>
-
-              <select
-                name="forwarderId"
-                defaultValue={selectedOffer?.forwarderId || ""}
-                required
-              >
-                <option value="">Select Forwarder</option>
-                {forwarders.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.companyName}
-                  </option>
-                ))}
-              </select>
-
+              <label htmlFor="commissionRate">Commission Rate</label>
               <input
                 type="number"
                 name="commissionRate"
                 placeholder="Commission Rate"
-                defaultValue={selectedOffer?.commissionRate || 0}
+                defaultValue={selectedOffer?.commissionRate || null}
                 required
               />
+              <label htmlFor="discountRate">Discount Rate</label>
               <input
                 type="number"
                 name="discountRate"
                 placeholder="Discount Rate"
-                defaultValue={selectedOffer?.discountRate || 0}
+                defaultValue={selectedOffer?.discountRate || null}
               />
+              <label htmlFor="expiresAt">Expires At</label>
               <input
                 type="date"
                 name="expiresAt"

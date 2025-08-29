@@ -174,19 +174,16 @@ const RoutePriceManagement = () => {
           <div className="modal-content">
             <h3>{selectedRoutePrice ? "Edit Route Price" : "Add Route Price"}</h3>
             <form onSubmit={handleSubmit}>
-              <select 
-                name="routeId" 
-                defaultValue={selectedRoutePrice?.routeId || ""} 
-                required
-              >
+              <label htmlFor="routeId">Route ID:</label>
+              <select name="routeId" defaultValue={selectedRoutePrice?.routeId || ""} required>
                 <option value="">Select Route</option>
                 {routes.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {getRouteName(r.id)}
+                    {r.id} : {r.startLocationName} - {r.endLocationName}
                   </option>
                 ))}
               </select>
-
+                <label htmlFor="vehicleTypeId">Vehicle Type:</label>
               <select
                 name="vehicleTypeId"
                 defaultValue={selectedRoutePrice?.vehicleTypeId || ""}
@@ -199,7 +196,7 @@ const RoutePriceManagement = () => {
                   </option>
                 ))}
               </select>
-
+                <label htmlFor="pricePerKm">Price per Km:</label>
               <input
                 type="number"
                 step="0.01"
@@ -208,7 +205,7 @@ const RoutePriceManagement = () => {
                 defaultValue={selectedRoutePrice?.pricePerKm || ""}
                 required
               />
-              
+              <label htmlFor="minimumPrice">Minimum Price:</label>
               <input
                 type="number"
                 step="0.01"

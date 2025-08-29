@@ -3,6 +3,7 @@ import { driverService } from "../../services/driverService";
 import { companyService } from "../../services/companyService";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
+import { useAuth } from "../../contexts/AuthContext";
 
 const DriverManagement = () => {
   const [drivers, setDrivers] = useState([]);
@@ -11,10 +12,9 @@ const DriverManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // Fetch drivers and companies
-  const fetchData = async () => {
-    setLoading(true);
+  const {user} = useAuth();
+  // Fetch drivers
+  const fetchDrivers = async () => {
     try {
       const [driverResponse, companyResponse] = await Promise.all([
         driverService.getAll(),
@@ -60,19 +60,17 @@ const DriverManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    try {
-      const form = e.target;
-      const formData = {
-        companyId: Number(form.companyId.value),
-        firstName: form.firstName.value,
-        lastName: form.lastName.value,
-        phoneNumber: form.phoneNumber.value,
-        licenseNumber: form.licenseNumber.value,
-        licenseExpiry: form.licenseExpiry.value,
-        licenseCategories: form.licenseCategories.value,
-        hireDate: form.hireDate.value,
-      };
+    const form = e.target;
+    const formData = {
+      companyId: user.companyId,
+      firstName: form.firstName.value,
+      lastName: form.lastName.value,
+      phoneNumber: form.phoneNumber.value,
+      licenseNumber: form.licenseNumber.value,
+      licenseExpiry: form.licenseExpiry.value,
+      licenseCategories: form.licenseCategories.value,
+      hireDate: form.hireDate.value,
+    };
 
       if (selectedDriver) {
         await driverService.update(selectedDriver.id, formData);
@@ -117,94 +115,45 @@ const DriverManagement = () => {
         />
         <button onClick={() => openModal()}>Add Driver</button>
       </div>
-
-      {loading && <Loader />}
-
-      {!loading && (
-        <>
-          <table className="management-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Company</th>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>License Number</th>
-                <th>License Categories</th>
-                <th>License Expiry</th>
-                <th>Hire Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDrivers.map((d) => (
-                <tr key={d.id}>
-                  <td>{d.id}</td>
-                  <td>{getCompanyName(d.companyId)}</td>
-                  <td>{`${d.firstName} ${d.lastName}`}</td>
-                  <td>{d.phoneNumber}</td>
-                  <td>{d.licenseNumber}</td>
-                  <td>{d.licenseCategories || "-"}</td>
-                  <td>{formatDate(d.licenseExpiry)}</td>
-                  <td>{formatDate(d.hireDate)}</td>
-                  <td>
-                    <span className={`status-badge ${d.driverStatus === 'Active' ? 'status-active' : 'status-inactive'}`}>
-                      {d.driverStatus || "Unknown"}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        onClick={() => openModal(d)}
-                        className="action-btn activate-btn"
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(d.id)}
-                        className="action-btn delete-btn"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {filteredDrivers.length === 0 && (
-            <div className="empty-state">
-              <div className="empty-icon">👨‍💼</div>
-              <h3>No drivers found</h3>
-              <p>Start by adding your first driver to the system</p>
-              <button className="empty-add-button" onClick={() => openModal()}>
-                Add Driver
-              </button>
-            </div>
-          )}
-        </>
-      )}
+{loading && <Loader/>}
+      <table className="management-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Company</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Phone</th>
+            <th>License Number</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredDrivers.map((d) => (
+            <tr key={d.id}>
+              <td>{d.id}</td>
+              <td>{d.companyName}</td>
+              <td>{d.firstName}</td>
+              <td>{d.lastName}</td>
+              <td>{d.phoneNumber}</td>
+              <td>{d.licenseNumber}</td>
+              <td>{d.driverStatus}</td>
+              <td>
+                <button onClick={() => openModal(d)}>Edit</button>
+                <button onClick={() => handleDelete(d.id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
             <h3>{selectedDriver ? "Edit Driver" : "Add Driver"}</h3>
             <form onSubmit={handleSubmit}>
-              <select 
-                name="companyId" 
-                defaultValue={selectedDriver?.companyId || ""} 
-                required
-              >
-                <option value="">Select Company</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.companyName}
-                  </option>
-                ))}
-              </select>
-              
+              <label htmlFor="firstName">First Name</label>
               <input
                 type="text"
                 name="firstName"
@@ -212,7 +161,7 @@ const DriverManagement = () => {
                 defaultValue={selectedDriver?.firstName || ""}
                 required
               />
-              
+              <label htmlFor="lastName">Last Name</label>
               <input
                 type="text"
                 name="lastName"
@@ -220,7 +169,7 @@ const DriverManagement = () => {
                 defaultValue={selectedDriver?.lastName || ""}
                 required
               />
-              
+              <label htmlFor="phoneNumber">Phone Number</label>
               <input
                 type="text"
                 name="phoneNumber"
@@ -228,7 +177,7 @@ const DriverManagement = () => {
                 defaultValue={selectedDriver?.phoneNumber || ""}
                 required
               />
-              
+              <label htmlFor="licenseNumber">License Number</label>
               <input
                 type="text"
                 name="licenseNumber"
@@ -236,21 +185,20 @@ const DriverManagement = () => {
                 defaultValue={selectedDriver?.licenseNumber || ""}
                 required
               />
-              
-              <input
-                type="date"
-                name="licenseExpiry"
-                placeholder="License Expiry"
-                defaultValue={selectedDriver?.licenseExpiry?.split("T")[0] || ""}
-              />
-              
+              <label htmlFor="licenseCategories">License Categories</label>
               <input
                 type="text"
                 name="licenseCategories"
                 placeholder="License Categories (e.g., B, C, D)"
                 defaultValue={selectedDriver?.licenseCategories || ""}
               />
-              
+              <label htmlFor="licenseExpiry">License Expiry</label>
+              <input
+                type="date"
+                name="licenseExpiry"
+                defaultValue={selectedDriver?.licenseExpiry?.split("T")[0] || ""}
+              />
+              <label htmlFor="hireDate">Hire Date</label>
               <input
                 type="date"
                 name="hireDate"

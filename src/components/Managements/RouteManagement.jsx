@@ -4,6 +4,7 @@ import { locationService } from "../../services/locationService";
 import { companyService } from "../../services/companyService";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
+import { useAuth } from "../../contexts/AuthContext";
 
 const RouteManagement = () => {
   const [routes, setRoutes] = useState([]);
@@ -11,12 +12,8 @@ const RouteManagement = () => {
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [locations, setLocations] = useState([]);
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch routes, locations and companies
-  const fetchData = async () => {
-    setLoading(true);
+  const {user} = useAuth();
+  const fetchRoutes = async () => {
     try {
       const [routeResponse, locationResponse, companyResponse] = await Promise.all([
         routeService.getAll(),
@@ -64,17 +61,15 @@ const RouteManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    try {
-      const form = e.target;
-      const formData = {
-        companyId: Number(form.companyId.value),
-        startLocationId: Number(form.startLocationId.value),
-        endLocationId: Number(form.endLocationId.value),
-        isActive: form.isActive.checked,
-        availableFrom: form.availableFrom.value,
-        availableTo: form.availableTo.value,
-      };
+    const form = e.target;
+    const formData = {
+      companyId: +user.companyId,
+      startLocationId: Number(form.startLocationId.value),
+      endLocationId: Number(form.endLocationId.value),
+      isActive: form.isActive.checked,
+      availableFrom: form.availableFrom.value,
+      availableTo: form.availableTo.value,
+    };
 
       if (selectedRoute) {
         await routeService.update(selectedRoute.id, formData);
@@ -195,24 +190,8 @@ const RouteManagement = () => {
           <div className="modal-content">
             <h3>{selectedRoute ? "Edit Route" : "Add Route"}</h3>
             <form onSubmit={handleSubmit}>
-              <select 
-                name="companyId" 
-                defaultValue={selectedRoute?.companyId || ""} 
-                required
-              >
-                <option value="">Select Company</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.companyName}
-                  </option>
-                ))}
-              </select>
-              
-              <select 
-                name="startLocationId" 
-                defaultValue={selectedRoute?.startLocationId || ""} 
-                required
-              >
+              <label htmlFor="startLocationId">Start Location:</label>
+              <select name="startLocationId" defaultValue={selectedRoute?.startLocationId || ""} required>
                 <option value="">Select Start Location</option>
                 {locations.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -220,12 +199,8 @@ const RouteManagement = () => {
                   </option>
                 ))}
               </select>
-
-              <select 
-                name="endLocationId" 
-                defaultValue={selectedRoute?.endLocationId || ""} 
-                required
-              >
+              <label htmlFor="endLocationId">End Location:</label>
+              <select name="endLocationId" defaultValue={selectedRoute?.endLocationId || ""} required>
                 <option value="">Select End Location</option>
                 {locations.map((l) => (
                   <option key={l.id} value={l.id}>
@@ -242,7 +217,7 @@ const RouteManagement = () => {
                   defaultChecked={selectedRoute?.isActive || false}
                 />
               </label>
-
+                <label htmlFor="availableFrom">Available From:</label>
               <input
                 type="datetime-local"
                 name="availableFrom"
@@ -250,7 +225,7 @@ const RouteManagement = () => {
                 defaultValue={selectedRoute?.availableFrom?.slice(0, 16) || ""}
                 required
               />
-              
+              <label htmlFor="availableTo">Available To:</label>
               <input
                 type="datetime-local"
                 name="availableTo"
