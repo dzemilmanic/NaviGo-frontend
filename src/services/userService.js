@@ -16,8 +16,9 @@ class UserService {
   }
 
   async updateStatus(id, status) {
+    const statusValue = status === "Active" ? 1 : 0;
     return apiService.patch(`/user/activate/${id}`, {
-      userStatus: status
+      userStatus: statusValue
     });
   }
 

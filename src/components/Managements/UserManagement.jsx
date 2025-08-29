@@ -12,7 +12,7 @@ const UserManagement = () => {
 
   const fetchData = async () => {
     try {
-      const userResponse = await userService.getAll(); // fetch once
+      const userResponse = await userService.getAll();
       const companyResponse = await companyService.getAll();
       setUsers(userResponse.data);
       setCompanies(companyResponse.data);
@@ -42,6 +42,20 @@ const UserManagement = () => {
         fetchData();
       } catch (error) {
         console.error("Error deleting user:", error);
+      }
+    }
+  };
+
+  const handleActivateDeactivate = async (id, currentStatus) => {
+    const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+    const action = newStatus === "Active" ? "activate" : "deactivate";
+    
+    if (window.confirm(`Are you sure you want to ${action} this user?`)) {
+      try {
+        await userService.updateStatus(id, newStatus);
+        fetchData();
+      } catch (error) {
+        console.error("Error updating user status:", error);
       }
     }
   };
@@ -92,7 +106,6 @@ const UserManagement = () => {
       <table className="management-table">
         <thead>
           <tr>
-            
             <th>Email</th>
             <th>Name</th>
             <th>Phone</th>
@@ -105,15 +118,31 @@ const UserManagement = () => {
         <tbody>
           {filteredUsers.map((u) => (
             <tr key={u.id}>
-              
               <td>{u.email}</td>
               <td>{`${u.firstName} ${u.lastName}`}</td>
               <td>{u.phoneNumber}</td>
               <td>{u.userRole}</td>
               <td>{u.companyId ? companies.find(c => c.id === u.companyId)?.companyName : "-"}</td>
-              <td>{u.userStatus}</td>
               <td>
-                <button onClick={() => handleDelete(u.id)}>Delete</button>
+                <span className={`status-badge ${u.userStatus === 'Active' ? 'status-active' : 'status-inactive'}`}>
+                  {u.userStatus}
+                </span>
+              </td>
+              <td>
+                <div className="action-buttons">
+                  <button 
+                    onClick={() => handleActivateDeactivate(u.id, u.userStatus)}
+                    className={`action-btn ${u.userStatus === 'Active' ? 'deactivate-btn' : 'activate-btn'}`}
+                  >
+                    {u.userStatus === "Active" ? "Deactivate" : "Activate"}
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(u.id)}
+                    className="action-btn delete-btn"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
