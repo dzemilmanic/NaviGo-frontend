@@ -1,11 +1,11 @@
 /* CSS Custom Properties for consistent theming */
 :root {
-  --primary-color: #4f46e5;
-  --primary-hover: #3730a3;
-  --secondary-color: #6b7280;
-  --success-color: #10b981;
+  --primary-color: #1B3C53;
+  --primary-hover: #456882;
+  --secondary-color: #D2C1B6;
+  --success-color: #16A34A;
   --success-hover: #059669;
-  --warning-color: #f59e0b;
+  --warning-color: #F59E0B;
   --warning-hover: #d97706;
   --danger-color: #ef4444;
   --danger-hover: #dc2626;
@@ -215,7 +215,497 @@
   }
 }
 
-/* Modal Styles */
+/* Modal Overlay - Status Modal Specific */
+.company-status-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: companyStatusOverlayFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes companyStatusOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Status Modal Container */
+.company-status-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: companyStatusModalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  border: 2px solid rgba(99, 102, 241, 0.15);
+  position: relative;
+}
+
+@keyframes companyStatusModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Header for Status Modal */
+.company-status-modal-header {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  padding: 24px;
+  border-bottom: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.company-status-modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.company-status-modal-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.3px;
+}
+
+.company-status-modal-title::before {
+  content: '🏢';
+  font-size: 26px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.company-status-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 700;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+}
+
+.company-status-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.15) rotate(90deg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Body for Status Modal */
+.company-status-modal-body {
+  padding: 36px 28px;
+  background: linear-gradient(to bottom, #fafbff 0%, #ffffff 100%);
+  position: relative;
+}
+
+.company-status-info {
+  background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  border: 2px solid #e0e7ff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.08);
+}
+
+.company-status-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+.company-status-info-title {
+  margin: 0 0 14px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.2px;
+}
+
+.company-status-info-text {
+  margin: 0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* Status Selection Area */
+.company-status-selection {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 16px;
+  border: 2px solid #f1f5f9;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.company-status-selection:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+  transform: translateY(-2px);
+}
+
+.company-status-selection-label {
+  display: block;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 14px;
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.company-status-select {
+  width: 100%;
+  padding: 18px 22px;
+  border: 3px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  background-size: 22px;
+  padding-right: 55px;
+}
+
+.company-status-select:hover {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.18);
+}
+
+.company-status-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+  background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+}
+
+.company-status-select option {
+  padding: 14px;
+  font-weight: 600;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 16px;
+}
+
+/* Modal Actions for Status Modal */
+.company-status-modal-actions {
+  background: linear-gradient(to right, #f8fafc 0%, #ffffff 100%);
+  padding: 28px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 18px;
+}
+
+.company-status-btn {
+  padding: 16px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+.company-status-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  transition: left 0.7s ease;
+}
+
+.company-status-btn:hover::before {
+  left: 100%;
+}
+
+.company-status-btn-primary {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.company-status-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(34, 197, 94, 0.5);
+}
+
+.company-status-btn-primary:active {
+  transform: translateY(0);
+}
+
+.company-status-btn-primary:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  opacity: 0.7;
+}
+
+.company-status-btn-secondary {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border: 3px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.company-status-btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #334155;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Company Status badges */
+.company-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.company-status-badge::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.company-status-pending {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 2px solid #f59e0b;
+}
+
+.company-status-pending::before {
+  background-color: #f59e0b;
+  animation: companyStatusPulse 2s infinite;
+}
+
+.company-status-approved {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 2px solid #22c55e;
+}
+
+.company-status-approved::before {
+  background-color: #22c55e;
+}
+
+.company-status-rejected {
+  background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%);
+  color: #991b1b;
+  border: 2px solid #ef4444;
+}
+
+.company-status-rejected::before {
+  background-color: #ef4444;
+}
+
+.company-status-unknown {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #6b7280;
+  border: 2px solid #d1d5db;
+}
+
+.company-status-unknown::before {
+  background-color: #6b7280;
+}
+
+@keyframes companyStatusPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(-50%) scale(1.2);
+  }
+}
+
+/* Company Status change button */
+.company-btn-status {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.company-btn-status::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+.company-btn-status:hover:not(:disabled)::before {
+  width: 300px;
+  height: 300px;
+}
+
+.company-btn-status:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.45);
+}
+
+.company-btn-status:active {
+  transform: translateY(0);
+}
+
+/* Responsive Design for Status Modal */
+@media (max-width: 768px) {
+  .company-status-modal-overlay {
+    padding: 16px;
+  }
+  
+  .company-status-modal {
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  .company-status-modal-header {
+    padding: 20px;
+  }
+  
+  .company-status-modal-body {
+    padding: 24px 20px;
+  }
+  
+  .company-status-modal-actions {
+    padding: 20px;
+    flex-direction: column;
+    gap: 14px;
+  }
+  
+  .company-status-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .company-status-modal-title {
+    font-size: 18px;
+  }
+  
+  .company-status-info-title {
+    font-size: 18px;
+  }
+  
+  .company-status-select {
+    padding: 16px 20px;
+    font-size: 15px;
+  }
+}
+
+/* General Modal Styles (for other modals) */
 .modal {
   position: fixed;
   top: 0;
