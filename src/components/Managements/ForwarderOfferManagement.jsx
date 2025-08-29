@@ -120,7 +120,7 @@ const ForwarderOfferManagement = () => {
             <tr key={o.id}>
               <td>{o.id}</td>
               <td>{o.routeId}</td>
-              <td>{o.forwarderId}</td>
+              <td>{o.forwarderCompanyName}</td>
               <td>{o.commissionRate}</td>
               <td>{o.discountRate}</td>
               <td>{o.forwarderOfferStatus}</td>

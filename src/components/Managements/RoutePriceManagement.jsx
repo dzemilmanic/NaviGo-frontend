@@ -102,7 +102,7 @@ const RoutePriceManagement = () => {
             <tr key={rp.id}>
               <td>{rp.id}</td>
               <td>{rp.routeId}</td>
-              <td>{rp.vehicleTypeId}</td>
+              <td>{rp.vehicleTypeName}</td>
               <td>{rp.pricePerKm}</td>
               <td>{rp.minimumPrice}</td>
               <td>

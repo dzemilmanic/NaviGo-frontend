@@ -118,9 +118,9 @@ const VehicleManagement = () => {
               <td>{v.brand}</td>
               <td>{v.model}</td>
               <td>{v.registrationNumber}</td>
-              <td>{vehicleTypes.find(t => t.id === v.vehicleTypeId)?.typeName}</td>
-              <td>{companies.find(c => c.id === v.companyId)?.companyName}</td>
-              <td>{locations.find(l => l.id === v.currentLocationId)?.fullAddress}</td>
+              <td>{v.vehicleTypeName}</td>
+              <td>{v.companyName}</td>
+              <td>{v.currentLocationName}</td>
               <td>
                 <button onClick={() => openModal(v)}>Edit</button>
                 <button onClick={() => handleDelete(v.id)}>Delete</button>

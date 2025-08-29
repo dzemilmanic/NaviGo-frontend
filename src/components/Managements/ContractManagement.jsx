@@ -125,8 +125,8 @@ const ContractManagement = () => {
             <tr key={c.id}>
               <td>{c.id}</td>
               <td>{c.contractNumber}</td>
-              <td>{c.clientId}</td>
-              <td>{c.forwarderId}</td>
+              <td>{c.clientFullName} {clients.find((client) => client.id === c.clientId)?.companyName ? '(' + clients.find((client) => client.id === c.clientId)?.companyName + ')' : ''}</td>
+              <td>{c.forwarderCompanyName}</td>
               <td>{c.routeId}</td>
               <td>{c.contractStatus}</td>
               <td>

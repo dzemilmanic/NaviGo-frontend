@@ -119,10 +119,10 @@ const ShipmentManagement = () => {
           {shipments.map((s) => (
             <tr key={s.id}>
               <td>{s.id}</td>
-              <td>{s.contractId}</td>
-              <td>{s.vehicleId}</td>
-              <td>{s.driverId}</td>
-              <td>{s.cargoTypeId}</td>
+              <td>{s.contractName}</td>
+              <td>{s.vehicleName}</td>
+              <td>{s.driverName}</td>
+              <td>{s.cargoTypeName}</td>
               <td>{s.weightKg}</td>
               <td>{s.priority}</td>
               <td>{s.description}</td>
