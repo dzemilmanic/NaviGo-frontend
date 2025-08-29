@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { driverService } from "../../services/driverService";
-import { companyService } from "../../services/companyService"; // za dropdown kompanija
+import { companyService } from "../../services/companyService";
+import Loader from "../Loader/Loader";
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -10,30 +11,26 @@ const DriverManagement = () => {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(false);
   const {user} = useAuth();
   // Fetch drivers
   const fetchDrivers = async () => {
     try {
-      const response = await driverService.getAll(); // bez search parametra
-      setDrivers(response.data);
+      const [driverResponse, companyResponse] = await Promise.all([
+        driverService.getAll(),
+        companyService.getAll()
+      ]);
+      setDrivers(driverResponse.data);
+      setCompanies(companyResponse.data);
     } catch (error) {
-      console.error("Error fetching drivers:", error);
-    }
-  };
-
-  // Fetch companies for dropdown
-  const fetchCompanies = async () => {
-    try {
-      const response = await companyService.getAll();
-      setCompanies(response.data);
-    } catch (error) {
-      console.error("Error fetching companies:", error);
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDrivers();
-    fetchCompanies();
+    fetchData();
   }, []);
 
   const openModal = (driver = null) => {
@@ -49,16 +46,20 @@ const DriverManagement = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this driver?")) {
       try {
+        setLoading(true);
         await driverService.delete(id);
-        fetchDrivers();
+        await fetchData();
       } catch (error) {
         console.error("Error deleting driver:", error);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const form = e.target;
     const formData = {
       companyId: user.companyId,
@@ -71,36 +72,50 @@ const DriverManagement = () => {
       hireDate: form.hireDate.value,
     };
 
-    try {
       if (selectedDriver) {
         await driverService.update(selectedDriver.id, formData);
       } else {
         await driverService.create(formData);
       }
-      fetchDrivers();
+      
+      await fetchData();
       closeModal();
     } catch (error) {
       console.error("Error saving driver:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Filter drivers na frontendu
+  // Filter drivers on frontend
   const filteredDrivers = drivers.filter((d) =>
-    `${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase())
+    `${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+    d.licenseNumber.toLowerCase().includes(search.toLowerCase()) ||
+    d.phoneNumber.toLowerCase().includes(search.toLowerCase())
   );
+
+  const getCompanyName = (companyId) => {
+    const company = companies.find(c => c.id === companyId);
+    return company ? company.companyName : "Unknown Company";
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString();
+  };
 
   return (
     <div className="management-container">
       <div className="management-header">
         <input
           type="text"
-          placeholder="Search drivers..."
+          placeholder="Search drivers by name, license, or phone..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <button onClick={() => openModal()}>Add Driver</button>
       </div>
-
+{loading && <Loader/>}
       <table className="management-table">
         <thead>
           <tr>
@@ -160,6 +175,7 @@ const DriverManagement = () => {
                 name="phoneNumber"
                 placeholder="Phone Number"
                 defaultValue={selectedDriver?.phoneNumber || ""}
+                required
               />
               <label htmlFor="licenseNumber">License Number</label>
               <input
@@ -167,12 +183,13 @@ const DriverManagement = () => {
                 name="licenseNumber"
                 placeholder="License Number"
                 defaultValue={selectedDriver?.licenseNumber || ""}
+                required
               />
               <label htmlFor="licenseCategories">License Categories</label>
               <input
                 type="text"
                 name="licenseCategories"
-                placeholder="License Categories"
+                placeholder="License Categories (e.g., B, C, D)"
                 defaultValue={selectedDriver?.licenseCategories || ""}
               />
               <label htmlFor="licenseExpiry">License Expiry</label>
@@ -185,11 +202,15 @@ const DriverManagement = () => {
               <input
                 type="date"
                 name="hireDate"
+                placeholder="Hire Date"
                 defaultValue={selectedDriver?.hireDate?.split("T")[0] || ""}
               />
+
               <div className="modal-actions">
-                <button type="submit">{selectedDriver ? "Save" : "Add"}</button>
-                <button type="button" onClick={closeModal}>
+                <button type="submit" disabled={loading}>
+                  {loading ? "Saving..." : (selectedDriver ? "Save" : "Add")}
+                </button>
+                <button type="button" onClick={closeModal} disabled={loading}>
                   Cancel
                 </button>
               </div>
