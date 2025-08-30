@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { companyService } from "../../services/companyService";
 import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from '../Loader/Loader';
 
@@ -58,7 +59,9 @@ const CompanyManagement = ({ userType }) => {
     try {
       const response = await companyService.getAll();
       setCompanies(response.data);
+      //toast.success("Companies loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load companies. Please try again.");
       console.error("Error fetching companies:", error);
     } finally {
       setLoading(false);
@@ -86,33 +89,156 @@ const CompanyManagement = ({ userType }) => {
 
   const handleStatusUpdate = async () => {
     if (!selectedCompanyForStatus) return;
-    setLoading(true)
-    setIsUpdatingStatus(true);
-    try {
-      await companyService.updateStatus(selectedCompanyForStatus.id, newStatus);
-      await fetchCompanies();
-      closeStatusModal();
-    } catch (error) {
-      console.error("Error updating company status:", error);
-      alert("Failed to update company status. Please try again.");
-    } finally {
-      setLoading(false);
-      setIsUpdatingStatus(false);
-    }
+    
+    const statusText = getStatusText(newStatus);
+    const companyName = selectedCompanyForStatus.companyName;
+
+    // Custom toast confirmation
+    const confirmUpdate = () => {
+      toast.dismiss();
+      performStatusUpdate();
+    };
+
+    const cancelUpdate = () => {
+      toast.dismiss();
+      toast.info("Status update cancelled");
+    };
+
+    const performStatusUpdate = async () => {
+      setLoading(true);
+      setIsUpdatingStatus(true);
+      try {
+        await companyService.updateStatus(selectedCompanyForStatus.id, newStatus);
+        await fetchCompanies();
+        closeStatusModal();
+        toast.success(`Company ${companyName} status updated to ${statusText}!`);
+      } catch (error) {
+        toast.error("Failed to update company status. Please try again.");
+        console.error("Error updating company status:", error);
+      } finally {
+        setLoading(false);
+        setIsUpdatingStatus(false);
+      }
+    };
+
+    // Show confirmation toast
+    toast.info(
+      <div>
+        <p>Change status of <strong>{companyName}</strong> to <strong>{statusText}</strong>?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmUpdate}
+            style={{
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Update
+          </button>
+          <button 
+            onClick={cancelUpdate}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this company?")) {
+  const handleDelete = async (id, companyName) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await companyService.delete(id);
-        fetchCompanies();
+        await fetchCompanies();
+        toast.success(`Company ${companyName} deleted successfully!`);
       } catch (error) {
+        toast.error("Failed to delete company. Please try again.");
         console.error("Error deleting company:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete company <strong>{companyName}</strong>?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const filteredCompanies = companies.filter((c) =>
@@ -186,7 +312,7 @@ const CompanyManagement = ({ userType }) => {
                         Change Status
                       </button>
                       <button 
-                        onClick={() => handleDelete(company.id)}
+                        onClick={() => handleDelete(company.id, company.companyName)}
                         className="action-btn delete-btn"
                         title="Delete company"
                       >

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
-import Loader from '../Loader/Loader'
+import Loader from '../Loader/Loader';
 
 const VehicleTypeManagement = () => {
   const [vehicleTypes, setVehicleTypes] = useState([]);
@@ -10,13 +11,16 @@ const VehicleTypeManagement = () => {
   const [selectedType, setSelectedType] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const response = await vehicleTypeService.getAll({ search });
       setVehicleTypes(response.data);
+      //toast.success("Vehicle types loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load vehicle types. Please try again.");
       console.error("Error fetching vehicle types:", error);
     } finally {
       setLoading(false);
@@ -39,41 +43,106 @@ const VehicleTypeManagement = () => {
     document.body.style.overflow = 'auto';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this vehicle type?")) {
+  const handleDelete = async (id, typeName) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await vehicleTypeService.delete(id);
-        fetchData();
+        await fetchData();
+        toast.success(`Vehicle type ${typeName} deleted successfully!`);
       } catch (error) {
+        toast.error("Failed to delete vehicle type. Please try again.");
         console.error("Error deleting vehicle type:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete vehicle type <strong>{typeName}</strong>?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const formData = {
+    const submitData = {
       typeName: form.typeName.value,
       description: form.description.value,
       requiresSpecialLicense: form.requiresSpecialLicense.checked,
     };
+    
+    setIsSubmitting(true);
     setLoading(true);
     try {
       if (selectedType) {
-        await vehicleTypeService.update(selectedType.id, formData);
+        await vehicleTypeService.update(selectedType.id, submitData);
+        toast.success(`Vehicle type ${submitData.typeName} updated successfully!`);
       } else {
-        await vehicleTypeService.create(formData);
+        await vehicleTypeService.create(submitData);
+        toast.success(`Vehicle type ${submitData.typeName} created successfully!`);
       }
       fetchData();
       closeModal();
     } catch (error) {
+      toast.error("Failed to save vehicle type. Please try again.");
       console.error("Error saving vehicle type:", error);
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -81,8 +150,8 @@ const VehicleTypeManagement = () => {
     vt.typeName.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) {
-    return <Loader />
+  if (loading && !isSubmitting) {
+    return <Loader />;
   }
 
   return (
@@ -145,7 +214,7 @@ const VehicleTypeManagement = () => {
                         Edit
                       </button>
                       <button 
-                        onClick={() => handleDelete(t.id)}
+                        onClick={() => handleDelete(t.id, t.typeName)}
                         className="action-btn delete-btn"
                         title="Delete vehicle type"
                       >
@@ -218,11 +287,20 @@ const VehicleTypeManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button 
+                  type="button" 
+                  onClick={closeModal} 
+                  className="cancel-btn"
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  {selectedType ? "Update Vehicle Type" : "Create Vehicle Type"}
+                <button 
+                  type="submit" 
+                  className="submit-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (selectedType ? "Updating..." : "Creating...") : (selectedType ? "Update Vehicle Type" : "Create Vehicle Type")}
                 </button>
               </div>
             </form>

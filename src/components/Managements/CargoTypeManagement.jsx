@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { cargoTypeService } from "../../services/cargoTypeService";
 import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 
@@ -15,13 +16,16 @@ const CargoTypeManagement = () => {
     requiresSpecialEquipment: false,
   });
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchCargoTypes = async () => {
     setLoading(true);
     try {
       const response = await cargoTypeService.getAll();
       setCargoTypes(response.data);
+      //toast.success("Cargo types loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load cargo types. Please try again.");
       console.error("Error fetching cargo types:", error);
     } finally {
       setLoading(false);
@@ -67,39 +71,103 @@ const CargoTypeManagement = () => {
     document.body.style.overflow = 'auto';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this cargo type?")) {
+  const handleDelete = async (id, typeName) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await cargoTypeService.delete(id);
-        fetchCargoTypes();
+        await fetchCargoTypes();
+        toast.success(`Cargo type ${typeName} deleted successfully!`);
       } catch (error) {
+        toast.error("Failed to delete cargo type. Please try again.");
         console.error("Error deleting cargo type:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete cargo type <strong>{typeName}</strong>?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setLoading(true);
     try {
       if (selectedCargoType) {
         await cargoTypeService.update(selectedCargoType.id, formData);
+        toast.success(`Cargo type ${formData.typeName} updated successfully!`);
       } else {
         await cargoTypeService.create(formData);
+        toast.success(`Cargo type ${formData.typeName} created successfully!`);
       }
       closeModal();
       fetchCargoTypes();
     } catch (error) {
+      toast.error("Failed to save cargo type. Please try again.");
       console.error("Error saving cargo type:", error);
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (loading) {
+  if (loading && !isSubmitting) {
     return <Loader />;
   }
 
@@ -163,7 +231,7 @@ const CargoTypeManagement = () => {
                         Edit
                       </button>
                       <button 
-                        onClick={() => handleDelete(ct.id)}
+                        onClick={() => handleDelete(ct.id, ct.typeName)}
                         className="action-btn delete-btn"
                         title="Delete cargo type"
                       >
@@ -244,11 +312,20 @@ const CargoTypeManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button 
+                  type="button" 
+                  onClick={closeModal} 
+                  className="cancel-btn"
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  {selectedCargoType ? "Update Cargo Type" : "Create Cargo Type"}
+                <button 
+                  type="submit" 
+                  className="submit-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (selectedCargoType ? "Updating..." : "Creating...") : (selectedCargoType ? "Update Cargo Type" : "Create Cargo Type")}
                 </button>
               </div>
             </form>

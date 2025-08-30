@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { shipmentStatusHistoryService } from "../../services/shipmentStatusHistoryService";
 import { shipmentService } from "../../services/shipmentService";
 import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 
@@ -20,7 +21,9 @@ const ShipmentStatusHistoryManagement = () => {
       const shipmentResponse = await shipmentService.getAll();
       setHistories(historyResponse.data);
       setShipments(shipmentResponse.data);
+      //toast.success("History records loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load history records. Please try again.");
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
@@ -44,17 +47,76 @@ const ShipmentStatusHistoryManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this history entry?")) {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await shipmentStatusHistoryService.delete(id);
-        fetchData();
+        await fetchData();
+        toast.success("History entry deleted successfully!");
       } catch (error) {
+        toast.error("Failed to delete history entry. Please try again.");
         console.error("Error deleting history entry:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete this history entry?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -69,12 +131,15 @@ const ShipmentStatusHistoryManagement = () => {
     try {
       if (selectedHistory) {
         await shipmentStatusHistoryService.update(selectedHistory.id, formData);
+        toast.success("History entry updated successfully!");
       } else {
         await shipmentStatusHistoryService.create(formData);
+        toast.success("History entry created successfully!");
       }
-      fetchData();
+      await fetchData();
       closeModal();
     } catch (error) {
+      toast.error("Failed to save history entry. Please try again.");
       console.error("Error saving history entry:", error);
     } finally {
       setLoading(false);

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { vehicleMaintenanceService } from "../../services/vehicleMaintenanceService";
 import { vehicleService } from "../../services/vehicleService";
 import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 
@@ -27,7 +28,9 @@ const VehicleMaintenanceManagement = () => {
     try {
       const response = await vehicleMaintenanceService.getAll();
       setVehicleMaintenances(response.data);
+      //toast.success("Maintenance records loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load maintenance records. Please try again.");
       console.error("Error fetching vehicle maintenances:", error);
     } finally {
       setLoading(false);
@@ -40,6 +43,7 @@ const VehicleMaintenanceManagement = () => {
       const response = await vehicleService.getAll();
       setVehicles(response.data);
     } catch (error) {
+      toast.error("Failed to load vehicles. Please try again.");
       console.error("Error fetching vehicles:", error);
     } finally {
       setLoading(false);
@@ -76,19 +80,77 @@ const VehicleMaintenanceManagement = () => {
     document.body.style.overflow = 'hidden';
   };
 
-  // Delete
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this vehicle maintenance?")) {
+  // Delete with custom toast confirmation
+  const handleDelete = async (id, maintenanceDescription) => {
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await vehicleMaintenanceService.delete(id);
-        fetchVehicleMaintenances();
+        await fetchVehicleMaintenances();
+        toast.success("Maintenance record deleted successfully!");
       } catch (error) {
+        toast.error("Failed to delete maintenance record. Please try again.");
         console.error("Error deleting vehicle maintenance:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete this maintenance record?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   // Submit (Add / Update)
@@ -104,6 +166,7 @@ const VehicleMaintenanceManagement = () => {
           repairCost: Number(formData.repairCost),
           resolvedAt: formData.resolvedAt || new Date().toISOString(),
         });
+        toast.success("Maintenance record updated successfully!");
       } else {
         await vehicleMaintenanceService.create({
           vehicleId: Number(formData.vehicleId),
@@ -112,6 +175,7 @@ const VehicleMaintenanceManagement = () => {
           maintenanceType: Number(formData.maintenanceType),
           repairCost: Number(formData.repairCost),
         });
+        toast.success("Maintenance record created successfully!");
       }
       setModalOpen(false);
       setSelectedVehicleMaintenance(null);
@@ -123,8 +187,9 @@ const VehicleMaintenanceManagement = () => {
         repairCost: 0,
         resolvedAt: "",
       });
-      fetchVehicleMaintenances();
+      await fetchVehicleMaintenances();
     } catch (error) {
+      toast.error("Failed to save maintenance record. Please try again.");
       console.error("Error saving vehicle maintenance:", error);
     } finally {
       setLoading(false);
@@ -219,7 +284,7 @@ const VehicleMaintenanceManagement = () => {
                         Edit
                       </button>
                       <button 
-                        onClick={() => handleDelete(vm.id)}
+                        onClick={() => handleDelete(vm.id, vm.description)}
                         className="action-btn delete-btn"
                         title="Delete maintenance record"
                       >

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { userService } from "../../services/userService";
 import { companyService } from "../../services/companyService";
 import { Menu, X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 
@@ -14,13 +15,15 @@ const UserManagement = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const fetchData = async () => {
-    setLoading(true); 
+    setLoading(true);
     try {
       const userResponse = await userService.getAll();
       const companyResponse = await companyService.getAll();
       setUsers(userResponse.data);
       setCompanies(companyResponse.data);
+      //toast.success("Data loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load data. Please try again.");
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
@@ -41,35 +44,153 @@ const UserManagement = () => {
     document.body.style.overflow = 'auto';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+  const handleDelete = async (id, userName) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await userService.delete(id);
-        fetchData();
+        await fetchData();
+        toast.success(`User ${userName} deleted successfully!`);
       } catch (error) {
+        toast.error("Failed to delete user. Please try again.");
         console.error("Error deleting user:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete user <strong>{userName}</strong>?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
-  const handleActivateDeactivate = async (id, currentStatus) => {
+  const handleActivateDeactivate = async (id, currentStatus, userName) => {
     const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
     const action = newStatus === "Active" ? "activate" : "deactivate";
-    
-    if (window.confirm(`Are you sure you want to ${action} this user?`)) {
+
+    // Custom toast confirmation
+    const confirmAction = () => {
+      toast.dismiss();
+      performStatusChange();
+    };
+
+    const cancelAction = () => {
+      toast.dismiss();
+      toast.info("Status change cancelled");
+    };
+
+    const performStatusChange = async () => {
       setLoading(true);
       try {
         await userService.updateStatus(id, newStatus);
-        fetchData();
+        await fetchData();
+        toast.success(`User ${userName} ${action}d successfully!`);
       } catch (error) {
+        toast.error(`Failed to ${action} user. Please try again.`);
         console.error("Error updating user status:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.info(
+      <div>
+        <p>Are you sure you want to <strong>{action}</strong> user <strong>{userName}</strong>?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmAction}
+            style={{
+              background: newStatus === 'Active' ? '#059669' : '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            {action.charAt(0).toUpperCase() + action.slice(1)}
+          </button>
+          <button 
+            onClick={cancelAction}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -84,18 +205,21 @@ const UserManagement = () => {
       userRole: Number(form.userRole.value),
       companyId: form.companyId.value ? Number(form.companyId.value) : null,
     };
+    
     setLoading(true);
     try {
       await userService.create(formData);
-      fetchData();
+      await fetchData();
       closeModal();
+      toast.success(`User ${formData.firstName} ${formData.lastName} created successfully!`);
+      form.reset();
     } catch (error) {
+      toast.error("Failed to create user. Please check your input and try again.");
       console.error("Error saving user:", error);
     } finally {
       setLoading(false);
     }
   };
-
 
   // Frontend filter
   const filteredUsers = users.filter((u) =>
@@ -177,14 +301,14 @@ const UserManagement = () => {
                   <td className="actions-cell">
                     <div className="action-buttons">
                       <button 
-                        onClick={() => handleActivateDeactivate(u.id, u.userStatus)}
+                        onClick={() => handleActivateDeactivate(u.id, u.userStatus, `${u.firstName} ${u.lastName}`)}
                         className={`action-btn ${u.userStatus === 'Active' ? 'deactivate-btn' : 'activate-btn'}`}
                         title={u.userStatus === "Active" ? "Deactivate user" : "Activate user"}
                       >
                         {u.userStatus === "Active" ? "Deactivate" : "Activate"}
                       </button>
                       <button 
-                        onClick={() => handleDelete(u.id)}
+                        onClick={() => handleDelete(u.id, `${u.firstName} ${u.lastName}`)}
                         className="action-btn delete-btn"
                         title="Delete user"
                       >

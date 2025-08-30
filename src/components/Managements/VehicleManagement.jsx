@@ -4,6 +4,7 @@ import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
 import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import Loader from "../Loader/Loader";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Managements.css";
@@ -20,6 +21,7 @@ const VehicleManagement = () => {
   const [loading, setLoading] = useState(false);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [pictureUrl, setPictureUrl] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   
   const fetchData = async () => {
@@ -34,7 +36,9 @@ const VehicleManagement = () => {
       setVehicleTypes(typeResponse.data);
       setCompanies(companyResponse.data);
       setLocations(locationResponse.data);
+      //toast.success("Vehicles loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load vehicles. Please try again.");
       console.error("Error fetching vehicles:", error);
     } finally {
       setLoading(false);
@@ -57,22 +61,82 @@ const VehicleManagement = () => {
     document.body.style.overflow = 'auto';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this vehicle?")) {
+  const handleDelete = async (id, vehicleName) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await vehicleService.delete(id);
-        fetchData();
+        await fetchData();
+        toast.success(`Vehicle ${vehicleName} deleted successfully!`);
       } catch (error) {
+        toast.error("Failed to delete vehicle. Please try again.");
         console.error("Error deleting vehicle:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete vehicle <strong>{vehicleName}</strong>?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setLoading(true);
     try {
       const form = e.target;
@@ -111,16 +175,20 @@ const VehicleManagement = () => {
 
       if (selectedVehicle) {
         await vehicleService.update(selectedVehicle.id, formData);
+        toast.success(`Vehicle ${formData.brand} ${formData.model} updated successfully!`);
       } else {
         await vehicleService.create(formData);
+        toast.success(`Vehicle ${formData.brand} ${formData.model} created successfully!`);
       }
 
-      fetchData();
+      await fetchData();
       closeModal();
     } catch (error) {
+      toast.error("Failed to save vehicle. Please try again.");
       console.error("Error saving vehicle:", error);
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -142,7 +210,7 @@ const VehicleManagement = () => {
     setPictureUrl(e.target.files[0]);
   };
   
-  if (loading) {
+  if (loading && !isSubmitting) {
     return <Loader />;
   }
   
@@ -260,7 +328,7 @@ const VehicleManagement = () => {
               </button>
               <button
                 className="delete-button"
-                onClick={() => handleDelete(vehicle.id)}
+                onClick={() => handleDelete(vehicle.id, `${vehicle.brand} ${vehicle.model}`)}
               >
                 Delete
               </button>
@@ -457,11 +525,20 @@ const VehicleManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button 
+                  type="button" 
+                  onClick={closeModal} 
+                  className="cancel-btn"
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  {selectedVehicle ? "Save Changes" : "Add Vehicle"}
+                <button 
+                  type="submit" 
+                  className="submit-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (selectedVehicle ? "Updating..." : "Creating...") : (selectedVehicle ? "Save Changes" : "Add Vehicle")}
                 </button>
               </div>
             </form>

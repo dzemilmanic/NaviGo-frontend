@@ -9,6 +9,8 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import Navbar from "./components/Navbar/Navbar.jsx";
 import Footer from "./components/Footer/Footer.jsx";
@@ -31,6 +33,7 @@ import RegularUserLayout from "./components/Layouts/RegularUser/RegularUserLayou
 import RegularUserDashboard from "./pages/Dashboards/RegularUser/RegularUserDashboard.jsx";
 import AboutUs from "./pages/AboutUs/AboutUs.jsx";
 import Error from './pages/Error/Error.jsx'
+
 const UnauthorizedPage = () => (
   <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
     <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "10px", boxShadow: "0 0 10px rgba(0,0,0,0.1)" }}>
@@ -68,7 +71,6 @@ useEffect(() => {
     }
   }
 }, [isAuthenticated, user, loading, navigate, location.pathname]);
-
 
     if (loading) {
     return (
@@ -162,6 +164,21 @@ useEffect(() => {
 
       {/* Only show Footer if user is not SuperAdmin or CompanyAdmin */}
       {!isSuperAdmin && !isCompanyAdmin && !isRegularUser && <Footer />}
+      
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        style={{ zIndex: 9999 }}
+      />
     </>
   );
 };

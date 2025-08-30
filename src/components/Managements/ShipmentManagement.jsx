@@ -5,6 +5,7 @@ import { vehicleService } from "../../services/vehicleService";
 import { driverService } from "../../services/driverService";
 import { cargoTypeService } from "../../services/cargoTypeService";
 import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 
@@ -33,7 +34,9 @@ const ShipmentManagement = () => {
       setVehicles(vehicleResponse.data);
       setDrivers(driverResponse.data);
       setCargoTypes(cargoTypeResponse.data);
+      //toast.success("Shipments loaded successfully!");
     } catch (error) {
+      toast.error("Failed to load shipments. Please try again.");
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
@@ -56,18 +59,77 @@ const ShipmentManagement = () => {
     document.body.style.overflow = 'auto';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this shipment?")) {
+  const handleDelete = async (id, shipmentDescription) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
         await shipmentService.delete(id);
-        fetchData();
+        await fetchData();
+        toast.success("Shipment deleted successfully!");
       } catch (error) {
+        toast.error("Failed to delete shipment. Please try again.");
         console.error("Error deleting shipment:", error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to delete this shipment?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
+            onClick={confirmDelete}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Delete
+          </button>
+          <button 
+            onClick={cancelDelete}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -85,6 +147,7 @@ const ShipmentManagement = () => {
         };
 
         await shipmentService.update(selectedShipment.id, updateData);
+        toast.success("Shipment updated successfully!");
       } else {
         // CREATE payload
         const createData = {
@@ -100,11 +163,13 @@ const ShipmentManagement = () => {
         };
 
         await shipmentService.create(createData);
+        toast.success("Shipment created successfully!");
       }
 
-      fetchData();
+      await fetchData();
       closeModal();
     } catch (error) {
+      toast.error("Failed to save shipment. Please try again.");
       console.error("Error saving shipment:", error);
     } finally {
       setLoading(false);
@@ -185,7 +250,7 @@ const ShipmentManagement = () => {
                         Edit
                       </button>
                       <button 
-                        onClick={() => handleDelete(s.id)}
+                        onClick={() => handleDelete(s.id, s.description)}
                         className="action-btn delete-btn"
                         title="Delete shipment"
                       >
