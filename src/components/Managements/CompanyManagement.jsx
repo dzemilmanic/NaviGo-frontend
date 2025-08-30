@@ -1,36 +1,20 @@
 import { useState, useEffect } from "react";
 import { companyService } from "../../services/companyService";
+import { X } from "lucide-react";
 import "./Managements.css";
 import Loader from '../Loader/Loader';
+
 const CompanyManagement = ({ userType }) => {
   const [companies, setCompanies] = useState([]);
   const [search, setSearch] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedCompanyForStatus, setSelectedCompanyForStatus] = useState(null);
   const [newStatus, setNewStatus] = useState(0);
-  const [loading,setLoading] = useState(false);
-  const [companyData, setCompanyData] = useState({
-    id: null,
-    companyName: "",
-    pib: "",
-    address: "",
-    contactEmail: "",
-    website: "",
-    description: "",
-    maxCommissionRate: 0,
-    proofFileUrl: "",
-    logoUrl: "",
-    companyType: 1,
-  });
-  const [proofFile, setProofFile] = useState(null);
-  const [logoUrl, setLogoUrl] = useState(null);
-  const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Status mapping for display
   const getStatusText = (status) => {
-    // Handle both string and number values from backend
     const statusStr = String(status).toLowerCase();
     switch (statusStr) {
       case "0":
@@ -44,7 +28,6 @@ const CompanyManagement = ({ userType }) => {
   };
 
   const getStatusClass = (status) => {
-    // Handle both string and number values from backend
     const statusStr = String(status).toLowerCase();
     switch (statusStr) {
       case "0":
@@ -77,7 +60,7 @@ const CompanyManagement = ({ userType }) => {
       setCompanies(response.data);
     } catch (error) {
       console.error("Error fetching companies:", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -86,40 +69,8 @@ const CompanyManagement = ({ userType }) => {
     fetchCompanies();
   }, []);
 
-  const openModal = (company = null) => {
-    if (company) {
-      setCompanyData({
-        id: company.id,
-        companyName: company.companyName,
-        pib: company.pib,
-        address: company.address,
-        contactEmail: company.contactEmail,
-        website: company.website,
-        description: company.description,
-        maxCommissionRate: company.maxCommissionRate || 0,
-        proofFileUrl: company.proofFileUrl,
-        companyType: company.companyType,
-      });
-    } else {
-      setCompanyData({
-        id: null,
-        companyName: "",
-        pib: "",
-        address: "",
-        contactEmail: "",
-        website: "",
-        description: "",
-        maxCommissionRate: 0,
-        proofFileUrl: "",
-        companyType: 1,
-      });
-    }
-    setIsModalOpen(true);
-  };
-
   const openStatusModal = (company) => {
     setSelectedCompanyForStatus(company);
-    // Convert status to number for select
     const statusStr = String(company.companyStatus).toLowerCase();
     let statusNum = 0;
     if (statusStr === "1" || statusStr === "approved") statusNum = 1;
@@ -128,18 +79,9 @@ const CompanyManagement = ({ userType }) => {
     setIsStatusModalOpen(true);
   };
 
-  const closeModal = () => setIsModalOpen(false);
   const closeStatusModal = () => {
     setIsStatusModalOpen(false);
     setSelectedCompanyForStatus(null);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    setCompanyData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
   };
 
   const handleStatusUpdate = async () => {
@@ -148,7 +90,7 @@ const CompanyManagement = ({ userType }) => {
     setIsUpdatingStatus(true);
     try {
       await companyService.updateStatus(selectedCompanyForStatus.id, newStatus);
-      await fetchCompanies(); // Refresh the data
+      await fetchCompanies();
       closeStatusModal();
     } catch (error) {
       console.error("Error updating company status:", error);
@@ -167,56 +109,9 @@ const CompanyManagement = ({ userType }) => {
         fetchCompanies();
       } catch (error) {
         console.error("Error deleting company:", error);
-      }finally{
+      } finally {
         setLoading(false);
       }
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsCreating(true);
-    setLoading(true)
-    try {
-      let proofFileUrl = companyData.proofFileUrl;
-      let logoFileUrl = companyData.logoUrl;
-
-      // Upload proof file
-      if (proofFile) {
-        const proofResponse = await companyService.uploadFile(proofFile);
-        proofFileUrl = proofResponse.data.url;
-      }
-
-      // Upload logo file
-      if (logoUrl) {
-        const logoResponse = await companyService.uploadFile(logoUrl);
-        logoFileUrl = logoResponse.data.url;
-      }
-
-      const payload = {
-        ...companyData,
-        proofFileUrl,
-        logoUrl: logoFileUrl,
-        companyType: companyData.companyType,
-        maxCommissionRate:
-          companyData.companyType === 2 ? companyData.maxCommissionRate : null,
-      };
-
-      if (companyData.id) {
-        await companyService.update(companyData.id, payload);
-      } else {
-        await companyService.create(payload);
-      }
-
-      setIsModalOpen(false);
-      fetchCompanies();
-      setProofFile(null);
-      setLogoUrl(null);
-    } catch (error) {
-      console.error("Error saving company:", error);
-    } finally {
-      setLoading(false);
-      setIsCreating(false);
     }
   };
 
@@ -224,26 +119,26 @@ const CompanyManagement = ({ userType }) => {
     c.companyName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleFileChange = (e) => {
-    setProofFile(e.target.files[0]);
-  };
-
-  const handleLogoChange = (e) => {
-    setLogoUrl(e.target.files[0]);
-  };
-  if(loading){
-    return <Loader/>
+  if (loading) {
+    return <Loader />
   }
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search companies..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
+        <div className="header-content">
+          <h2 className="header-title">Company Management</h2>
+          <p className="header-subtitle">Manage companies and their information</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search companies by name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+        </div>
       </div>
 
       <div className="table-container">
@@ -260,29 +155,48 @@ const CompanyManagement = ({ userType }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredCompanies.map((company) => (
-              <tr key={company.id}>
-                <td>{company.id}</td>
-                <td className="company-name">{company.companyName}</td>
-                <td>{company.pib}</td>
-                <td>{company.contactEmail}</td>
-                <td>{getCompanyTypeText(company.companyType)}</td>
-                <td>
-                  <span className={`status-badge ${getStatusClass(company.companyStatus)}`}>
-                    {getStatusText(company.companyStatus)}
-                  </span>
-                </td>
-                <td>
-                  <button 
-                    className="btn-status" 
-                    onClick={() => openStatusModal(company)}
-                  >
-                    Change Status
-                  </button>
-                  <button onClick={() => handleDelete(company.id)}>Delete</button>
+            {filteredCompanies.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="empty-row">
+                  <div className="empty-state">
+                    <p>No companies found matching your search criteria.</p>
+                  </div>
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredCompanies.map((company) => (
+                <tr key={company.id}>
+                  <td>{company.id}</td>
+                  <td className="company-name">{company.companyName}</td>
+                  <td>{company.pib}</td>
+                  <td className="email-cell">{company.contactEmail}</td>
+                  <td>{getCompanyTypeText(company.companyType)}</td>
+                  <td>
+                    <span className={`status-badge ${getStatusClass(company.companyStatus)}`}>
+                      {getStatusText(company.companyStatus)}
+                    </span>
+                  </td>
+                  <td className="actions-cell">
+                    <div className="action-buttons">
+                      <button 
+                        className="action-btn activate-btn" 
+                        onClick={() => openStatusModal(company)}
+                        title="Change status"
+                      >
+                        Change Status
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(company.id)}
+                        className="action-btn delete-btn"
+                        title="Delete company"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -290,10 +204,12 @@ const CompanyManagement = ({ userType }) => {
       {/* Status Update Modal */}
       {isStatusModalOpen && selectedCompanyForStatus && (
         <div className="company-status-modal-overlay">
-          <div className="modal company-status-modal">
+          <div className="company-status-modal">
             <div className="company-status-modal-header">
               <h3>Change Company Status</h3>
-              <button className="close-btn" onClick={closeStatusModal}>×</button>
+              <button className="close-btn" onClick={closeStatusModal}>
+                <X size={20} />
+              </button>
             </div>
             <div className="company-status-modal-body">
               <div className="company-status-company-info">
@@ -318,142 +234,20 @@ const CompanyManagement = ({ userType }) => {
             </div>
             <div className="company-status-modal-actions">
               <button 
-                className="btn btn-primary" 
-                onClick={handleStatusUpdate}
-                disabled={isUpdatingStatus}
-              >
-                {isUpdatingStatus ? "Updating..." : "Update Status"}
-              </button>
-              <button 
-                className="btn btn-secondary" 
+                className="cancel-btn" 
                 onClick={closeStatusModal}
                 disabled={isUpdatingStatus}
               >
                 Cancel
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Company Edit/Create Modal */}
-      {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h3>{companyData.id ? "Edit Company" : "Add Company"}</h3>
-              <button className="close-btn" onClick={closeModal}>×</button>
-            </div>
-            <form onSubmit={handleSubmit} className="company-form">
-              <div className="form-row">
-                <input
-                  type="text"
-                  name="companyName"
-                  placeholder="Company Name"
-                  value={companyData.companyName}
-                  onChange={handleInputChange}
-                  required
-                />
-                <input
-                  type="text"
-                  name="pib"
-                  placeholder="PIB"
-                  value={companyData.pib}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <input
-                type="text"
-                name="address"
-                placeholder="Address"
-                value={companyData.address}
-                onChange={handleInputChange}
-              />
-              <div className="form-row">
-                <input
-                  type="email"
-                  name="contactEmail"
-                  placeholder="Contact Email"
-                  value={companyData.contactEmail}
-                  onChange={handleInputChange}
-                />
-                <input
-                  type="url"
-                  name="website"
-                  placeholder="Website"
-                  value={companyData.website}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <textarea
-                name="description"
-                placeholder="Description"
-                value={companyData.description}
-                onChange={handleInputChange}
-              />
-              {userType === "shipper" && <>
-                <label htmlFor="maxCommissionRate">Max Commission Rate</label>
-                <input
-                  type="number"
-                  name="maxCommissionRate"
-                  placeholder="Max Commission Rate"
-                  value={companyData.maxCommissionRate}
-                  onChange={handleInputChange}
-                  min="0"
-                  max="100"
-                  required
-                />
-              </>}
-
-              <div className="file-inputs">
-                <div className="file-input-wrapper">
-                  <label htmlFor="proofFileUrl">
-                    {proofFile
-                      ? `Selected: ${proofFile.name}`
-                      : "Select Proof File"}
-                  </label>
-                  <input
-                    type="file"
-                    id="proofFileUrl"
-                    name="proofFileUrl"
-                    onChange={handleFileChange}
-                  />
-                </div>
-                <div className="file-input-wrapper">
-                  <label htmlFor="logoUrl">
-                    {logoUrl ? `Selected: ${logoUrl.name}` : "Select Logo File"}
-                  </label>
-                  <input
-                    type="file"
-                    id="logoUrl"
-                    name="logoUrl"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                  />
-                </div>
-              </div>
-
-              <select
-                name="companyType"
-                value={companyData.companyType}
-                onChange={handleInputChange}
-                className="company-type-select"
+              <button 
+                className="submit-btn" 
+                onClick={handleStatusUpdate}
+                disabled={isUpdatingStatus}
               >
-                <option value={1}>Client</option>
-                <option value={2}>Forwarder</option>
-                <option value={3}>Carrier</option>
-              </select>
-
-              <div className="modal-actions">
-                <button type="submit" disabled={isCreating} className="btn btn-primary">
-                  {isCreating ? "Saving..." : companyData.id ? "Save" : "Add"}
-                </button>
-                <button type="button" onClick={closeModal} className="btn btn-secondary">
-                  Cancel
-                </button>
-              </div>
-            </form>
+                {isUpdatingStatus ? "Updating..." : "Update Status"}
+              </button>
+            </div>
           </div>
         </div>
       )}

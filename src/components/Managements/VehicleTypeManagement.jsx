@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
+import { X } from "lucide-react";
 import "./Managements.css";
 import Loader from '../Loader/Loader'
+
 const VehicleTypeManagement = () => {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -15,7 +18,7 @@ const VehicleTypeManagement = () => {
       setVehicleTypes(response.data);
     } catch (error) {
       console.error("Error fetching vehicle types:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -27,11 +30,13 @@ const VehicleTypeManagement = () => {
   const openModal = (type = null) => {
     setSelectedType(type);
     setIsModalOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedType(null);
     setIsModalOpen(false);
+    document.body.style.overflow = 'auto';
   };
 
   const handleDelete = async (id) => {
@@ -42,7 +47,7 @@ const VehicleTypeManagement = () => {
         fetchData();
       } catch (error) {
         console.error("Error deleting vehicle type:", error);
-      } finally{
+      } finally {
         setLoading(false);
       }
     }
@@ -67,82 +72,157 @@ const VehicleTypeManagement = () => {
       closeModal();
     } catch (error) {
       console.error("Error saving vehicle type:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
-  if(loading){
-    return <Loader/>
+
+  const filteredVehicleTypes = vehicleTypes.filter((vt) =>
+    vt.typeName.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) {
+    return <Loader />
   }
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search vehicle types..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={() => openModal()}>Add Vehicle Type</button>
+        <div className="header-content">
+          <h2 className="header-title">Vehicle Type Management</h2>
+          <p className="header-subtitle">Manage vehicle types and their requirements</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search vehicle types by name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add New Vehicle Type
+          </button>
+        </div>
       </div>
 
-      <table className="management-table">
-        <thead>
-          <tr>
-            
-            <th>Type Name</th>
-            <th>Description</th>
-            <th>Special License</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {vehicleTypes.map((t) => (
-            <tr key={t.id}>
-              
-              <td>{t.typeName}</td>
-              <td>{t.description}</td>
-              <td>{t.requiresSpecialLicense ? "Yes" : "No"}</td>
-              <td>
-                <button onClick={() => openModal(t)}>Edit</button>
-                <button onClick={() => handleDelete(t.id)}>Delete</button>
-              </td>
+      <div className="table-container">
+        <table className="management-table">
+          <thead>
+            <tr>
+              <th>Type Name</th>
+              <th>Description</th>
+              <th>Special License Required</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredVehicleTypes.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="empty-row">
+                  <div className="empty-state">
+                    <p>No vehicle types found matching your search criteria.</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredVehicleTypes.map((t) => (
+                <tr key={t.id}>
+                  <td className="name-cell">{t.typeName}</td>
+                  <td>{t.description}</td>
+                  <td>
+                    <span className={`status-badge ${t.requiresSpecialLicense ? 'status-active' : 'status-inactive'}`}>
+                      {t.requiresSpecialLicense ? "Yes" : "No"}
+                    </span>
+                  </td>
+                  <td className="actions-cell">
+                    <div className="action-buttons">
+                      <button 
+                        onClick={() => openModal(t)}
+                        className="action-btn edit-btn"
+                        title="Edit vehicle type"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(t.id)}
+                        className="action-btn delete-btn"
+                        title="Delete vehicle type"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{selectedType ? "Edit Vehicle Type" : "Add Vehicle Type"}</h3>
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                name="typeName"
-                placeholder="Type Name"
-                defaultValue={selectedType?.typeName || ""}
-                required
-              />
-              <input
-                type="text"
-                name="description"
-                placeholder="Description"
-                defaultValue={selectedType?.description || ""}
-              />
-              <label>
-                <input
-                  type="checkbox"
-                  name="requiresSpecialLicense"
-                  defaultChecked={selectedType?.requiresSpecialLicense || false}
-                />
-                Requires Special License
-              </label>
+        <div className="modal" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedType ? "Edit Vehicle Type" : "Add New Vehicle Type"}</h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="user-form">
+              <div className="form-section">
+                <div className="form-group">
+                  <label htmlFor="typeName">Type Name</label>
+                  <input
+                    type="text"
+                    id="typeName"
+                    name="typeName"
+                    placeholder="Vehicle Type Name"
+                    defaultValue={selectedType?.typeName || ""}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-group">
+                  <label htmlFor="description">Description</label>
+                  <input
+                    type="text"
+                    id="description"
+                    name="description"
+                    placeholder="Description of the vehicle type"
+                    defaultValue={selectedType?.description || ""}
+                  />
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      name="requiresSpecialLicense"
+                      defaultChecked={selectedType?.requiresSpecialLicense || false}
+                      style={{ marginRight: '8px' }}
+                    />
+                    Requires Special License
+                  </label>
+                </div>
+              </div>
 
               <div className="modal-actions">
-                <button type="submit">{selectedType ? "Save" : "Add"}</button>
-                <button type="button" onClick={closeModal}>
+                <button type="button" onClick={closeModal} className="cancel-btn">
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  {selectedType ? "Update Vehicle Type" : "Create Vehicle Type"}
                 </button>
               </div>
             </form>
