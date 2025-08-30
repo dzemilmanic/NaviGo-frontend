@@ -11,6 +11,7 @@ import ShipmentManagement from "../../../components/Managements/ShipmentManageme
 import PaymentManagement from "../../../components/Managements/PaymentManagement";
 import PickupChangeManagement from "../../../components/Managements/PickupChangeManagement";
 import ShipmentDocumentManagement from "../../../components/Managements/ShipmentDocumentManagement";
+import VehicleMaintenanceManagement from "../../../components/Managements/VehicleMaintenanceManagement";
 import { LogOut } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -27,9 +28,16 @@ const CompanyAdminDashboard = ({ companyType }) => {
   // Konfiguracija pristupa po tipu kompanije
   const dashboardConfig = {
     Carrier: {
-      sidebarButtons: ["Vehicles", "Drivers", "Routes", "Route Prices"],
+      sidebarButtons: [
+        "Vehicles",
+        "Vehicle Maintenances",
+        "Drivers",
+        "Routes",
+        "Route Prices",
+      ],
       components: {
         Vehicles: <VehicleManagement />,
+        "Vehicle Maintenances": <VehicleMaintenanceManagement />,
         Drivers: <DriverManagement />,
         Routes: <RouteManagement />,
         "Route Prices": <RoutePriceManagement />,
@@ -41,7 +49,7 @@ const CompanyAdminDashboard = ({ companyType }) => {
         "Contracts",
         "Shipments",
         "Payments",
-        "Shipment Documents"
+        "Shipment Documents",
       ],
       components: {
         "Forwarder Offers": <ForwarderOfferManagement />,
