@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { vehicleMaintenanceService } from "../../services/vehicleMaintenanceService";
 import { vehicleService } from "../../services/vehicleService";
+import { X } from "lucide-react";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+
 const VehicleMaintenanceManagement = () => {
   const [vehicleMaintenances, setVehicleMaintenances] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedVehicleMaintenance, setSelectedVehicleMaintenance] =
-    useState(null);
+  const [selectedVehicleMaintenance, setSelectedVehicleMaintenance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     vehicleId: "",
@@ -50,6 +51,16 @@ const VehicleMaintenanceManagement = () => {
     fetchVehicles();
   }, []);
 
+  const openModal = () => {
+    setModalOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    document.body.style.overflow = 'auto';
+  };
+
   // Edit
   const handleEdit = (vm) => {
     setSelectedVehicleMaintenance(vm);
@@ -62,15 +73,12 @@ const VehicleMaintenanceManagement = () => {
       resolvedAt: vm.resolvedAt || "",
     });
     setModalOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
   // Delete
   const handleDelete = async (id) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this vehicle maintenance?"
-      )
-    ) {
+    if (window.confirm("Are you sure you want to delete this vehicle maintenance?")) {
       setLoading(true);
       try {
         await vehicleMaintenanceService.delete(id);
@@ -134,70 +142,120 @@ const VehicleMaintenanceManagement = () => {
 
   const severityEnumToValue = (str) => severityOptions.indexOf(str);
   const maintenanceEnumToValue = (str) => maintenanceOptions.indexOf(str);
+
   if (loading) {
     return <Loader />;
   }
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search description..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button onClick={() => setModalOpen(true)}>
-          Add Vehicle Maintenance
-        </button>
+        <div className="header-content">
+          <h2 className="header-title">Vehicle Maintenance Management</h2>
+          <p className="header-subtitle">Track and manage vehicle maintenance records</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search by description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add Vehicle Maintenance
+          </button>
+        </div>
       </div>
 
-      <table className="management-table">
-        <thead>
-          <tr>
-            <th>Vehicle</th>
-            <th>Description</th>
-            <th>Severity</th>
-            <th>Maintenance Type</th>
-            <th>Repair Cost</th>
-            <th>Reported At</th>
-            <th>Resolved At</th>
-            <th>Reported By</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredVehicleMaintenances.map((vm) => (
-            <tr key={vm.id}>
-              <td>{vm.vehicleName}</td>
-              <td>{vm.description}</td>
-              <td>{vm.severity}</td>
-              <td>{vm.maintenanceType}</td>
-              <td>{vm.repairCost}</td>
-              <td>{new Date(vm.reportedAt).toLocaleString()}</td>
-              <td>
-                {vm.resolvedAt ? new Date(vm.resolvedAt).toLocaleString() : "-"}
-              </td>
-              <td>{vm.reportedByUserEmail}</td>
-              <td>
-                <button onClick={() => handleEdit(vm)}>Edit</button>
-                <button onClick={() => handleDelete(vm.id)}>Delete</button>
-              </td>
+      <div className="table-container">
+        <table className="management-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Description</th>
+              <th>Severity</th>
+              <th>Maintenance Type</th>
+              <th>Repair Cost</th>
+              <th>Reported At</th>
+              <th>Resolved At</th>
+              <th>Reported By</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredVehicleMaintenances.length === 0 ? (
+              <tr>
+                <td colSpan="9" className="empty-row">
+                  <div className="empty-state">
+                    <p>No vehicle maintenance records found matching your search criteria.</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredVehicleMaintenances.map((vm) => (
+                <tr key={vm.id} className="table-row">
+                  <td>{vm.vehicleName}</td>
+                  <td>{vm.description}</td>
+                  <td>
+                    <span className={`status-badge severity-${vm.severity.toLowerCase()}`}>
+                      {vm.severity}
+                    </span>
+                  </td>
+                  <td>{vm.maintenanceType}</td>
+                  <td>${vm.repairCost}</td>
+                  <td>{new Date(vm.reportedAt).toLocaleString()}</td>
+                  <td>
+                    {vm.resolvedAt ? new Date(vm.resolvedAt).toLocaleString() : "—"}
+                  </td>
+                  <td>{vm.reportedByUserEmail}</td>
+                  <td className="actions-cell">
+                    <div className="action-buttons">
+                      <button 
+                        onClick={() => handleEdit(vm)}
+                        className="action-btn activate-btn"
+                        title="Edit maintenance record"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(vm.id)}
+                        className="action-btn delete-btn"
+                        title="Delete maintenance record"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {modalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>
-              {selectedVehicleMaintenance
-                ? "Edit Vehicle Maintenance"
-                : "Add Vehicle Maintenance"}
-            </h3>
+        <div className="modal" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>
+                {selectedVehicleMaintenance
+                  ? "Edit Vehicle Maintenance"
+                  : "Add Vehicle Maintenance"}
+              </h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
             <form onSubmit={handleSubmit}>
               {!selectedVehicleMaintenance && (
-                <>
+                <div className="form-group">
                   <label htmlFor="vehicle">Vehicle</label>
                   <select
                     value={formData.vehicleId}
@@ -213,52 +271,68 @@ const VehicleMaintenanceManagement = () => {
                       </option>
                     ))}
                   </select>
-                </>
+                </div>
               )}
-              <label>Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                required
-              />
-              <label>Severity</label>
-              <select
-                value={formData.severity}
-                onChange={(e) =>
-                  setFormData({ ...formData, severity: e.target.value })
-                }
-              >
-                {severityOptions.map((s, i) => (
-                  <option key={i} value={i}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              <label>Maintenance Type</label>
-              <select
-                value={formData.maintenanceType}
-                onChange={(e) =>
-                  setFormData({ ...formData, maintenanceType: e.target.value })
-                }
-              >
-                {maintenanceOptions.map((m, i) => (
-                  <option key={i} value={i}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-              <label>Repair Cost</label>
-              <input
-                type="number"
-                value={formData.repairCost}
-                onChange={(e) =>
-                  setFormData({ ...formData, repairCost: e.target.value })
-                }
-              />
+              
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  placeholder="Describe the maintenance issue..."
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Severity</label>
+                <select
+                  value={formData.severity}
+                  onChange={(e) =>
+                    setFormData({ ...formData, severity: e.target.value })
+                  }
+                >
+                  {severityOptions.map((s, i) => (
+                    <option key={i} value={i}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Maintenance Type</label>
+                <select
+                  value={formData.maintenanceType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, maintenanceType: e.target.value })
+                  }
+                >
+                  {maintenanceOptions.map((m, i) => (
+                    <option key={i} value={i}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label>Repair Cost</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formData.repairCost}
+                  onChange={(e) =>
+                    setFormData({ ...formData, repairCost: e.target.value })
+                  }
+                  placeholder="Enter repair cost"
+                />
+              </div>
+              
               {selectedVehicleMaintenance && (
-                <>
+                <div className="form-group">
                   <label>Resolved At</label>
                   <input
                     type="datetime-local"
@@ -271,12 +345,15 @@ const VehicleMaintenanceManagement = () => {
                       setFormData({ ...formData, resolvedAt: e.target.value })
                     }
                   />
-                </>
+                </div>
               )}
+
               <div className="modal-actions">
-                <button type="submit">Save</button>
-                <button type="button" onClick={() => setModalOpen(false)}>
+                <button type="button" onClick={closeModal} className="cancel-btn">
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Save
                 </button>
               </div>
             </form>

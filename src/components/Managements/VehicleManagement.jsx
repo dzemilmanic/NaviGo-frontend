@@ -3,10 +3,12 @@ import { vehicleService } from "../../services/vehicleService";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
+import { X } from "lucide-react";
 import Loader from "../Loader/Loader";
 import { useAuth } from "../../contexts/AuthContext";
-// import "./Managements.css";
+import "./Managements.css";
 import "./VehicleManagement.css";
+
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
@@ -19,6 +21,7 @@ const VehicleManagement = () => {
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [pictureUrl, setPictureUrl] = useState(null);
   const { user } = useAuth();
+  
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -41,14 +44,17 @@ const VehicleManagement = () => {
   useEffect(() => {
     fetchData();
   }, []);
+  
   const openModal = (vehicle = null) => {
     setSelectedVehicle(vehicle);
     setIsModalOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedVehicle(null);
     setIsModalOpen(false);
+    document.body.style.overflow = 'auto';
   };
 
   const handleDelete = async (id) => {
@@ -131,28 +137,32 @@ const VehicleManagement = () => {
     });
     setFilteredVehicles(filtered);
   };
+  
   const handleFileChange = (e) => {
     setPictureUrl(e.target.files[0]);
   };
+  
   if (loading) {
     return <Loader />;
   }
+  
   return (
-    <div className="vehicle-management">
-      <div className="page-header">
-        <h1>Vehicle Management</h1>
-        <div className="header-controls">
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search vehicles by brand, model, or registration..."
-              value={search}
-              onChange={(e) => handleSearch(e)}
-              className="search-input"
-            />
-          </div>
-          <button className="add-button" onClick={() => openModal()}>
-            + Add Vehicle
+    <div className="management-container">
+      <div className="management-header">
+        <div className="header-content">
+          <h2 className="header-title">Vehicle Management</h2>
+          <p className="header-subtitle">Manage your fleet vehicles and their information</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search vehicles by brand, model, or registration..."
+            value={search}
+            onChange={(e) => handleSearch(e)}
+            className="search-input"
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add Vehicle
           </button>
         </div>
       </div>
@@ -258,6 +268,7 @@ const VehicleManagement = () => {
           </div>
         ))}
       </div>
+      
       {filteredVehicles.length === 0 && !loading && (
         <div className="empty-state">
           <div className="empty-icon">🚗</div>
@@ -270,12 +281,17 @@ const VehicleManagement = () => {
       )}
 
       {isModalOpen && (
-        <div className="modal-overlay" onClick={closeModal}>
+        <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{selectedVehicle ? "Edit Vehicle" : "Add New Vehicle"}</h3>
-              <button className="close-button" onClick={closeModal}>
-                ×
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
+              >
+                <X size={20} />
               </button>
             </div>
 
@@ -413,6 +429,7 @@ const VehicleManagement = () => {
                     }
                   />
                 </div>
+                
                 <div className="file-input-wrapper">
                   <label htmlFor="vehiclePicture">
                     {pictureUrl
@@ -440,15 +457,11 @@ const VehicleManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="submit" className="submit-button">
-                  {selectedVehicle ? "Save Changes" : "Add Vehicle"}
-                </button>
-                <button
-                  type="button"
-                  className="cancel-button"
-                  onClick={closeModal}
-                >
+                <button type="button" onClick={closeModal} className="cancel-btn">
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  {selectedVehicle ? "Save Changes" : "Add Vehicle"}
                 </button>
               </div>
             </form>

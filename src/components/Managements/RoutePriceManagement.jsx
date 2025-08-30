@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { routePriceService } from "../../services/routePriceService";
 import { routeService } from "../../services/routeService";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
+import { X } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
 
@@ -46,11 +47,13 @@ const RoutePriceManagement = () => {
   const openModal = (routePrice = null) => {
     setSelectedRoutePrice(routePrice);
     setIsModalOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedRoutePrice(null);
     setIsModalOpen(false);
+    document.body.style.overflow = 'auto';
   };
 
   const handleDelete = async (id) => {
@@ -100,127 +103,166 @@ const RoutePriceManagement = () => {
     return route ? `${route.startLocationName || route.startLocationId} → ${route.endLocationName || route.endLocationId}` : `Route ${routeId}`;
   };
 
+  if (loading) return <Loader />;
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search route prices by vehicle type or route..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={() => openModal()}>Add Route Price</button>
+        <div className="header-content">
+          <h2 className="header-title">Route Price Management</h2>
+          <p className="header-subtitle">Manage pricing for different routes and vehicle types</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search route prices by vehicle type or route..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add Route Price
+          </button>
+        </div>
       </div>
 
-      {loading && <Loader />}
-
-      {!loading && (
-        <>
-          <table className="management-table">
-            <thead>
+      <div className="table-container">
+        <table className="management-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Route</th>
+              <th>Vehicle Type</th>
+              <th>Price per Km</th>
+              <th>Minimum Price</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRoutePrices.length === 0 ? (
               <tr>
-                <th>ID</th>
-                <th>Route</th>
-                <th>Vehicle Type</th>
-                <th>Price per Km</th>
-                <th>Minimum Price</th>
-                <th>Actions</th>
+                <td colSpan="6" className="empty-row">
+                  <div className="empty-state">
+                    <p>No route prices found matching your search criteria.</p>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredRoutePrices.map((rp) => (
-                <tr key={rp.id}>
+            ) : (
+              filteredRoutePrices.map((rp) => (
+                <tr key={rp.id} className="table-row">
                   <td>{rp.id}</td>
                   <td>{getRouteName(rp.routeId)}</td>
-                  <td>{rp.vehicleTypeName}</td>
-                  <td>${rp.pricePerKm}</td>
-                  <td>${rp.minimumPrice}</td>
                   <td>
+                    <span className="role-badge">{rp.vehicleTypeName}</span>
+                  </td>
+                  <td className="price-cell">${rp.pricePerKm}</td>
+                  <td className="price-cell">${rp.minimumPrice}</td>
+                  <td className="actions-cell">
                     <div className="action-buttons">
                       <button 
                         onClick={() => openModal(rp)}
                         className="action-btn activate-btn"
+                        title="Edit route price"
                       >
                         Edit
                       </button>
                       <button 
                         onClick={() => handleDelete(rp.id)}
                         className="action-btn delete-btn"
+                        title="Delete route price"
                       >
                         Delete
                       </button>
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {filteredRoutePrices.length === 0 && (
-            <div className="empty-state">
-              <div className="empty-icon">💰</div>
-              <h3>No route prices found</h3>
-              <p>Start by adding your first route price to the system</p>
-              <button className="empty-add-button" onClick={() => openModal()}>
-                Add Route Price
-              </button>
-            </div>
-          )}
-        </>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{selectedRoutePrice ? "Edit Route Price" : "Add Route Price"}</h3>
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="routeId">Route ID:</label>
-              <select name="routeId" defaultValue={selectedRoutePrice?.routeId || ""} required>
-                <option value="">Select Route</option>
-                {routes.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.id} : {r.startLocationName} - {r.endLocationName}
-                  </option>
-                ))}
-              </select>
-                <label htmlFor="vehicleTypeId">Vehicle Type:</label>
-              <select
-                name="vehicleTypeId"
-                defaultValue={selectedRoutePrice?.vehicleTypeId || ""}
-                required
+        <div className="modal" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedRoutePrice ? "Edit Route Price" : "Add Route Price"}</h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
               >
-                <option value="">Select Vehicle Type</option>
-                {vehicleTypes.map((vt) => (
-                  <option key={vt.id} value={vt.id}>
-                    {vt.typeName}
-                  </option>
-                ))}
-              </select>
-                <label htmlFor="pricePerKm">Price per Km:</label>
-              <input
-                type="number"
-                step="0.01"
-                name="pricePerKm"
-                placeholder="Price per Km"
-                defaultValue={selectedRoutePrice?.pricePerKm || ""}
-                required
-              />
-              <label htmlFor="minimumPrice">Minimum Price:</label>
-              <input
-                type="number"
-                step="0.01"
-                name="minimumPrice"
-                placeholder="Minimum Price"
-                defaultValue={selectedRoutePrice?.minimumPrice || ""}
-                required
-              />
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="form-section">
+                <div className="form-group">
+                  <label htmlFor="routeId">Route:</label>
+                  <select name="routeId" defaultValue={selectedRoutePrice?.routeId || ""} required>
+                    <option value="">Select Route</option>
+                    {routes.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.id}: {r.startLocationName} - {r.endLocationName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-group">
+                  <label htmlFor="vehicleTypeId">Vehicle Type:</label>
+                  <select
+                    name="vehicleTypeId"
+                    defaultValue={selectedRoutePrice?.vehicleTypeId || ""}
+                    required
+                  >
+                    <option value="">Select Vehicle Type</option>
+                    {vehicleTypes.map((vt) => (
+                      <option key={vt.id} value={vt.id}>
+                        {vt.typeName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="pricePerKm">Price per Km:</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="pricePerKm"
+                      placeholder="Price per Km"
+                      defaultValue={selectedRoutePrice?.pricePerKm || ""}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="minimumPrice">Minimum Price:</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="minimumPrice"
+                      placeholder="Minimum Price"
+                      defaultValue={selectedRoutePrice?.minimumPrice || ""}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="modal-actions">
-                <button type="submit" disabled={loading}>
-                  {loading ? "Saving..." : (selectedRoutePrice ? "Save" : "Add")}
-                </button>
-                <button type="button" onClick={closeModal} disabled={loading}>
+                <button type="button" onClick={closeModal} className="cancel-btn" disabled={loading}>
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                  {loading ? "Saving..." : (selectedRoutePrice ? "Save" : "Add")}
                 </button>
               </div>
             </form>

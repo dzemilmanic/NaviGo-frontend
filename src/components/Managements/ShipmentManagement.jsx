@@ -4,8 +4,10 @@ import { contractService } from "../../services/contractService";
 import { vehicleService } from "../../services/vehicleService";
 import { driverService } from "../../services/driverService";
 import { cargoTypeService } from "../../services/cargoTypeService";
+import { X } from "lucide-react";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+
 const ShipmentManagement = () => {
   const [shipments, setShipments] = useState([]);
   const [contracts, setContracts] = useState([]);
@@ -16,6 +18,7 @@ const ShipmentManagement = () => {
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -44,11 +47,13 @@ const ShipmentManagement = () => {
   const openModal = (shipment = null) => {
     setSelectedShipment(shipment);
     setIsModalOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedShipment(null);
     setIsModalOpen(false);
+    document.body.style.overflow = 'auto';
   };
 
   const handleDelete = async (id) => {
@@ -109,179 +114,250 @@ const ShipmentManagement = () => {
   if (loading) {
     return <Loader />;
   }
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search shipments..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={() => openModal()}>Add Shipment</button>
+        <div className="header-content">
+          <h2 className="header-title">Shipment Management</h2>
+          <p className="header-subtitle">Manage shipments and track deliveries</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search shipments..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add Shipment
+          </button>
+        </div>
       </div>
 
-      <table className="management-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Contract ID</th>
-            <th>Vehicle</th>
-            <th>Driver</th>
-            <th>Cargo Type</th>
-            <th>Weight (Kg)</th>
-            <th>Priority</th>
-            <th>Description</th>
-            <th>Scheduled Departure</th>
-            <th>Scheduled Arrival</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {shipments.map((s) => (
-            <tr key={s.id}>
-              <td>{s.id}</td>
-              <td>{s.contractName}</td>
-              <td>{s.vehicleName}</td>
-              <td>{s.driverName}</td>
-              <td>{s.cargoTypeName}</td>
-              <td>{s.weightKg}</td>
-              <td>{s.priority}</td>
-              <td>{s.description}</td>
-              <td>{s.scheduledDeparture}</td>
-              <td>{s.scheduledArrival}</td>
-              <td>
-                <button onClick={() => openModal(s)}>Edit</button>
-                <button onClick={() => handleDelete(s.id)}>Delete</button>
-              </td>
+      <div className="table-container">
+        <table className="management-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Contract ID</th>
+              <th>Vehicle</th>
+              <th>Driver</th>
+              <th>Cargo Type</th>
+              <th>Weight (Kg)</th>
+              <th>Priority</th>
+              <th>Description</th>
+              <th>Scheduled Departure</th>
+              <th>Scheduled Arrival</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {shipments.length === 0 ? (
+              <tr>
+                <td colSpan="11" className="empty-row">
+                  <div className="empty-state">
+                    <p>No shipments found matching your search criteria.</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              shipments.map((s) => (
+                <tr key={s.id} className="table-row">
+                  <td>{s.id}</td>
+                  <td>{s.contractName}</td>
+                  <td>{s.vehicleName}</td>
+                  <td>{s.driverName}</td>
+                  <td>{s.cargoTypeName}</td>
+                  <td>{s.weightKg}</td>
+                  <td>{s.priority}</td>
+                  <td>{s.description}</td>
+                  <td>{new Date(s.scheduledDeparture).toLocaleString()}</td>
+                  <td>{new Date(s.scheduledArrival).toLocaleString()}</td>
+                  <td className="actions-cell">
+                    <div className="action-buttons">
+                      <button 
+                        onClick={() => openModal(s)}
+                        className="action-btn activate-btn"
+                        title="Edit shipment"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(s.id)}
+                        className="action-btn delete-btn"
+                        title="Delete shipment"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{selectedShipment ? "Edit Shipment" : "Add Shipment"}</h3>
+        <div className="modal" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedShipment ? "Edit Shipment" : "Add Shipment"}</h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
             <form onSubmit={handleSubmit}>
               {/* CREATE polja - vidi se samo kad dodaješ */}
               {!selectedShipment && (
                 <>
-                  <label htmlFor="contractId">Contract ID:</label>
-                  <select name="contractId" required>
-                    <option value="">Select Contract</option>
-                    {contracts.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.contractNumber}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="form-group">
+                    <label htmlFor="contractId">Contract ID:</label>
+                    <select name="contractId" required>
+                      <option value="">Select Contract</option>
+                      {contracts.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.contractNumber}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                  <label htmlFor="vehicleId">Vehicle</label>
-                  <select name="vehicleId" required>
-                    <option value="">Select Vehicle</option>
-                    {vehicles.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.brand} {v.model} ({v.registrationNumber})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="form-group">
+                    <label htmlFor="vehicleId">Vehicle</label>
+                    <select name="vehicleId" required>
+                      <option value="">Select Vehicle</option>
+                      {vehicles.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.brand} {v.model} ({v.registrationNumber})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                  <label htmlFor="driverId">Driver</label>
-                  <select name="driverId" required>
-                    <option value="">Select Driver</option>
-                    {drivers.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.firstName} {d.lastName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="form-group">
+                    <label htmlFor="driverId">Driver</label>
+                    <select name="driverId" required>
+                      <option value="">Select Driver</option>
+                      {drivers.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.firstName} {d.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                  <label htmlFor="cargoTypeId">Cargo Type</label>
-                  <select name="cargoTypeId" required>
-                    <option value="">Select Cargo Type</option>
-                    {cargoTypes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.typeName}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="form-group">
+                    <label htmlFor="cargoTypeId">Cargo Type</label>
+                    <select name="cargoTypeId" required>
+                      <option value="">Select Cargo Type</option>
+                      {cargoTypes.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.typeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                  <label htmlFor="weightKg">Weight (kg)</label>
-                  <input
-                    type="number"
-                    name="weightKg"
-                    placeholder="Weight (Kg)"
-                    required
-                  />
+                  <div className="form-group">
+                    <label htmlFor="weightKg">Weight (kg)</label>
+                    <input
+                      type="number"
+                      name="weightKg"
+                      placeholder="Weight (Kg)"
+                      required
+                    />
+                  </div>
 
-                  <label htmlFor="priority">Priority</label>
-                  <input
-                    type="number"
-                    name="priority"
-                    placeholder="Priority"
-                    required
-                  />
+                  <div className="form-group">
+                    <label htmlFor="priority">Priority</label>
+                    <input
+                      type="number"
+                      name="priority"
+                      placeholder="Priority"
+                      required
+                    />
+                  </div>
 
-                  <label htmlFor="scheduledDeparture">Choose Departure:</label>
-                  <input
-                    type="datetime-local"
-                    name="scheduledDeparture"
-                    required
-                  />
+                  <div className="form-group">
+                    <label htmlFor="scheduledDeparture">Choose Departure:</label>
+                    <input
+                      type="datetime-local"
+                      name="scheduledDeparture"
+                      required
+                    />
+                  </div>
 
-                  <label htmlFor="scheduledArrival">Choose Arrival:</label>
-                  <input
-                    type="datetime-local"
-                    name="scheduledArrival"
-                    required
-                  />
+                  <div className="form-group">
+                    <label htmlFor="scheduledArrival">Choose Arrival:</label>
+                    <input
+                      type="datetime-local"
+                      name="scheduledArrival"
+                      required
+                    />
+                  </div>
                 </>
               )}
 
               {/* Zajednička polja */}
-              <label htmlFor="description">Description</label>
-              <input
-                type="text"
-                name="description"
-                placeholder="Description"
-                defaultValue={selectedShipment?.description || ""}
-              />
+              <div className="form-group">
+                <label htmlFor="description">Description</label>
+                <input
+                  type="text"
+                  name="description"
+                  placeholder="Description"
+                  defaultValue={selectedShipment?.description || ""}
+                />
+              </div>
 
               {/* EDIT polja - vidi se samo kad edituješ */}
               {selectedShipment && (
                 <>
-                  <label htmlFor="status">Status</label>
-                  <select name="status" defaultValue={selectedShipment.status}>
-                    <option value="0">Scheduled</option>
-                    <option value="1">In Transit</option>
-                    <option value="2">Delayed</option>
-                    <option value="3">Delivered</option>
-                    <option value="4">Cancelled</option>
-                  </select>
+                  <div className="form-group">
+                    <label htmlFor="status">Status</label>
+                    <select name="status" defaultValue={selectedShipment.status}>
+                      <option value="0">Scheduled</option>
+                      <option value="1">In Transit</option>
+                      <option value="2">Delayed</option>
+                      <option value="3">Delivered</option>
+                      <option value="4">Cancelled</option>
+                    </select>
+                  </div>
 
-                  <label htmlFor="actualDeparture">Actual Departure:</label>
-                  <input
-                    type="datetime-local"
-                    name="actualDeparture"
-                    defaultValue={selectedShipment.actualDeparture || ""}
-                  />
+                  <div className="form-group">
+                    <label htmlFor="actualDeparture">Actual Departure:</label>
+                    <input
+                      type="datetime-local"
+                      name="actualDeparture"
+                      defaultValue={selectedShipment.actualDeparture || ""}
+                    />
+                  </div>
 
-                  <label htmlFor="actualArrival">Actual Arrival:</label>
-                  <input
-                    type="datetime-local"
-                    name="actualArrival"
-                    defaultValue={selectedShipment.actualArrival || ""}
-                  />
+                  <div className="form-group">
+                    <label htmlFor="actualArrival">Actual Arrival:</label>
+                    <input
+                      type="datetime-local"
+                      name="actualArrival"
+                      defaultValue={selectedShipment.actualArrival || ""}
+                    />
+                  </div>
                 </>
               )}
 
               <div className="modal-actions">
-                <button type="submit">
-                  {selectedShipment ? "Save" : "Add"}
-                </button>
-                <button type="button" onClick={closeModal}>
+                <button type="button" onClick={closeModal} className="cancel-btn">
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  {selectedShipment ? "Save" : "Add"}
                 </button>
               </div>
             </form>

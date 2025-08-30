@@ -411,9 +411,7 @@
     font-size: 14px;
   }
   
-  .dashboard-main {
-    margin: var(--spacing-md) var(--spacing-md) var(--spacing-md) 0;
-  }
+  
   
   .main-header {
     padding: var(--spacing-lg);
@@ -460,7 +458,7 @@
     border-radius: 0;
     grid-column: 1;
     grid-row: 1;
-    padding-top: 70px;
+    
   }
 
   .main-header {
