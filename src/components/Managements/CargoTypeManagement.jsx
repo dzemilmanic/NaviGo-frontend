@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { cargoTypeService } from "../../services/cargoTypeService"; // import tvog servisa
 // import "./Managements.css";
-
+import Loader from "../Loader/Loader";
 const CargoTypeManagement = () => {
   const [cargoTypes, setCargoTypes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,14 +12,17 @@ const CargoTypeManagement = () => {
     description: "",
     requiresSpecialEquipment: false,
   });
-
+  const [loading, setLoading] = useState(false);
   // Fetch svih cargo tipova
   const fetchCargoTypes = async () => {
+    setLoading(true);
     try {
       const response = await cargoTypeService.getAll();
       setCargoTypes(response.data);
     } catch (error) {
       console.error("Error fetching cargo types:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,11 +49,14 @@ const CargoTypeManagement = () => {
   // Brisanje
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this cargo type?")) {
+      setLoading(true);
       try {
         await cargoTypeService.delete(id);
         fetchCargoTypes();
       } catch (error) {
         console.error("Error deleting cargo type:", error);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -58,6 +64,7 @@ const CargoTypeManagement = () => {
   // Dodavanje / edit submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       if (selectedCargoType) {
         await cargoTypeService.update(selectedCargoType.id, formData);
@@ -66,13 +73,21 @@ const CargoTypeManagement = () => {
       }
       setModalOpen(false);
       setSelectedCargoType(null);
-      setFormData({ typeName: "", description: "", requiresSpecialEquipment: false });
+      setFormData({
+        typeName: "",
+        description: "",
+        requiresSpecialEquipment: false,
+      });
       fetchCargoTypes();
     } catch (error) {
       console.error("Error saving cargo type:", error);
+    } finally {
+      setLoading(false);
     }
   };
-
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <div className="management-container">
       <div className="management-header">
@@ -119,21 +134,28 @@ const CargoTypeManagement = () => {
                 type="text"
                 placeholder="Type Name"
                 value={formData.typeName}
-                onChange={(e) => setFormData({ ...formData, typeName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, typeName: e.target.value })
+                }
                 required
               />
               <label htmlFor="description">Description</label>
               <textarea
                 placeholder="Description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
               <label>
                 <input
                   type="checkbox"
                   checked={formData.requiresSpecialEquipment}
                   onChange={(e) =>
-                    setFormData({ ...formData, requiresSpecialEquipment: e.target.checked })
+                    setFormData({
+                      ...formData,
+                      requiresSpecialEquipment: e.target.checked,
+                    })
                   }
                 />
                 Requires Special Equipment

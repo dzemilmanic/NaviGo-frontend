@@ -2,29 +2,35 @@ import { useState, useEffect } from "react";
 import { pickupChangeService } from "../../services/pickupChangeService";
 import { shipmentService } from "../../services/shipmentService"; // za povezane pošiljke
 import "./Managements.css";
-
+import Loader from '../Loader/Loader';
 const PickupChangeManagement = () => {
   const [pickupChanges, setPickupChanges] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedPickupChange, setSelectedPickupChange] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
-
+  const [loading,setLoading] = useState(false);
   const fetchPickupChanges = async () => {
+    setLoading(true)
     try {
       const response = await pickupChangeService.getAll({ search });
       setPickupChanges(response.data);
     } catch (error) {
       console.error("Error fetching pickup changes:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
   const fetchShipments = async () => {
+    setLoading(true);
     try {
       const response = await shipmentService.getAll();
       setShipments(response.data);
     } catch (error) {
       console.error("Error fetching shipments:", error);
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -45,11 +51,14 @@ const PickupChangeManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this pickup change?")) {
+      setLoading(true);
       try {
         await pickupChangeService.delete(id);
         fetchPickupChanges();
       } catch (error) {
         console.error("Error deleting pickup change:", error);
+      } finally{
+        setLoading(false);
       }
     }
   };
@@ -61,7 +70,7 @@ const PickupChangeManagement = () => {
       shipmentId: Number(form.shipmentId.value),
       newTime: form.newTime.value,
     };
-
+    setLoading(true);
     try {
       if (selectedPickupChange) {
         await pickupChangeService.update(selectedPickupChange.id, formData);
@@ -72,9 +81,13 @@ const PickupChangeManagement = () => {
       closeModal();
     } catch (error) {
       console.error("Error saving pickup change:", error);
+    } finally{
+      setLoading(false);
     }
   };
-
+  if(loading){
+    return <Loader/>
+  }
   return (
     <div className="management-container">
       <div className="management-header">

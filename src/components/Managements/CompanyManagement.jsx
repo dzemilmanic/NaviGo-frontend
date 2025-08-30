@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { companyService } from "../../services/companyService";
 import "./Managements.css";
-
+import Loader from '../Loader/Loader';
 const CompanyManagement = ({ userType }) => {
   const [companies, setCompanies] = useState([]);
   const [search, setSearch] = useState("");
@@ -9,6 +9,7 @@ const CompanyManagement = ({ userType }) => {
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedCompanyForStatus, setSelectedCompanyForStatus] = useState(null);
   const [newStatus, setNewStatus] = useState(0);
+  const [loading,setLoading] = useState(false);
   const [companyData, setCompanyData] = useState({
     id: null,
     companyName: "",
@@ -70,11 +71,14 @@ const CompanyManagement = ({ userType }) => {
   };
 
   const fetchCompanies = async () => {
+    setLoading(true);
     try {
       const response = await companyService.getAll();
       setCompanies(response.data);
     } catch (error) {
       console.error("Error fetching companies:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -140,7 +144,7 @@ const CompanyManagement = ({ userType }) => {
 
   const handleStatusUpdate = async () => {
     if (!selectedCompanyForStatus) return;
-
+    setLoading(true)
     setIsUpdatingStatus(true);
     try {
       await companyService.updateStatus(selectedCompanyForStatus.id, newStatus);
@@ -150,17 +154,21 @@ const CompanyManagement = ({ userType }) => {
       console.error("Error updating company status:", error);
       alert("Failed to update company status. Please try again.");
     } finally {
+      setLoading(false);
       setIsUpdatingStatus(false);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this company?")) {
+      setLoading(true);
       try {
         await companyService.delete(id);
         fetchCompanies();
       } catch (error) {
         console.error("Error deleting company:", error);
+      }finally{
+        setLoading(false);
       }
     }
   };
@@ -168,7 +176,7 @@ const CompanyManagement = ({ userType }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsCreating(true);
-
+    setLoading(true)
     try {
       let proofFileUrl = companyData.proofFileUrl;
       let logoFileUrl = companyData.logoUrl;
@@ -207,6 +215,7 @@ const CompanyManagement = ({ userType }) => {
     } catch (error) {
       console.error("Error saving company:", error);
     } finally {
+      setLoading(false);
       setIsCreating(false);
     }
   };
@@ -222,7 +231,9 @@ const CompanyManagement = ({ userType }) => {
   const handleLogoChange = (e) => {
     setLogoUrl(e.target.files[0]);
   };
-
+  if(loading){
+    return <Loader/>
+  }
   return (
     <div className="management-container">
       <div className="management-header">

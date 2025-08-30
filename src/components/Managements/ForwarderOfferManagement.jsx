@@ -4,6 +4,7 @@ import { routeService } from "../../services/routeService";
 import { companyService } from "../../services/companyService"; // za forwardere
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
+import Loader from "../Loader/Loader";
 const ForwarderOfferManagement = () => {
   const [offers, setOffers] = useState([]);
   const [search, setSearch] = useState("");
@@ -12,30 +13,40 @@ const ForwarderOfferManagement = () => {
   const [routes, setRoutes] = useState([]);
   const [forwarders, setForwarders] = useState([]);
   const {user} = useAuth();
+  const [loading,setLoading] = useState(false);
   const fetchOffers = async () => {
+    setLoading(true);
     try {
       const response = await forwarderOfferService.getAll({ search });
       setOffers(response.data);
     } catch (error) {
       console.error("Error fetching offers:", error);
+    } finally{
+      setLoading(false);
     }
   };
 
   const fetchRoutes = async () => {
+    setLoading(true);
     try {
       const response = await routeService.getAll();
       setRoutes(response.data);
     } catch (error) {
       console.error("Error fetching routes:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
   const fetchForwarders = async () => {
+    setLoading(true);
     try {
       const response = await companyService.getAll({ companyType: 2 }); // forwarderi
       setForwarders(response.data);
     } catch (error) {
       console.error("Error fetching forwarders:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -57,17 +68,21 @@ const ForwarderOfferManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this offer?")) {
+      setLoading(true);
       try {
         await forwarderOfferService.delete(id);
         fetchOffers();
       } catch (error) {
         console.error("Error deleting offer:", error);
+      } finally{
+        setLoading(false);
       }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const form = e.target;
     const formData = {
       routeId: Number(form.routeId.value),
@@ -87,9 +102,11 @@ const ForwarderOfferManagement = () => {
       closeModal();
     } catch (error) {
       console.error("Error saving offer:", error);
+    } finally{
+      setLoading(false);
     }
   };
-
+  if(loading) return <Loader/>
   return (
     <div className="management-container">
       <div className="management-header">

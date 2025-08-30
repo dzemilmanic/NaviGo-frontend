@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { shipmentStatusHistoryService } from "../../services/shipmentStatusHistoryService";
 import { shipmentService } from "../../services/shipmentService";
 import "./Managements.css";
-
+import Loader from "../Loader/Loader";
 const ShipmentStatusHistoryManagement = () => {
   const [histories, setHistories] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedHistory, setSelectedHistory] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const fetchData = async () => {
+    setLoading(true);
     try {
       const historyResponse = await shipmentStatusHistoryService.getAll({ search });
       const shipmentResponse = await shipmentService.getAll();
@@ -18,6 +19,8 @@ const ShipmentStatusHistoryManagement = () => {
       setShipments(shipmentResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,11 +40,14 @@ const ShipmentStatusHistoryManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this history entry?")) {
+      setLoading(true);
       try {
         await shipmentStatusHistoryService.delete(id);
         fetchData();
       } catch (error) {
         console.error("Error deleting history entry:", error);
+      } finally{
+        setLoading(false);
       }
     }
   };
@@ -54,7 +60,7 @@ const ShipmentStatusHistoryManagement = () => {
       shipmentStatus: Number(form.shipmentStatus.value),
       notes: form.notes.value,
     };
-
+    setLoading(true);
     try {
       if (selectedHistory) {
         await shipmentStatusHistoryService.update(selectedHistory.id, formData);
@@ -65,9 +71,11 @@ const ShipmentStatusHistoryManagement = () => {
       closeModal();
     } catch (error) {
       console.error("Error saving history entry:", error);
+    } finally{
+      setLoading(false);
     }
   };
-
+  if(loading) return <Loader />
   return (
     <div className="management-container">
       <div className="management-header">

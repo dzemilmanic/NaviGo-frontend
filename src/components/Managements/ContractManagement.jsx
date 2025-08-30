@@ -7,7 +7,7 @@ import { routeService } from "../../services/routeService";
 import { userService } from "../../services/userService";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Managements.css";
-
+import Loader from '../Loader/Loader';
 const ContractManagement = () => {
   const [contracts, setContracts] = useState([]);
   const [search, setSearch] = useState("");
@@ -20,19 +20,23 @@ const ContractManagement = () => {
   const [forwarderOffers, setForwarderOffers] = useState([]);
   const [routes, setRoutes] = useState([]);
   const { user } = useAuth();
-
+  const [loading,setLoading] = useState(false);
   // Fetch contracts
   const fetchContracts = async () => {
+    setLoading(true);
     try {
       const response = await contractService.getAll({ search });
       setContracts(response.data);
     } catch (error) {
       console.error("Error fetching contracts:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
   // Fetch dropdown data
   const fetchDropdownData = async () => {
+    setLoading(true);
     try {
       const [clientsCompanyData, allUsersData, forwardersData, routePricesData, forwarderOffersData, routesData] = await Promise.all([
         companyService.getAll({ companyType: 1 }),
@@ -79,6 +83,8 @@ setClientsRegular(combinedUsers);
 
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -99,11 +105,14 @@ setClientsRegular(combinedUsers);
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this contract?")) {
+      setLoading(true);
       try {
         await contractService.delete(id);
         fetchContracts();
       } catch (error) {
         console.error("Error deleting contract:", error);
+      } finally{
+        setLoading(false);
       }
     }
   };
@@ -111,7 +120,7 @@ setClientsRegular(combinedUsers);
 const handleSubmit = async (e) => {
   e.preventDefault();
   const form = e.target;
-
+  setLoading(true);
   try {
     if (selectedContract) {
       // Map string value to enum number
@@ -151,10 +160,14 @@ const handleSubmit = async (e) => {
     closeModal();
   } catch (error) {
     console.error("Error saving contract:", error);
+  }finally{
+    setLoading(false);
   }
 };
 
-
+  if(loading){
+    return <Loader />
+  }
   return (
     <div className="management-container">
       <div className="management-header">

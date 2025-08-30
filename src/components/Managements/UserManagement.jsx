@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { userService } from "../../services/userService";
 import { companyService } from "../../services/companyService";
 import "./Managements.css";
-
+import Loader from "../Loader/Loader";
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [loading,setLoading] = useState(false);
   const fetchData = async () => {
+    setLoading(true); 
     try {
       const userResponse = await userService.getAll();
       const companyResponse = await companyService.getAll();
@@ -18,6 +19,8 @@ const UserManagement = () => {
       setCompanies(companyResponse.data);
     } catch (error) {
       console.error("Error fetching users:", error);
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -37,11 +40,14 @@ const UserManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
+      setLoading(true);
       try {
         await userService.delete(id);
         fetchData();
       } catch (error) {
         console.error("Error deleting user:", error);
+      } finally{
+        setLoading(false);
       }
     }
   };
@@ -51,11 +57,14 @@ const UserManagement = () => {
     const action = newStatus === "Active" ? "activate" : "deactivate";
     
     if (window.confirm(`Are you sure you want to ${action} this user?`)) {
+      setLoading(true);
       try {
         await userService.updateStatus(id, newStatus);
         fetchData();
       } catch (error) {
         console.error("Error updating user status:", error);
+      } finally{
+        setLoading(false);
       }
     }
   };
@@ -72,7 +81,7 @@ const UserManagement = () => {
       userRole: Number(form.userRole.value),
       companyId: form.companyId.value ? Number(form.companyId.value) : null,
     };
-
+    setLoading(true);
     try {
       if (selectedUser) {
         await userService.update(selectedUser.id, formData);
@@ -83,6 +92,8 @@ const UserManagement = () => {
       closeModal();
     } catch (error) {
       console.error("Error saving user:", error);
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -90,7 +101,9 @@ const UserManagement = () => {
   const filteredUsers = users.filter((u) =>
     `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase())
   );
-
+  if(loading){
+    return <Loader/>
+  }
   return (
     <div className="management-container">
       <div className="management-header">

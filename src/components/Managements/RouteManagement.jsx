@@ -111,7 +111,7 @@ const RouteManagement = () => {
     if (!dateTimeString) return "-";
     return new Date(dateTimeString).toLocaleString();
   };
-
+  if(loading) return <Loader />
   return (
     <div className="management-container">
       <div className="management-header">
@@ -123,8 +123,6 @@ const RouteManagement = () => {
         />
         <button onClick={() => openModal()}>Add Route</button>
       </div>
-
-      {loading && <Loader />}
 
       {!loading && (
         <>

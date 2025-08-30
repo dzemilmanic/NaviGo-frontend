@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
 import "./Managements.css";
-
+import Loader from '../Loader/Loader'
 const VehicleTypeManagement = () => {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const fetchData = async () => {
+    setLoading(true);
     try {
       const response = await vehicleTypeService.getAll({ search });
       setVehicleTypes(response.data);
     } catch (error) {
       console.error("Error fetching vehicle types:", error);
+    } finally{
+      setLoading(false);
     }
   };
 
@@ -33,11 +36,14 @@ const VehicleTypeManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this vehicle type?")) {
+      setLoading(true);
       try {
         await vehicleTypeService.delete(id);
         fetchData();
       } catch (error) {
         console.error("Error deleting vehicle type:", error);
+      } finally{
+        setLoading(false);
       }
     }
   };
@@ -50,7 +56,7 @@ const VehicleTypeManagement = () => {
       description: form.description.value,
       requiresSpecialLicense: form.requiresSpecialLicense.checked,
     };
-
+    setLoading(true);
     try {
       if (selectedType) {
         await vehicleTypeService.update(selectedType.id, formData);
@@ -61,9 +67,13 @@ const VehicleTypeManagement = () => {
       closeModal();
     } catch (error) {
       console.error("Error saving vehicle type:", error);
+    } finally{
+      setLoading(false);
     }
   };
-
+  if(loading){
+    return <Loader/>
+  }
   return (
     <div className="management-container">
       <div className="management-header">

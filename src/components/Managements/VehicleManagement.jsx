@@ -4,9 +4,10 @@ import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
 import Loader from "../Loader/Loader";
-import {useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 // import "./Managements.css";
 import "./VehicleManagement.css";
+import Loader from "../Loader/Loader";
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
@@ -18,7 +19,7 @@ const VehicleManagement = () => {
   const [loading, setLoading] = useState(false);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [pictureUrl, setPictureUrl] = useState(null);
-  const {user}  = useAuth();
+  const { user } = useAuth();
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -53,64 +54,70 @@ const VehicleManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this vehicle?")) {
+      setLoading(true);
       try {
         await vehicleService.delete(id);
         fetchData();
       } catch (error) {
         console.error("Error deleting vehicle:", error);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const form = e.target;
-    let vehiclePicture = pictureUrl;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const form = e.target;
+      let vehiclePicture = pictureUrl;
 
-    // Upload vehicle picture ako postoji URL
-    if (vehiclePicture) {
-      const pictureResponse = await vehicleService.uploadFile(vehiclePicture);
-      vehiclePicture = pictureResponse.data.url;
+      // Upload vehicle picture ako postoji URL
+      if (vehiclePicture) {
+        const pictureResponse = await vehicleService.uploadFile(vehiclePicture);
+        vehiclePicture = pictureResponse.data.url;
+      }
+
+      // Funkcija za formatiranje datuma u yyyy-MM-dd
+      const formatDate = (dateString) => {
+        if (!dateString) return null;
+        const d = new Date(dateString);
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${d.getFullYear()}-${month}-${day}`;
+      };
+
+      const formData = {
+        brand: form.brand.value,
+        model: form.model.value,
+        engineCapacityCc: Number(form.engineCapacityCc.value),
+        vehiclePicture,
+        companyId: +user.companyId,
+        vehicleTypeId: Number(form.vehicleTypeId.value),
+        registrationNumber: form.registrationNumber.value,
+        capacityKg: Number(form.capacityKg.value),
+        manufactureYear: Number(form.manufactureYear.value),
+        lastInspectionDate: formatDate(form.lastInspectionDate.value),
+        insuranceExpiry: formatDate(form.insuranceExpiry.value),
+        currentLocationId: Number(form.currentLocationId.value),
+        categories: form.categories.value,
+      };
+
+      if (selectedVehicle) {
+        await vehicleService.update(selectedVehicle.id, formData);
+      } else {
+        await vehicleService.create(formData);
+      }
+
+      fetchData();
+      closeModal();
+    } catch (error) {
+      console.error("Error saving vehicle:", error);
+    } finally {
+      setLoading(false);
     }
-
-    // Funkcija za formatiranje datuma u yyyy-MM-dd
-    const formatDate = (dateString) => {
-      if (!dateString) return null;
-      const d = new Date(dateString);
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      return `${d.getFullYear()}-${month}-${day}`;
-    };
-
-    const formData = {
-      brand: form.brand.value,
-      model: form.model.value,
-      engineCapacityCc: Number(form.engineCapacityCc.value),
-      vehiclePicture,
-      companyId: +user.companyId,
-      vehicleTypeId: Number(form.vehicleTypeId.value),
-      registrationNumber: form.registrationNumber.value,
-      capacityKg: Number(form.capacityKg.value),
-      manufactureYear: Number(form.manufactureYear.value),
-      lastInspectionDate: formatDate(form.lastInspectionDate.value),
-      insuranceExpiry: formatDate(form.insuranceExpiry.value),
-      currentLocationId: Number(form.currentLocationId.value),
-      categories: form.categories.value,
-    };
-
-    if (selectedVehicle) {
-      await vehicleService.update(selectedVehicle.id, formData);
-    } else {
-      await vehicleService.create(formData);
-    }
-
-    fetchData();
-    closeModal();
-  } catch (error) {
-    console.error("Error saving vehicle:", error);
-  }
-};
+  };
 
   const handleSearch = (e) => {
     setSearch(e.target.value);
@@ -128,6 +135,9 @@ const handleSubmit = async (e) => {
   const handleFileChange = (e) => {
     setPictureUrl(e.target.files[0]);
   };
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <div className="vehicle-management">
       <div className="page-header">
@@ -249,7 +259,6 @@ const handleSubmit = async (e) => {
           </div>
         ))}
       </div>
-      {loading && <Loader />}
       {filteredVehicles.length === 0 && !loading && (
         <div className="empty-state">
           <div className="empty-icon">🚗</div>

@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { shipmentDocumentService } from "../../services/shipmentDocumentService";
 import { shipmentService } from "../../services/shipmentService";
 import "./Managements.css";
-
+import Loader from "../Loader/Loader";
 const ShipmentDocumentManagement = () => {
   const [documents, setDocuments] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [loading,setLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState(null);
   const fetchData = async () => {
+    setLoading(true);
     try {
       const docsResponse = await shipmentDocumentService.getAll({ search });
       const shipmentsResponse = await shipmentService.getAll();
@@ -20,6 +21,8 @@ const ShipmentDocumentManagement = () => {
       setShipments(shipmentsResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,11 +42,14 @@ const ShipmentDocumentManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
+      setLoading(true)
       try {
         await shipmentDocumentService.delete(id);
         fetchData();
       } catch (error) {
         console.error("Error deleting document:", error);
+      } finally{
+        setLoading(false)
       }
     }
   };
@@ -56,7 +62,7 @@ const ShipmentDocumentManagement = () => {
 
     // Početni URL: kod edit-a koristi stari URL, kod add je prazan
     let fileUploadedUrl = selectedDocument?.fileUrl || "";
-
+    setLoading(true);
     // Ako je korisnik izabrao novi fajl, uploaduj ga
     if (fileUrl) {
       try {
@@ -89,9 +95,13 @@ const ShipmentDocumentManagement = () => {
       setFileUrl(null); // reset fajla
     } catch (error) {
       console.error("Error saving document:", error);
+    } finally{
+      setLoading(false);
     }
   };
-
+  if(loading){
+    return <Loader/>
+  }
   return (
     <div className="management-container">
       <div className="management-header">

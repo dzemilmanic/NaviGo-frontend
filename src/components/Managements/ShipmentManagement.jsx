@@ -5,7 +5,7 @@ import { vehicleService } from "../../services/vehicleService";
 import { driverService } from "../../services/driverService";
 import { cargoTypeService } from "../../services/cargoTypeService";
 import "./Managements.css";
-
+import Loader from "../Loader/Loader";
 const ShipmentManagement = () => {
   const [shipments, setShipments] = useState([]);
   const [contracts, setContracts] = useState([]);
@@ -15,8 +15,9 @@ const ShipmentManagement = () => {
   const [search, setSearch] = useState("");
   const [selectedShipment, setSelectedShipment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const fetchData = async () => {
+    setLoading(true);
     try {
       const shipmentResponse = await shipmentService.getAll({ search });
       const contractResponse = await contractService.getAll();
@@ -31,6 +32,8 @@ const ShipmentManagement = () => {
       setCargoTypes(cargoTypeResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,55 +53,62 @@ const ShipmentManagement = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this shipment?")) {
+      setLoading(true);
       try {
         await shipmentService.delete(id);
         fetchData();
       } catch (error) {
         console.error("Error deleting shipment:", error);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const form = e.target;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    setLoading(true);
+    try {
+      if (selectedShipment) {
+        // EDIT payload
+        const updateData = {
+          description: form.description.value,
+          status: Number(form.status.value),
+          actualDeparture: form.actualDeparture.value,
+          actualArrival: form.actualArrival.value,
+        };
 
-  try {
-    if (selectedShipment) {
-      // EDIT payload
-      const updateData = {
-        description: form.description.value,
-        status: Number(form.status.value),
-        actualDeparture: form.actualDeparture.value,
-        actualArrival: form.actualArrival.value,
-      };
+        await shipmentService.update(selectedShipment.id, updateData);
+      } else {
+        // CREATE payload
+        const createData = {
+          contractId: Number(form.contractId.value),
+          vehicleId: Number(form.vehicleId.value),
+          driverId: Number(form.driverId.value),
+          cargoTypeId: Number(form.cargoTypeId.value),
+          weightKg: Number(form.weightKg.value),
+          priority: Number(form.priority.value),
+          description: form.description.value,
+          scheduledDeparture: form.scheduledDeparture.value,
+          scheduledArrival: form.scheduledArrival.value,
+        };
 
-      await shipmentService.update(selectedShipment.id, updateData);
-    } else {
-      // CREATE payload
-      const createData = {
-        contractId: Number(form.contractId.value),
-        vehicleId: Number(form.vehicleId.value),
-        driverId: Number(form.driverId.value),
-        cargoTypeId: Number(form.cargoTypeId.value),
-        weightKg: Number(form.weightKg.value),
-        priority: Number(form.priority.value),
-        description: form.description.value,
-        scheduledDeparture: form.scheduledDeparture.value,
-        scheduledArrival: form.scheduledArrival.value,
-      };
+        await shipmentService.create(createData);
+      }
 
-      await shipmentService.create(createData);
+      fetchData();
+      closeModal();
+    } catch (error) {
+      console.error("Error saving shipment:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetchData();
-    closeModal();
-  } catch (error) {
-    console.error("Error saving shipment:", error);
+  if (loading) {
+    return <Loader />;
   }
-};
-
-
   return (
     <div className="management-container">
       <div className="management-header">
@@ -149,115 +159,135 @@ const handleSubmit = async (e) => {
         </tbody>
       </table>
 
-{isModalOpen && (
-  <div className="modal">
-    <div className="modal-content">
-      <h3>{selectedShipment ? "Edit Shipment" : "Add Shipment"}</h3>
-      <form onSubmit={handleSubmit}>
+      {isModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{selectedShipment ? "Edit Shipment" : "Add Shipment"}</h3>
+            <form onSubmit={handleSubmit}>
+              {/* CREATE polja - vidi se samo kad dodaješ */}
+              {!selectedShipment && (
+                <>
+                  <label htmlFor="contractId">Contract ID:</label>
+                  <select name="contractId" required>
+                    <option value="">Select Contract</option>
+                    {contracts.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.contractNumber}
+                      </option>
+                    ))}
+                  </select>
 
-        {/* CREATE polja - vidi se samo kad dodaješ */}
-        {!selectedShipment && (
-          <>
-            <label htmlFor="contractId">Contract ID:</label>
-            <select name="contractId" required>
-              <option value="">Select Contract</option>
-              {contracts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.contractNumber}
-                </option>
-              ))}
-            </select>
+                  <label htmlFor="vehicleId">Vehicle</label>
+                  <select name="vehicleId" required>
+                    <option value="">Select Vehicle</option>
+                    {vehicles.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.brand} {v.model} ({v.registrationNumber})
+                      </option>
+                    ))}
+                  </select>
 
-            <label htmlFor="vehicleId">Vehicle</label>
-            <select name="vehicleId" required>
-              <option value="">Select Vehicle</option>
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.brand} {v.model} ({v.registrationNumber})
-                </option>
-              ))}
-            </select>
+                  <label htmlFor="driverId">Driver</label>
+                  <select name="driverId" required>
+                    <option value="">Select Driver</option>
+                    {drivers.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.firstName} {d.lastName}
+                      </option>
+                    ))}
+                  </select>
 
-            <label htmlFor="driverId">Driver</label>
-            <select name="driverId" required>
-              <option value="">Select Driver</option>
-              {drivers.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.firstName} {d.lastName}
-                </option>
-              ))}
-            </select>
+                  <label htmlFor="cargoTypeId">Cargo Type</label>
+                  <select name="cargoTypeId" required>
+                    <option value="">Select Cargo Type</option>
+                    {cargoTypes.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.typeName}
+                      </option>
+                    ))}
+                  </select>
 
-            <label htmlFor="cargoTypeId">Cargo Type</label>
-            <select name="cargoTypeId" required>
-              <option value="">Select Cargo Type</option>
-              {cargoTypes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.typeName}
-                </option>
-              ))}
-            </select>
+                  <label htmlFor="weightKg">Weight (kg)</label>
+                  <input
+                    type="number"
+                    name="weightKg"
+                    placeholder="Weight (Kg)"
+                    required
+                  />
 
-            <label htmlFor="weightKg">Weight (kg)</label>
-            <input type="number" name="weightKg" placeholder="Weight (Kg)" required />
+                  <label htmlFor="priority">Priority</label>
+                  <input
+                    type="number"
+                    name="priority"
+                    placeholder="Priority"
+                    required
+                  />
 
-            <label htmlFor="priority">Priority</label>
-            <input type="number" name="priority" placeholder="Priority" required />
+                  <label htmlFor="scheduledDeparture">Choose Departure:</label>
+                  <input
+                    type="datetime-local"
+                    name="scheduledDeparture"
+                    required
+                  />
 
-            <label htmlFor="scheduledDeparture">Choose Departure:</label>
-            <input type="datetime-local" name="scheduledDeparture" required />
+                  <label htmlFor="scheduledArrival">Choose Arrival:</label>
+                  <input
+                    type="datetime-local"
+                    name="scheduledArrival"
+                    required
+                  />
+                </>
+              )}
 
-            <label htmlFor="scheduledArrival">Choose Arrival:</label>
-            <input type="datetime-local" name="scheduledArrival" required />
-          </>
-        )}
+              {/* Zajednička polja */}
+              <label htmlFor="description">Description</label>
+              <input
+                type="text"
+                name="description"
+                placeholder="Description"
+                defaultValue={selectedShipment?.description || ""}
+              />
 
-        {/* Zajednička polja */}
-        <label htmlFor="description">Description</label>
-        <input
-          type="text"
-          name="description"
-          placeholder="Description"
-          defaultValue={selectedShipment?.description || ""}
-        />
+              {/* EDIT polja - vidi se samo kad edituješ */}
+              {selectedShipment && (
+                <>
+                  <label htmlFor="status">Status</label>
+                  <select name="status" defaultValue={selectedShipment.status}>
+                    <option value="0">Scheduled</option>
+                    <option value="1">In Transit</option>
+                    <option value="2">Delayed</option>
+                    <option value="3">Delivered</option>
+                    <option value="4">Cancelled</option>
+                  </select>
 
-        {/* EDIT polja - vidi se samo kad edituješ */}
-        {selectedShipment && (
-          <>
-            <label htmlFor="status">Status</label>
-            <select name="status" defaultValue={selectedShipment.status}>
-              <option value="0">Scheduled</option>
-              <option value="1">In Transit</option>
-              <option value="2">Delayed</option>
-              <option value="3">Delivered</option>
-              <option value="4">Cancelled</option>
-            </select>
+                  <label htmlFor="actualDeparture">Actual Departure:</label>
+                  <input
+                    type="datetime-local"
+                    name="actualDeparture"
+                    defaultValue={selectedShipment.actualDeparture || ""}
+                  />
 
-            <label htmlFor="actualDeparture">Actual Departure:</label>
-            <input
-              type="datetime-local"
-              name="actualDeparture"
-              defaultValue={selectedShipment.actualDeparture || ""}
-            />
+                  <label htmlFor="actualArrival">Actual Arrival:</label>
+                  <input
+                    type="datetime-local"
+                    name="actualArrival"
+                    defaultValue={selectedShipment.actualArrival || ""}
+                  />
+                </>
+              )}
 
-            <label htmlFor="actualArrival">Actual Arrival:</label>
-            <input
-              type="datetime-local"
-              name="actualArrival"
-              defaultValue={selectedShipment.actualArrival || ""}
-            />
-          </>
-        )}
-
-        <div className="modal-actions">
-          <button type="submit">{selectedShipment ? "Save" : "Add"}</button>
-          <button type="button" onClick={closeModal}>Cancel</button>
+              <div className="modal-actions">
+                <button type="submit">
+                  {selectedShipment ? "Save" : "Add"}
+                </button>
+                <button type="button" onClick={closeModal}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
-    </div>
-  </div>
-)}
-
+      )}
     </div>
   );
 };

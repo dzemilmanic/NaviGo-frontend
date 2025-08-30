@@ -106,7 +106,7 @@ const DriverManagement = () => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString();
   };
-
+  if(loading) return <Loader />
   return (
     <div className="management-container">
       <div className="management-header">
@@ -118,8 +118,6 @@ const DriverManagement = () => {
         />
         <button onClick={() => openModal()}>Add Driver</button>
       </div>
-
-      {loading && <Loader />}
 
       <table className="management-table">
         <thead>

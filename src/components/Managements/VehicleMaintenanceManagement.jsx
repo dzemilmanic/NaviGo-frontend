@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { vehicleMaintenanceService } from "../../services/vehicleMaintenanceService";
 import { vehicleService } from "../../services/vehicleService";
-// import "./Managements.css";
+import "./Managements.css";
 import Loader from "../Loader/Loader";
 const VehicleMaintenanceManagement = () => {
   const [vehicleMaintenances, setVehicleMaintenances] = useState([]);
