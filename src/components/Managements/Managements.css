@@ -1,11 +1,11 @@
 /* CSS Custom Properties for consistent theming */
 :root {
-  --primary-color: #4f46e5;
-  --primary-hover: #3730a3;
-  --secondary-color: #6b7280;
-  --success-color: #10b981;
+  --primary-color: #1B3C53;
+  --primary-hover: #456882;
+  --secondary-color: #D2C1B6;
+  --success-color: #16A34A;
   --success-hover: #059669;
-  --warning-color: #f59e0b;
+  --warning-color: #f59e0b; 
   --warning-hover: #d97706;
   --danger-color: #ef4444;
   --danger-hover: #dc2626;
@@ -677,7 +677,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   margin-left: 5px;
-  color: white;
+  color: rgb(0, 0, 0);
 }
 
 .status-pending {
