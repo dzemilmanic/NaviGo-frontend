@@ -12,6 +12,7 @@ import PaymentManagement from "../../../components/Managements/PaymentManagement
 import PickupChangeManagement from "../../../components/Managements/PickupChangeManagement";
 import ShipmentDocumentManagement from "../../../components/Managements/ShipmentDocumentManagement";
 import VehicleMaintenanceManagement from "../../../components/Managements/VehicleMaintenanceManagement";
+import ShipmentStatusHistoryManagement from "../../../components/Managements/ShipmentStatusHistoryManagement";
 import { LogOut } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,7 @@ const CompanyAdminDashboard = ({ companyType }) => {
         "Vehicles",
         "Vehicle Maintenances",
         "Shipments",
+        "Shipment Status Histories",
         "Drivers",
         "Routes",
         "Route Prices",
@@ -40,6 +42,7 @@ const CompanyAdminDashboard = ({ companyType }) => {
         Vehicles: <VehicleManagement />,
         "Vehicle Maintenances": <VehicleMaintenanceManagement />,
         Shipments: <ShipmentManagement />,
+        "Shipment Status Histories": <ShipmentStatusHistoryManagement />,
         Drivers: <DriverManagement />,
         Routes: <RouteManagement />,
         "Route Prices": <RoutePriceManagement />,

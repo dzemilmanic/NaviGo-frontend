@@ -7,7 +7,6 @@ import Loader from "../Loader/Loader";
 import { useAuth } from "../../contexts/AuthContext";
 // import "./Managements.css";
 import "./VehicleManagement.css";
-import Loader from "../Loader/Loader";
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
