@@ -59,33 +59,45 @@ const ShipmentManagement = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = {
-      contractId: Number(form.contractId.value),
-      vehicleId: Number(form.vehicleId.value),
-      driverId: Number(form.driverId.value),
-      cargoTypeId: Number(form.cargoTypeId.value),
-      weightKg: Number(form.weightKg.value),
-      priority: Number(form.priority.value),
-      description: form.description.value,
-      scheduledDeparture: form.scheduledDeparture.value,
-      scheduledArrival: form.scheduledArrival.value,
-    };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const form = e.target;
 
-    try {
-      if (selectedShipment) {
-        await shipmentService.update(selectedShipment.id, formData);
-      } else {
-        await shipmentService.create(formData);
-      }
-      fetchData();
-      closeModal();
-    } catch (error) {
-      console.error("Error saving shipment:", error);
+  try {
+    if (selectedShipment) {
+      // EDIT payload
+      const updateData = {
+        description: form.description.value,
+        status: Number(form.status.value),
+        actualDeparture: form.actualDeparture.value,
+        actualArrival: form.actualArrival.value,
+      };
+
+      await shipmentService.update(selectedShipment.id, updateData);
+    } else {
+      // CREATE payload
+      const createData = {
+        contractId: Number(form.contractId.value),
+        vehicleId: Number(form.vehicleId.value),
+        driverId: Number(form.driverId.value),
+        cargoTypeId: Number(form.cargoTypeId.value),
+        weightKg: Number(form.weightKg.value),
+        priority: Number(form.priority.value),
+        description: form.description.value,
+        scheduledDeparture: form.scheduledDeparture.value,
+        scheduledArrival: form.scheduledArrival.value,
+      };
+
+      await shipmentService.create(createData);
     }
-  };
+
+    fetchData();
+    closeModal();
+  } catch (error) {
+    console.error("Error saving shipment:", error);
+  }
+};
+
 
   return (
     <div className="management-container">
@@ -137,113 +149,115 @@ const ShipmentManagement = () => {
         </tbody>
       </table>
 
-      {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>{selectedShipment ? "Edit Shipment" : "Add Shipment"}</h3>
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="contractId">Contract ID:</label>
-              <select
-                name="contractId"
-                defaultValue={selectedShipment?.contractId || ""}
-                required
-              >
-                <option value="">Select Contract</option>
-                {contracts.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.contractNumber}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="vehicleId">Vehicle</label>
-              <select
-                name="vehicleId"
-                defaultValue={selectedShipment?.vehicleId || ""}
-                required
-              >
-                <option value="">Select Vehicle</option>
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.brand} {v.model} ({v.registrationNumber})
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="driverId">Driver</label>
-              <select
-                name="driverId"
-                defaultValue={selectedShipment?.driverId || ""}
-                required
-              >
-                <option value="">Select Driver</option>
-                {drivers.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.firstName} {d.lastName}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="cargoTypeId">Cargo Type</label>
-              <select
-                name="cargoTypeId"
-                defaultValue={selectedShipment?.cargoTypeId || ""}
-                required
-              >
-                <option value="">Select Cargo Type</option>
-                {cargoTypes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.typeName}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="weightKg">Weight (kg)</label>
-              <input
-                type="number"
-                name="weightKg"
-                placeholder="Weight (Kg)"
-                defaultValue={selectedShipment?.weightKg || ""}
-                required
-              />
-              <label htmlFor="priority">Priority</label>
-              <input
-                type="number"
-                name="priority"
-                placeholder="Priority"
-                defaultValue={selectedShipment?.priority || 0}
-                required
-              />
-              <label htmlFor="description">Description</label>
-              <input
-                type="text"
-                name="description"
-                placeholder="Description"
-                defaultValue={selectedShipment?.description || ""}
-              />
-              <label htmlFor="scheduledDeparture">Choose date and time:</label>
-              <input
-                type="datetime-local"
-                name="scheduledDeparture"
-                defaultValue={selectedShipment?.scheduledDeparture || ""}
-                required
-              />
-              <label htmlFor="scheduledArrival">Choose date and time:</label>
-              <input
-                type="datetime-local"
-                name="scheduledArrival"
-                defaultValue={selectedShipment?.scheduledArrival || ""}
-                required
-              />
+{isModalOpen && (
+  <div className="modal">
+    <div className="modal-content">
+      <h3>{selectedShipment ? "Edit Shipment" : "Add Shipment"}</h3>
+      <form onSubmit={handleSubmit}>
 
-              <div className="modal-actions">
-                <button type="submit">
-                  {selectedShipment ? "Save" : "Add"}
-                </button>
-                <button type="button" onClick={closeModal}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+        {/* CREATE polja - vidi se samo kad dodaješ */}
+        {!selectedShipment && (
+          <>
+            <label htmlFor="contractId">Contract ID:</label>
+            <select name="contractId" required>
+              <option value="">Select Contract</option>
+              {contracts.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.contractNumber}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="vehicleId">Vehicle</label>
+            <select name="vehicleId" required>
+              <option value="">Select Vehicle</option>
+              {vehicles.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.brand} {v.model} ({v.registrationNumber})
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="driverId">Driver</label>
+            <select name="driverId" required>
+              <option value="">Select Driver</option>
+              {drivers.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.firstName} {d.lastName}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="cargoTypeId">Cargo Type</label>
+            <select name="cargoTypeId" required>
+              <option value="">Select Cargo Type</option>
+              {cargoTypes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.typeName}
+                </option>
+              ))}
+            </select>
+
+            <label htmlFor="weightKg">Weight (kg)</label>
+            <input type="number" name="weightKg" placeholder="Weight (Kg)" required />
+
+            <label htmlFor="priority">Priority</label>
+            <input type="number" name="priority" placeholder="Priority" required />
+
+            <label htmlFor="scheduledDeparture">Choose Departure:</label>
+            <input type="datetime-local" name="scheduledDeparture" required />
+
+            <label htmlFor="scheduledArrival">Choose Arrival:</label>
+            <input type="datetime-local" name="scheduledArrival" required />
+          </>
+        )}
+
+        {/* Zajednička polja */}
+        <label htmlFor="description">Description</label>
+        <input
+          type="text"
+          name="description"
+          placeholder="Description"
+          defaultValue={selectedShipment?.description || ""}
+        />
+
+        {/* EDIT polja - vidi se samo kad edituješ */}
+        {selectedShipment && (
+          <>
+            <label htmlFor="status">Status</label>
+            <select name="status" defaultValue={selectedShipment.status}>
+              <option value="0">Scheduled</option>
+              <option value="1">In Transit</option>
+              <option value="2">Delayed</option>
+              <option value="3">Delivered</option>
+              <option value="4">Cancelled</option>
+            </select>
+
+            <label htmlFor="actualDeparture">Actual Departure:</label>
+            <input
+              type="datetime-local"
+              name="actualDeparture"
+              defaultValue={selectedShipment.actualDeparture || ""}
+            />
+
+            <label htmlFor="actualArrival">Actual Arrival:</label>
+            <input
+              type="datetime-local"
+              name="actualArrival"
+              defaultValue={selectedShipment.actualArrival || ""}
+            />
+          </>
+        )}
+
+        <div className="modal-actions">
+          <button type="submit">{selectedShipment ? "Save" : "Add"}</button>
+          <button type="button" onClick={closeModal}>Cancel</button>
         </div>
-      )}
+      </form>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

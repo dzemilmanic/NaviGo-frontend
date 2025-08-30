@@ -31,6 +31,7 @@ const CompanyAdminDashboard = ({ companyType }) => {
       sidebarButtons: [
         "Vehicles",
         "Vehicle Maintenances",
+        "Shipments",
         "Drivers",
         "Routes",
         "Route Prices",
@@ -38,6 +39,7 @@ const CompanyAdminDashboard = ({ companyType }) => {
       components: {
         Vehicles: <VehicleManagement />,
         "Vehicle Maintenances": <VehicleMaintenanceManagement />,
+        Shipments: <ShipmentManagement />,
         Drivers: <DriverManagement />,
         Routes: <RouteManagement />,
         "Route Prices": <RoutePriceManagement />,
@@ -47,14 +49,12 @@ const CompanyAdminDashboard = ({ companyType }) => {
       sidebarButtons: [
         "Forwarder Offers",
         "Contracts",
-        "Shipments",
         "Payments",
         "Shipment Documents",
       ],
       components: {
         "Forwarder Offers": <ForwarderOfferManagement />,
         Contracts: <ContractManagement />,
-        Shipments: <ShipmentManagement />,
         Payments: <PaymentManagement />,
         "Shipment Documents": <ShipmentDocumentManagement />,
       },
