@@ -1,3 +1,5 @@
+import { authService } from "./authService";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://navigoapi-fgguf3fkh6b4fqg3.italynorth-01.azurewebsites.net/api";
@@ -9,12 +11,14 @@ export const API_ENDPOINTS = {
   REFRESH: `${API_BASE_URL}/auth/refresh`,
   GOOGLE_LOGIN: `${API_BASE_URL}/auth/google-login`,
   REGISTER: `${API_BASE_URL}/User`,
+
   // User endpoints
   USERS: `${API_BASE_URL}/user`,
   SUPERADMIN: `${API_BASE_URL}/user/superadmin`,
   VERIFY_EMAIL: `${API_BASE_URL}/user/verify-email`,
   FORGOT_PASSWORD: `${API_BASE_URL}/user/forgot-password`,
   RESET_PASSWORD: `${API_BASE_URL}/user/reset-password`,
+
   // Company endpoints
   COMPANIES: `${API_BASE_URL}/company`,
 
@@ -40,6 +44,8 @@ export const API_ENDPOINTS = {
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
+    this.isRefreshing = false;
+    this.pendingRequests = [];
   }
 
   getAuthHeaders() {
@@ -51,14 +57,13 @@ class ApiService {
     };
   }
 
-  async request(endpoint, options = {}) {
+  async request(endpoint, options = {}, retry = true) {
     const url = `${this.baseURL}${endpoint}`;
     const { body, headers: customHeaders, ...rest } = options;
 
-    // Nabavi standardne header-e sa tokenom
     let headers = { ...this.getAuthHeaders(), ...customHeaders };
 
-    // Ne dodaj Content-Type ako šalješ FormData ili već string
+    // Ne dodaj Content-Type ako šalješ FormData ili raw string
     if (body instanceof FormData) {
       delete headers["Content-Type"];
     } else if (typeof body === "string") {
@@ -76,6 +81,38 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
+
+      // Ako je token istekao → pokušaj refresh
+      if (response.status === 401 && retry) {
+        console.warn("Access token expired. Attempting refresh...");
+
+        if (!this.isRefreshing) {
+          this.isRefreshing = true;
+
+          const refreshResult = await authService.refreshAccessToken();
+
+          this.isRefreshing = false;
+
+          if (refreshResult.success) {
+            // ponovo pokreni sve pending requeste
+            this.pendingRequests.forEach(cb => cb());
+            this.pendingRequests = [];
+
+            // retry original request sa novim tokenom
+            return this.request(endpoint, options, false);
+          } else {
+            authService.clearTokens();
+            return { success: false, error: "Session expired. Please login again." };
+          }
+        } else {
+          // Ako refresh već traje → sačekaj
+          return new Promise(resolve => {
+            this.pendingRequests.push(() => {
+              resolve(this.request(endpoint, options, false));
+            });
+          });
+        }
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -122,6 +159,7 @@ class ApiService {
   async delete(endpoint) {
     return this.request(endpoint, { method: "DELETE" });
   }
+
   async upload(endpoint, data) {
     return this.request(endpoint, {
       method: "POST",
