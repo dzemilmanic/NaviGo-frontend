@@ -9,6 +9,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+import { jsPDF } from "jspdf";
+
 const ContractManagement = () => {
   const [contracts, setContracts] = useState([]);
   const [search, setSearch] = useState("");
@@ -26,7 +28,7 @@ const ContractManagement = () => {
   const fetchContracts = async () => {
     setLoading(true);
     try {
-      const response = await contractService.getAll({ search });
+      const response = await contractService.getAll();
       setContracts(response.data);
     } catch (error) {
       console.error("Error fetching contracts:", error);
@@ -34,6 +36,69 @@ const ContractManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+  const generateContractPDF = (contract) => {
+    const doc = new jsPDF();
+
+    // Font i veličina
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(16);
+    doc.text("TRANSPORTATION CONTRACT", 105, 20, { align: "center" });
+
+    doc.setFontSize(12);
+    let y = 40;
+
+    // Podaci o ugovoru
+    doc.text(`Contract Number: ${contract.contractNumber}`, 20, y);
+    y += 10;
+
+    const clientCompany = clientsCompany.find(
+      (c) => c.id === contract.clientId
+    )?.companyName;
+    doc.text(
+      `Client: ${contract.clientFullName} ${
+        clientCompany ? `(${clientCompany})` : ""
+      }`,
+      20,
+      y
+    );
+    y += 10;
+
+    doc.text(`Forwarder: ${contract.forwarderCompanyName}`, 20, y);
+    y += 10;
+
+    // Dohvati rutu i transporter kompaniju
+    const route = routes.find((r) => r.id === contract.routeId);
+    const transporterCompany = route?.companyName || "N/A";
+    const routeText = route
+      ? `${route.startLocationName} - ${route.endLocationName}`
+      : contract.routeId;
+
+    doc.text(`Transporter: ${transporterCompany}`, 20, y);
+    y += 10;
+    doc.text(`Route: ${routeText}`, 20, y);
+    y += 20;
+
+    // Tekst ugovora
+    const contractText = `This contract defines the transportation of goods by the forwarder and transporter.
+The parties to the contract agree to all the terms and rules specified in the contract.
+The payment terms, liability, and obligations are detailed below.`;
+    doc.text(contractText, 20, y, { maxWidth: 170 });
+
+    y += 50;
+
+    // Potpisi
+    doc.text("____________________", 20, y);
+    doc.text("Client", 20, y + 10);
+
+    doc.text("____________________", 80, y);
+    doc.text("Forwarder", 80, y + 10);
+
+    doc.text("____________________", 140, y);
+    doc.text("Transporter", 140, y + 10);
+
+    // Sačuvaj PDF
+    doc.save(`Contract_${contract.contractNumber}.pdf`);
   };
 
   // Fetch dropdown data
@@ -313,6 +378,7 @@ const ContractManagement = () => {
                 <button onClick={() => handleDelete(c.id, c.contractNumber)}>
                   Delete
                 </button>
+                <button onClick={() => generateContractPDF(c)}>Download</button>
               </td>
             </tr>
           ))}

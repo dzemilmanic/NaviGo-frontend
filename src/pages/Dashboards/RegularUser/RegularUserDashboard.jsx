@@ -3,6 +3,7 @@ import "../Dashboards.css";
 import ShipmentManagement from "../../../components/Managements/ShipmentManagement";
 import PaymentManagement from "../../../components/Managements/PaymentManagement";
 import PickupChangeManagement from '../../../components/Managements/PickupChangeManagement';
+import ContractManagement from '../../../components/Managements/ContractManagement';
 import { LogOut } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -18,11 +19,12 @@ const RegularUserDashboard = () => {
 
   // Konfiguracija dugmadi i komponenti
   const dashboardConfig = {
-    sidebarButtons: ["Shipments", "Payments","Pickup Changes"],
+    sidebarButtons: ["Shipments", "Payments","Pickup Changes","Contracts"],
     components: {
       Shipments: <ShipmentManagement />,
       Payments: <PaymentManagement />,
       "Pickup Changes": <PickupChangeManagement />,
+      Contracts: <ContractManagement />,
     },
   };
 
