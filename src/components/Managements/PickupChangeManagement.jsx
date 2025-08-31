@@ -2,22 +2,24 @@ import { useState, useEffect } from "react";
 import { pickupChangeService } from "../../services/pickupChangeService";
 import { shipmentService } from "../../services/shipmentService"; // za povezane pošiljke
 import "./Managements.css";
-import Loader from '../Loader/Loader';
+import Loader from "../Loader/Loader";
+import { toast } from "react-toastify";
 const PickupChangeManagement = () => {
   const [pickupChanges, setPickupChanges] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedPickupChange, setSelectedPickupChange] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fetchPickupChanges = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
       const response = await pickupChangeService.getAll({ search });
       setPickupChanges(response.data);
     } catch (error) {
+      toast.error("Failed to load pickup changes. Please try again.");
       console.error("Error fetching pickup changes:", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -28,8 +30,9 @@ const PickupChangeManagement = () => {
       const response = await shipmentService.getAll();
       setShipments(response.data);
     } catch (error) {
+      toast.error("Failed to load shipments. Please try again.");
       console.error("Error fetching shipments:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -50,17 +53,84 @@ const PickupChangeManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this pickup change?")) {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
-        await pickupChangeService.delete(id);
-        fetchPickupChanges();
+        const response = await pickupChangeService.delete(id);
+        if (response.success) {
+          toast.success(`Pickup change ${id} deleted successfully!`);
+        } else {
+          toast.error(
+            `Failed to delete pickup change. Message: ${response.message}`
+          );
+        }
+        await fetchPickupChanges();
       } catch (error) {
+        toast.error("Failed to delete pickup change. Please try again.");
         console.error("Error deleting pickup change:", error);
-      } finally{
+      } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>
+          Are you sure you want to delete pickup change <strong>{id}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmDelete}
+            style={{
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Delete
+          </button>
+          <button
+            onClick={cancelDelete}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -73,20 +143,41 @@ const PickupChangeManagement = () => {
     setLoading(true);
     try {
       if (selectedPickupChange) {
-        await pickupChangeService.update(selectedPickupChange.id, formData);
+        const response = await pickupChangeService.update(
+          selectedPickupChange.id,
+          formData
+        );
+        if (!response.success) {
+          toast.error(
+            `Failed to update pickup change. Message: ${response.message}`
+          );
+        } else {
+          toast.success(
+            `Pickup change ${selectedPickupChange.id} updated successfully!`
+          );
+        }
       } else {
-        await pickupChangeService.create(formData);
+        const response = await pickupChangeService.create(formData);
+        if (!response.success) {
+          toast.error(
+            `Failed to create pickup change. Message: ${response.message}`
+          );
+        } else {
+          toast.success(
+            `Pickup change ${formData.shipmentId} created successfully!`
+          );
+        }
       }
       fetchPickupChanges();
       closeModal();
     } catch (error) {
       console.error("Error saving pickup change:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
-  if(loading){
-    return <Loader/>
+  if (loading) {
+    return <Loader />;
   }
   return (
     <div className="management-container">
@@ -135,9 +226,17 @@ const PickupChangeManagement = () => {
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <h3>{selectedPickupChange ? "Edit Pickup Change" : "Add Pickup Change"}</h3>
+            <h3>
+              {selectedPickupChange
+                ? "Edit Pickup Change"
+                : "Add Pickup Change"}
+            </h3>
             <form onSubmit={handleSubmit}>
-              <select name="shipmentId" defaultValue={selectedPickupChange?.shipmentId || ""} required>
+              <select
+                name="shipmentId"
+                defaultValue={selectedPickupChange?.shipmentId || ""}
+                required
+              >
                 <option value="">Select Shipment</option>
                 {shipments.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -154,7 +253,9 @@ const PickupChangeManagement = () => {
               />
 
               <div className="modal-actions">
-                <button type="submit">{selectedPickupChange ? "Save" : "Add"}</button>
+                <button type="submit">
+                  {selectedPickupChange ? "Save" : "Add"}
+                </button>
                 <button type="button" onClick={closeModal}>
                   Cancel
                 </button>

@@ -5,6 +5,7 @@ import { companyService } from "../../services/companyService"; // za forwardere
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
 import Loader from "../Loader/Loader";
+import { toast } from "react-toastify";
 const ForwarderOfferManagement = () => {
   const [offers, setOffers] = useState([]);
   const [search, setSearch] = useState("");
@@ -12,16 +13,17 @@ const ForwarderOfferManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [routes, setRoutes] = useState([]);
   const [forwarders, setForwarders] = useState([]);
-  const {user} = useAuth();
-  const [loading,setLoading] = useState(false);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const fetchOffers = async () => {
     setLoading(true);
     try {
       const response = await forwarderOfferService.getAll({ search });
       setOffers(response.data);
     } catch (error) {
+      toast.error("Failed to load offers. Please try again.");
       console.error("Error fetching offers:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -32,8 +34,9 @@ const ForwarderOfferManagement = () => {
       const response = await routeService.getAll();
       setRoutes(response.data);
     } catch (error) {
+      toast.error("Failed to load routes. Please try again.");
       console.error("Error fetching routes:", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -44,8 +47,9 @@ const ForwarderOfferManagement = () => {
       const response = await companyService.getAll({ companyType: 2 }); // forwarderi
       setForwarders(response.data);
     } catch (error) {
+      toast.error("Failed to load forwarders. Please try again.");
       console.error("Error fetching forwarders:", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -65,21 +69,86 @@ const ForwarderOfferManagement = () => {
     setSelectedOffer(null);
     setIsModalOpen(false);
   };
-
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this offer?")) {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
-        await forwarderOfferService.delete(id);
-        fetchOffers();
+        const response = await forwarderOfferService.delete(id);
+        if (response.success) {
+          toast.success(`Forwarder offer ${id} deleted successfully!`);
+        } else {
+          toast.error(
+            `Failed to delete forwarder offer. Message: ${response.message}`
+          );
+        }
+        await fetchOffers();
       } catch (error) {
+        toast.error("Failed to delete forwarder offer. Please try again.");
         console.error("Error deleting offer:", error);
-      } finally{
+      } finally {
         setLoading(false);
       }
-    }
-  };
+    };
 
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>
+          Are you sure you want to delete forwarder offer <strong>{id}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmDelete}
+            style={{
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Delete
+          </button>
+          <button
+            onClick={cancelDelete}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -94,19 +163,36 @@ const ForwarderOfferManagement = () => {
 
     try {
       if (selectedOffer) {
-        await forwarderOfferService.update(selectedOffer.id, formData);
+        const response = await forwarderOfferService.update(
+          selectedOffer.id,
+          formData
+        );
+        if (response.success) {
+          toast.success("Forwarder offer updated successfully!");
+        } else {
+          toast.error(
+            `Failed to update forwarder offer. Message: ${response.message}`
+          );
+        }
       } else {
-        await forwarderOfferService.create(formData);
+        const response = await forwarderOfferService.create(formData);
+        if (response.success) {
+          toast.success("Forwarder offer created successfully!");
+        } else {
+          toast.error(
+            `Failed to create forwarder offer. Message: ${response.message}`
+          );
+        }
       }
       fetchOffers();
       closeModal();
     } catch (error) {
       console.error("Error saving offer:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
-  if(loading) return <Loader/>
+  if (loading) return <Loader />;
   return (
     <div className="management-container">
       <div className="management-header">
@@ -157,7 +243,11 @@ const ForwarderOfferManagement = () => {
             <h3>{selectedOffer ? "Edit Offer" : "Add Offer"}</h3>
             <form onSubmit={handleSubmit}>
               <label htmlFor="routeId">Route</label>
-              <select name="routeId" defaultValue={selectedOffer?.routeId || ""} required>
+              <select
+                name="routeId"
+                defaultValue={selectedOffer?.routeId || ""}
+                required
+              >
                 <option value="">Select Route</option>
                 {routes.map((r) => (
                   <option key={r.id} value={r.id}>

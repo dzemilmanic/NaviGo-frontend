@@ -108,10 +108,14 @@ const CompanyManagement = ({ userType }) => {
       setLoading(true);
       setIsUpdatingStatus(true);
       try {
-        await companyService.updateStatus(selectedCompanyForStatus.id, newStatus);
+        const response = await companyService.updateStatus(selectedCompanyForStatus.id, newStatus);
+        if(response.success){
+          toast.success(`Company ${companyName} status updated to ${statusText}!`);
+        }else{
+          toast.error(`Failed to update company status. Message: ${response.message}`);
+        }
         await fetchCompanies();
         closeStatusModal();
-        toast.success(`Company ${companyName} status updated to ${statusText}!`);
       } catch (error) {
         toast.error("Failed to update company status. Please try again.");
         console.error("Error updating company status:", error);
@@ -183,9 +187,13 @@ const CompanyManagement = ({ userType }) => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await companyService.delete(id);
+        const response = await companyService.delete(id);
+        if(response.success){
+          toast.success(`Company ${companyName} deleted successfully!`);
+        }else{
+          toast.error(`Failed to delete company. Message: ${response.message}`);
+        }
         await fetchCompanies();
-        toast.success(`Company ${companyName} deleted successfully!`);
       } catch (error) {
         toast.error("Failed to delete company. Please try again.");
         console.error("Error deleting company:", error);

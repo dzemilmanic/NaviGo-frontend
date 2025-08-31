@@ -74,9 +74,13 @@ const ShipmentManagement = () => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await shipmentService.delete(id);
+        const response = await shipmentService.delete(id);
+        if(response.success){
+          toast.success("Shipment deleted successfully!");
+        }else{
+          toast.error(`Failed to delete shipment. Message: ${response.message}`);
+        }
         await fetchData();
-        toast.success("Shipment deleted successfully!");
       } catch (error) {
         toast.error("Failed to delete shipment. Please try again.");
         console.error("Error deleting shipment:", error);
@@ -146,8 +150,12 @@ const ShipmentManagement = () => {
           actualArrival: form.actualArrival.value,
         };
 
-        await shipmentService.update(selectedShipment.id, updateData);
-        toast.success("Shipment updated successfully!");
+        const response = await shipmentService.update(selectedShipment.id, updateData);
+        if(response.success){
+          toast.success("Shipment updated successfully!");
+        }else{
+          toast.error(`Failed to update shipment. Message: ${response.message}`);
+        }
       } else {
         // CREATE payload
         const createData = {
@@ -162,8 +170,12 @@ const ShipmentManagement = () => {
           scheduledArrival: form.scheduledArrival.value,
         };
 
-        await shipmentService.create(createData);
-        toast.success("Shipment created successfully!");
+        const response = await shipmentService.create(createData);
+        if(!response.success){
+          toast.error(`Failed to create shipment. Message: ${response.message}`);
+        }else{
+          toast.success("Shipment created successfully!");
+        }
       }
 
       await fetchData();

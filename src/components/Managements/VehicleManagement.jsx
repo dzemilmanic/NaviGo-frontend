@@ -76,9 +76,13 @@ const VehicleManagement = () => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await vehicleService.delete(id);
+        const response = await vehicleService.delete(id);
+        if(response.success){
+          toast.success(`Vehicle ${vehicleName} deleted successfully!`);
+        }else{
+          toast.error(`Failed to delete vehicle. Message:${response.message}`);
+        }
         await fetchData();
-        toast.success(`Vehicle ${vehicleName} deleted successfully!`);
       } catch (error) {
         toast.error("Failed to delete vehicle. Please try again.");
         console.error("Error deleting vehicle:", error);
@@ -174,11 +178,19 @@ const VehicleManagement = () => {
       };
 
       if (selectedVehicle) {
-        await vehicleService.update(selectedVehicle.id, formData);
-        toast.success(`Vehicle ${formData.brand} ${formData.model} updated successfully!`);
+        const response = await vehicleService.update(selectedVehicle.id, formData);
+        if(!response.success){
+          toast.error(`Failed to update vehicle. Message:${response.message}`);
+        }else{
+          toast.success(`Vehicle ${formData.brand} ${formData.model} updated successfully!`);
+        }
       } else {
-        await vehicleService.create(formData);
-        toast.success(`Vehicle ${formData.brand} ${formData.model} created successfully!`);
+        const response = await vehicleService.create(formData);
+        if(!response.success){
+          toast.error(`Failed to create vehicle. Message:${response.message}`);
+        }else{
+          toast.success(`Vehicle ${formData.brand} ${formData.model} created successfully!`);
+        }
       }
 
       await fetchData();

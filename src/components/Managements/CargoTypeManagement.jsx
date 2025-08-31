@@ -86,9 +86,13 @@ const CargoTypeManagement = () => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await cargoTypeService.delete(id);
+        const response = await cargoTypeService.delete(id);
+        if(response.success){
+          toast.success(`Cargo type ${typeName} deleted successfully!`);
+        }else{
+          toast.error(`Failed to delete cargo type. Message:${response.message}`);
+        }
         await fetchCargoTypes();
-        toast.success(`Cargo type ${typeName} deleted successfully!`);
       } catch (error) {
         toast.error("Failed to delete cargo type. Please try again.");
         console.error("Error deleting cargo type:", error);
@@ -150,8 +154,12 @@ const CargoTypeManagement = () => {
     setLoading(true);
     try {
       if (selectedCargoType) {
-        await cargoTypeService.update(selectedCargoType.id, formData);
-        toast.success(`Cargo type ${formData.typeName} updated successfully!`);
+        const response = await cargoTypeService.update(selectedCargoType.id, formData);
+        if(!response.success){
+          toast.error(`Failed to update cargo type. Message:${response.message}`);
+        }else{
+          toast.success(`Cargo type ${formData.typeName} updated successfully!`);
+        }
       } else {
         await cargoTypeService.create(formData);
         toast.success(`Cargo type ${formData.typeName} created successfully!`);

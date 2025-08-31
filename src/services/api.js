@@ -57,79 +57,100 @@ class ApiService {
     };
   }
 
-  async request(endpoint, options = {}, retry = true) {
-    const url = `${this.baseURL}${endpoint}`;
-    const { body, headers: customHeaders, ...rest } = options;
+async request(endpoint, options = {}, retry = true) {
+  const url = `${this.baseURL}${endpoint}`;
+  const { body, headers: customHeaders, ...rest } = options;
 
-    let headers = { ...this.getAuthHeaders(), ...customHeaders };
+  let headers = { ...this.getAuthHeaders(), ...customHeaders };
 
-    // Ne dodaj Content-Type ako šalješ FormData ili raw string
-    if (body instanceof FormData) {
-      delete headers["Content-Type"];
-    } else if (typeof body === "string") {
-      headers["Content-Type"] = "application/json";
-    }
-
-    const config = {
-      headers,
-      ...rest,
-      body:
-        body instanceof FormData || typeof body === "string"
-          ? body
-          : JSON.stringify(body),
-    };
-
-    try {
-      const response = await fetch(url, config);
-
-      // Ako je token istekao → pokušaj refresh
-      if (response.status === 401 && retry) {
-        console.warn("Access token expired. Attempting refresh...");
-
-        if (!this.isRefreshing) {
-          this.isRefreshing = true;
-
-          const refreshResult = await authService.refreshAccessToken();
-
-          this.isRefreshing = false;
-
-          if (refreshResult.success) {
-            // ponovo pokreni sve pending requeste
-            this.pendingRequests.forEach(cb => cb());
-            this.pendingRequests = [];
-
-            // retry original request sa novim tokenom
-            return this.request(endpoint, options, false);
-          } else {
-            authService.clearTokens();
-            return { success: false, error: "Session expired. Please login again." };
-          }
-        } else {
-          // Ako refresh već traje → sačekaj
-          return new Promise(resolve => {
-            this.pendingRequests.push(() => {
-              resolve(this.request(endpoint, options, false));
-            });
-          });
-        }
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
-        );
-      }
-
-      if (response.status === 204) return { success: true, data: null };
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (error) {
-      console.error(`API request failed: ${endpoint}`, error);
-      return { success: false, error: error.message };
-    }
+  // Ne dodaj Content-Type ako šalješ FormData ili raw string
+  if (body instanceof FormData) {
+    delete headers["Content-Type"];
+  } else if (typeof body === "string") {
+    headers["Content-Type"] = "application/json";
   }
+
+  const config = {
+    headers,
+    ...rest,
+    body:
+      body instanceof FormData || typeof body === "string"
+        ? body
+        : JSON.stringify(body),
+  };
+
+  try {
+    const response = await fetch(url, config);
+
+    // Ako je token istekao → pokušaj refresh
+    if (response.status === 401 && retry) {
+      console.warn("Access token expired. Attempting refresh...");
+
+      if (!this.isRefreshing) {
+        this.isRefreshing = true;
+
+        const refreshResult = await authService.refreshAccessToken();
+
+        this.isRefreshing = false;
+
+        if (refreshResult.success) {
+          // ponovo pokreni sve pending requeste
+          this.pendingRequests.forEach(cb => cb());
+          this.pendingRequests = [];
+
+          // retry original request sa novim tokenom
+          return this.request(endpoint, options, false);
+        } else {
+          authService.clearTokens();
+          // reject sve pending requests ako refresh failuje
+          this.pendingRequests.forEach(cb => cb());
+          this.pendingRequests = [];
+          return { success: false, message: "Session expired. Please login again." };
+        }
+      } else {
+        // Ako refresh već traje → sačekaj
+        return new Promise(resolve => {
+          this.pendingRequests.push(() => {
+            resolve(this.request(endpoint, options, false));
+          });
+        });
+      }
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      let errorMessage = "";
+
+      if (errorData.message) {
+        // Klasičan message
+        errorMessage = errorData.message;
+      } else if (errorData.errors) {
+        // ASP.NET ValidationProblemDetails
+        const fieldErrors = Object.entries(errorData.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+          .join(" | ");
+        errorMessage = errorData.title
+          ? `${errorData.title} - ${fieldErrors}`
+          : fieldErrors;
+      } else {
+        // Fallback
+        errorMessage = `HTTP error! status: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    if (response.status === 204) return { success: true, data: null };
+
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error(`API request failed: ${endpoint}`, error);
+    return { success: false, message: error.message };
+  }
+}
+
 
   async get(endpoint) {
     return this.request(endpoint, { method: "GET" });

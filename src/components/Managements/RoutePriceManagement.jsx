@@ -5,7 +5,7 @@ import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { X } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
-
+import { toast } from "react-toastify";
 const RoutePriceManagement = () => {
   const [routePrices, setRoutePrices] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -28,6 +28,7 @@ const RoutePriceManagement = () => {
       setRoutes(routesResponse.data);
       setVehicleTypes(vehicleTypesResponse.data);
     } catch (error) {
+      toast.error("Failed to load route prices. Please try again.");
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
@@ -56,19 +57,82 @@ const RoutePriceManagement = () => {
     document.body.style.overflow = 'auto';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this route price?")) {
-      try {
+    const handleDelete = async (id) => {
+      // Custom toast confirmation
+      const confirmDelete = () => {
+        toast.dismiss();
+        performDelete();
+      };
+  
+      const cancelDelete = () => {
+        toast.dismiss();
+        toast.info("Delete operation cancelled");
+      };
+  
+      const performDelete = async () => {
         setLoading(true);
-        await routePriceService.delete(id);
-        await fetchData();
-      } catch (error) {
-        console.error("Error deleting route price:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+        try {
+          const response = await routePriceService.delete(id);
+          if(response.success){
+            toast.success(`Route price ${id} deleted successfully!`);
+          }else{
+            toast.error(`Failed to delete route price. Message: ${response.message}`);
+          }
+          await fetchData();
+        } catch (error) {
+          toast.error("Failed to delete route price. Please try again.");
+          console.error("Error deleting route price:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      // Show confirmation toast
+      toast.warn(
+        <div>
+          <p>Are you sure you want to delete route price <strong>{id}</strong>?</p>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={confirmDelete}
+              style={{
+                background: '#dc2626',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Delete
+            </button>
+            <button 
+              onClick={cancelDelete}
+              style={{
+                background: '#6b7280',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>,
+        {
+          position: "top-center",
+          autoClose: false,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: false,
+          closeButton: false,
+        }
+      );
+    };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,9 +148,19 @@ const RoutePriceManagement = () => {
       };
 
       if (selectedRoutePrice) {
-        await routePriceService.update(selectedRoutePrice.id, formData);
+        const response = await routePriceService.update(selectedRoutePrice.id, formData);
+        if (response.success) {
+          toast.success(`Route price ${selectedRoutePrice.id} updated successfully!`);
+        }else{
+          toast.error(`Failed to update route price. Message: ${response.message}`);
+        }
       } else {
-        await routePriceService.create(formData);
+        const response = await routePriceService.create(formData);
+        if(response.success){
+          toast.success(`Route price created successfully!`);
+        }else{
+          toast.error(`Failed to create route price. Message: ${response.message}`);
+        }
       }
       
       await fetchData();

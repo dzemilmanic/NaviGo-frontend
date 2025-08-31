@@ -58,9 +58,13 @@ const VehicleTypeManagement = () => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await vehicleTypeService.delete(id);
+        const response = await vehicleTypeService.delete(id);
+        if(response.success){
+          toast.success(`Vehicle type ${typeName} deleted successfully!`);
+        }else{
+          toast.error(`Failed to delete vehicle type. Message:${response.message}`);
+        }
         await fetchData();
-        toast.success(`Vehicle type ${typeName} deleted successfully!`);
       } catch (error) {
         toast.error("Failed to delete vehicle type. Please try again.");
         console.error("Error deleting vehicle type:", error);
@@ -129,8 +133,12 @@ const VehicleTypeManagement = () => {
     setLoading(true);
     try {
       if (selectedType) {
-        await vehicleTypeService.update(selectedType.id, submitData);
-        toast.success(`Vehicle type ${submitData.typeName} updated successfully!`);
+        const response = await vehicleTypeService.update(selectedType.id, submitData);
+        if(!response.success){
+          toast.error(`Failed to update vehicle type. Message:${response.message}`);
+        }else{
+          toast.success(`Vehicle type ${submitData.typeName} updated successfully!`);
+        }
       } else {
         await vehicleTypeService.create(submitData);
         toast.success(`Vehicle type ${submitData.typeName} created successfully!`);

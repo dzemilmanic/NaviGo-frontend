@@ -3,13 +3,14 @@ import { shipmentDocumentService } from "../../services/shipmentDocumentService"
 import { shipmentService } from "../../services/shipmentService";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+import { toast } from "react-toastify";
 const ShipmentDocumentManagement = () => {
   const [documents, setDocuments] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [fileUrl, setFileUrl] = useState(null);
   const fetchData = async () => {
     setLoading(true);
@@ -20,6 +21,7 @@ const ShipmentDocumentManagement = () => {
       setDocuments(docsResponse.data);
       setShipments(shipmentsResponse.data);
     } catch (error) {
+      toast.error("Failed to load documents. Please try again.");
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
@@ -41,17 +43,85 @@ const ShipmentDocumentManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this document?")) {
-      setLoading(true)
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
+      setLoading(true);
       try {
-        await shipmentDocumentService.delete(id);
-        fetchData();
+        const response = await shipmentDocumentService.delete(id);
+        if (response.success) {
+          toast.success(`Shipment document  ${id} deleted successfully!`);
+        } else {
+          toast.error(
+            `Failed to delete shipment document. Message: ${response.message}`
+          );
+        }
+        await fetchData();
       } catch (error) {
-        console.error("Error deleting document:", error);
-      } finally{
-        setLoading(false)
+        toast.error("Failed to delete shipment document. Please try again.");
+        console.error("Error deleting shipment document:", error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>
+          Are you sure you want to delete shipment document{" "}
+          <strong>{id}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmDelete}
+            style={{
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Delete
+          </button>
+          <button
+            onClick={cancelDelete}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
   const handleFileChange = (e) => {
     setFileUrl(e.target.files[0]);
@@ -86,21 +156,40 @@ const ShipmentDocumentManagement = () => {
 
     try {
       if (selectedDocument) {
-        await shipmentDocumentService.update(selectedDocument.id, formData);
+        const response = await shipmentDocumentService.update(
+          selectedDocument.id,
+          formData
+        );
+        if (!response.success) {
+          toast.error(
+            `Failed to update document. Message: ${response.message}`
+          );
+        } else {
+          toast.success(
+            `Document ${selectedDocument.id} updated successfully!`
+          );
+        }
       } else {
-        await shipmentDocumentService.create(formData);
+        const response = await shipmentDocumentService.create(formData);
+        if (!response.success) {
+          toast.error(
+            `Failed to create document. Message: ${response.message}`
+          );
+        } else {
+          toast.success(`Document ${response.data.id} created successfully!`);
+        }
       }
       fetchData();
       closeModal();
       setFileUrl(null); // reset fajla
     } catch (error) {
       console.error("Error saving document:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
-  if(loading){
-    return <Loader/>
+  if (loading) {
+    return <Loader />;
   }
   return (
     <div className="management-container">
@@ -162,7 +251,7 @@ const ShipmentDocumentManagement = () => {
                   </option>
                 ))}
               </select>
-                <label htmlFor="documentType">Document Type</label>
+              <label htmlFor="documentType">Document Type</label>
               <select
                 name="documentType"
                 defaultValue={selectedDocument?.documentType || ""}

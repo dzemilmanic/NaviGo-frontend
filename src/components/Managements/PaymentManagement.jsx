@@ -5,6 +5,7 @@ import { userService } from "../../services/userService"; // za klijente
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
 import Loader from "../Loader/Loader";
+import { toast } from "react-toastify";
 const PaymentManagement = () => {
   const [payments, setPayments] = useState([]);
   const [search, setSearch] = useState("");
@@ -14,15 +15,16 @@ const PaymentManagement = () => {
   const [clients, setClients] = useState([]);
   const { user } = useAuth();
   const [fileUrl, setFileUrl] = useState(null);
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fetchPayments = async () => {
     setLoading(true);
     try {
       const response = await paymentService.getAll({ search });
       setPayments(response.data);
     } catch (error) {
+      toast.error("Failed to load payments. Please try again.");
       console.error("Error fetching payments:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -33,8 +35,9 @@ const PaymentManagement = () => {
       const response = await contractService.getAll();
       setContracts(response.data);
     } catch (error) {
+      toast.error("Failed to load contracts. Please try again.");
       console.error("Error fetching contracts:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -45,8 +48,9 @@ const PaymentManagement = () => {
       const response = await userService.getAll();
       setClients(response.data);
     } catch (error) {
+      toast.error("Failed to load clients. Please try again.");
       console.error("Error fetching clients:", error);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -66,64 +70,139 @@ const PaymentManagement = () => {
     setSelectedPayment(null);
     setIsModalOpen(false);
   };
-
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this payment?")) {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
-        await paymentService.delete(id);
-        fetchPayments();
+        const response = await paymentService.delete(id);
+        if (response.success) {
+          toast.success(`Payment ${id} deleted successfully!`);
+        } else {
+          toast.error(`Failed to delete payment. Message: ${response.message}`);
+        }
+        await fetchPayments();
       } catch (error) {
+        toast.error("Failed to delete payment. Please try again.");
         console.error("Error deleting payment:", error);
-      } finally{
+      } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>
+          Are you sure you want to delete payment <strong>{id}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmDelete}
+            style={{
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Delete
+          </button>
+          <button
+            onClick={cancelDelete}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  let receiptUrl = selectedPayment?.receiptUrl || "";
-  setLoading(true);
-  if (fileUrl) {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    let receiptUrl = selectedPayment?.receiptUrl || "";
+    setLoading(true);
+    if (fileUrl) {
+      try {
+        const uploadResponse = await paymentService.uploadFile(fileUrl);
+        receiptUrl = uploadResponse.data.url; // URL sa Azure-a(
+        console.log(receiptUrl);
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        return;
+      }
+    }
+    const formData = {
+      contractId: Number(e.target.contractId.value),
+      receiptUrl, // ovo se uvek šalje
+    };
+
     try {
-      const uploadResponse = await paymentService.uploadFile(fileUrl);
-      receiptUrl = uploadResponse.data.url; // URL sa Azure-a(
-      console.log(receiptUrl);
+      if (selectedPayment) {
+        const response = await paymentService.update(
+          selectedPayment.id,
+          formData
+        );
+        if (response.success) {
+          toast.success("Payment updated successfully!");
+        } else {
+          toast.error(`Failed to update payment. Message: ${response.message}`);
+        }
+      } else {
+        const response = await paymentService.create(formData);
+        if (response.success) {
+          toast.success("Payment created successfully!");
+        } else {
+          toast.error(`Failed to create payment. Message: ${response.message}`);
+        }
+      }
+      fetchPayments();
+      closeModal();
+      setFileUrl(null); // reset fajla
     } catch (error) {
-      console.error("Error uploading file:", error);
-      return;
+      toast.error("Failed to save payment. Please try again.");
+      console.error("Error saving payment:", error);
+    } finally {
+      setLoading(false);
     }
-  }
-  const formData = {
-    contractId: Number(e.target.contractId.value),
-    receiptUrl, // ovo se uvek šalje
   };
-
-  try {
-    if (selectedPayment) {
-      await paymentService.update(selectedPayment.id, formData);
-    } else {
-      await paymentService.create(formData);
-    }
-    fetchPayments();
-    closeModal();
-    setFileUrl(null); // reset fajla
-  } catch (error) {
-    console.error("Error saving payment:", error);
-  }finally{
-    setLoading(false);
-  }
-};
-
-
-
 
   const handleFileChange = (e) => {
     setFileUrl(e.target.files[0]);
   };
-  if(loading){
-    return <Loader/>
+  if (loading) {
+    return <Loader />;
   }
   return (
     <div className="management-container">

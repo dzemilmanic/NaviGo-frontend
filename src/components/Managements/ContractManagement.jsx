@@ -6,8 +6,9 @@ import { routePriceService } from "../../services/routePriceService";
 import { routeService } from "../../services/routeService";
 import { userService } from "../../services/userService";
 import { useAuth } from "../../contexts/AuthContext";
+import { toast } from "react-toastify";
 import "./Managements.css";
-import Loader from '../Loader/Loader';
+import Loader from "../Loader/Loader";
 const ContractManagement = () => {
   const [contracts, setContracts] = useState([]);
   const [search, setSearch] = useState("");
@@ -20,7 +21,7 @@ const ContractManagement = () => {
   const [forwarderOffers, setForwarderOffers] = useState([]);
   const [routes, setRoutes] = useState([]);
   const { user } = useAuth();
-  const [loading,setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   // Fetch contracts
   const fetchContracts = async () => {
     setLoading(true);
@@ -29,7 +30,8 @@ const ContractManagement = () => {
       setContracts(response.data);
     } catch (error) {
       console.error("Error fetching contracts:", error);
-    }finally{
+      toast.error("Failed to load contracts. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
@@ -38,13 +40,20 @@ const ContractManagement = () => {
   const fetchDropdownData = async () => {
     setLoading(true);
     try {
-      const [clientsCompanyData, allUsersData, forwardersData, routePricesData, forwarderOffersData, routesData] = await Promise.all([
+      const [
+        clientsCompanyData,
+        allUsersData,
+        forwardersData,
+        routePricesData,
+        forwarderOffersData,
+        routesData,
+      ] = await Promise.all([
         companyService.getAll({ companyType: 1 }),
         userService.getAll(),
         companyService.getAll({ companyType: 2 }),
         routePriceService.getAll(),
         forwarderOfferService.getAll(),
-        routeService.getAll()
+        routeService.getAll(),
       ]);
 
       setClientsCompany(clientsCompanyData.data);
@@ -54,36 +63,40 @@ const ContractManagement = () => {
       setRoutes(routesData.data);
 
       // Kombinujemo Regular i CompanyAdmin u jednu listu za dropdown
-const combinedUsers = allUsersData.data
-  .filter(u => {
-    if (u.userRole === "RegularUser" && !u.companyId) {
-      // fizičko lice
-      return true;
-    }
-    if (
-      u.userRole === "CompanyAdmin" &&
-      u.companyId &&
-      clientsCompanyData.data.find(c => c.id === u.companyId && c.companyType === "Client")
-    ) {
-      // pravno lice
-      return true;
-    }
-    return false; // sve ostalo filtriramo
-  })
-  .map(u => {
-    const company = clientsCompanyData.data.find(c => c.id === u.companyId);
-    return {
-      id: u.id,
-      fullName: `${u.firstName} ${u.lastName}${company ? ` (${company.companyName})` : ""}`
-    };
-  });
+      const combinedUsers = allUsersData.data
+        .filter((u) => {
+          if (u.userRole === "RegularUser" && !u.companyId) {
+            // fizičko lice
+            return true;
+          }
+          if (
+            u.userRole === "CompanyAdmin" &&
+            u.companyId &&
+            clientsCompanyData.data.find(
+              (c) => c.id === u.companyId && c.companyType === "Client"
+            )
+          ) {
+            // pravno lice
+            return true;
+          }
+          return false; // sve ostalo filtriramo
+        })
+        .map((u) => {
+          const company = clientsCompanyData.data.find(
+            (c) => c.id === u.companyId
+          );
+          return {
+            id: u.id,
+            fullName: `${u.firstName} ${u.lastName}${
+              company ? ` (${company.companyName})` : ""
+            }`,
+          };
+        });
 
-setClientsRegular(combinedUsers);
-
-
+      setClientsRegular(combinedUsers);
     } catch (error) {
       console.error("Error fetching dropdown data:", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -102,71 +115,156 @@ setClientsRegular(combinedUsers);
     setSelectedContract(null);
     setIsModalOpen(false);
   };
+  const handleDelete = async (id, contractNumber) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
+    };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this contract?")) {
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
       setLoading(true);
       try {
-        await contractService.delete(id);
-        fetchContracts();
+        const response = await contractService.delete(id);
+        if (response.success) {
+          toast.success(`Contract ${contractNumber} deleted successfully!`);
+        } else {
+          toast.error(
+            `Failed to delete contract. Message: ${response.message}`
+          );
+        }
+        await fetchContracts();
       } catch (error) {
+        toast.error("Failed to delete contract. Please try again.");
         console.error("Error deleting contract:", error);
-      } finally{
+      } finally {
         setLoading(false);
       }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>
+          Are you sure you want to delete contract{" "}
+          <strong>{contractNumber}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmDelete}
+            style={{
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Delete
+          </button>
+          <button
+            onClick={cancelDelete}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    setLoading(true);
+    try {
+      if (selectedContract) {
+        // Map string value to enum number
+        const statusMap = {
+          Pending: 0,
+          Active: 1,
+          Completed: 2,
+          Cancelled: 3,
+        };
+
+        const updateData = {
+          terms: form.terms.value,
+          contractStatus: form.contractStatus?.value
+            ? statusMap[form.contractStatus.value]
+            : selectedContract.contractStatus,
+          penaltyRatePerHour: Number(form.penaltyRatePerHour.value),
+          maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
+        };
+
+        const response = await contractService.update(
+          selectedContract.id,
+          updateData
+        );
+        if (response.success) {
+          toast.success("Contract updated successfully!");
+        } else {
+          toast.error(
+            `Failed to update contract. Message: ${response.message}`
+          );
+        }
+      } else {
+        const createData = {
+          clientId: Number(form.clientId.value),
+          forwarderId: Number(user.companyId),
+          routeId: Number(form.routeId.value),
+          routePriceId: Number(form.routePriceId.value),
+          forwarderOfferId: Number(form.forwarderOfferId.value),
+          contractNumber: form.contractNumber.value,
+          terms: form.terms.value,
+          penaltyRatePerHour: Number(form.penaltyRatePerHour.value),
+          maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
+        };
+        const response = await contractService.create(createData);
+        if (response.success) {
+          toast.success("Contract created successfully!");
+        } else {
+          toast.error(
+            `Failed to create contract. Message: ${response.message}`
+          );
+        }
+      }
+
+      fetchContracts();
+      closeModal();
+    } catch (error) {
+      toast.error("Failed to save contract. Please try again.");
+      console.error("Error saving contract:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const form = e.target;
-  setLoading(true);
-  try {
-    if (selectedContract) {
-      // Map string value to enum number
-      const statusMap = {
-        Pending: 0,
-        Active: 1,
-        Completed: 2,
-        Cancelled: 3
-      };
-
-      const updateData = {
-        terms: form.terms.value,
-        contractStatus: form.contractStatus?.value
-          ? statusMap[form.contractStatus.value]
-          : selectedContract.contractStatus,
-        penaltyRatePerHour: Number(form.penaltyRatePerHour.value),
-        maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
-      };
-
-      await contractService.update(selectedContract.id, updateData);
-    } else {
-      const createData = {
-        clientId: Number(form.clientId.value),
-        forwarderId: Number(user.companyId),
-        routeId: Number(form.routeId.value),
-        routePriceId: Number(form.routePriceId.value),
-        forwarderOfferId: Number(form.forwarderOfferId.value),
-        contractNumber: form.contractNumber.value,
-        terms: form.terms.value,
-        penaltyRatePerHour: Number(form.penaltyRatePerHour.value),
-        maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
-      };
-      await contractService.create(createData);
-    }
-
-    fetchContracts();
-    closeModal();
-  } catch (error) {
-    console.error("Error saving contract:", error);
-  }finally{
-    setLoading(false);
-  }
-};
-
-  if(loading){
-    return <Loader />
+  if (loading) {
+    return <Loader />;
   }
   return (
     <div className="management-container">
@@ -199,7 +297,8 @@ const handleSubmit = async (e) => {
               <td>{c.contractNumber}</td>
               <td>
                 {c.clientFullName}{" "}
-                {clientsCompany.find((client) => client.id === c.clientId)?.companyName
+                {clientsCompany.find((client) => client.id === c.clientId)
+                  ?.companyName
                   ? "(" +
                     clientsCompany.find((client) => client.id === c.clientId)
                       ?.companyName +
@@ -211,125 +310,154 @@ const handleSubmit = async (e) => {
               <td>{c.contractStatus}</td>
               <td>
                 <button onClick={() => openModal(c)}>Edit</button>
-                <button onClick={() => handleDelete(c.id)}>Delete</button>
+                <button onClick={() => handleDelete(c.id, c.contractNumber)}>
+                  Delete
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-{isModalOpen && (
-  <div className="modal">
-    <div className="modal-content">
-      {selectedContract ? (
-        <>
-          <h3>Edit Contract</h3>
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="terms">Terms:</label>
-            <textarea
-              name="terms"
-              placeholder="Terms"
-              defaultValue={selectedContract?.terms || ""}
-            />
+      {isModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            {selectedContract ? (
+              <>
+                <h3>Edit Contract</h3>
+                <form onSubmit={handleSubmit}>
+                  <label htmlFor="terms">Terms:</label>
+                  <textarea
+                    name="terms"
+                    placeholder="Terms"
+                    defaultValue={selectedContract?.terms || ""}
+                  />
 
-            <label htmlFor="contractStatus">Status:</label>
-            <select name="contractStatus" defaultValue={selectedContract?.contractStatus || ""}>
-              <option value="">Select Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Active">Active</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+                  <label htmlFor="contractStatus">Status:</label>
+                  <select
+                    name="contractStatus"
+                    defaultValue={selectedContract?.contractStatus || ""}
+                  >
+                    <option value="">Select Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Active">Active</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
 
-            <label htmlFor="penaltyRatePerHour">Penalty Rate per Hour:</label>
-            <input
-              type="number"
-              name="penaltyRatePerHour"
-              placeholder="Penalty Rate per Hour"
-              defaultValue={selectedContract?.penaltyRatePerHour || ""}
-            />
+                  <label htmlFor="penaltyRatePerHour">
+                    Penalty Rate per Hour:
+                  </label>
+                  <input
+                    type="number"
+                    name="penaltyRatePerHour"
+                    placeholder="Penalty Rate per Hour"
+                    defaultValue={selectedContract?.penaltyRatePerHour || ""}
+                  />
 
-            <label htmlFor="maxPenaltyPercent">Max Penalty Percent:</label>
-            <input
-              type="number"
-              name="maxPenaltyPercent"
-              placeholder="Max Penalty Percent"
-              defaultValue={selectedContract?.maxPenaltyPercent || ""}
-            />
+                  <label htmlFor="maxPenaltyPercent">
+                    Max Penalty Percent:
+                  </label>
+                  <input
+                    type="number"
+                    name="maxPenaltyPercent"
+                    placeholder="Max Penalty Percent"
+                    defaultValue={selectedContract?.maxPenaltyPercent || ""}
+                  />
 
-            <div className="modal-actions">
-              <button type="submit">Save</button>
-              <button type="button" onClick={closeModal}>Cancel</button>
-            </div>
-          </form>
-        </>
-      ) : (
-        <>
-          <h3>Add Contract</h3>
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="clientId">Client:</label>
-            <select name="clientId" required>
-              <option value="">Select Client</option>
-              {clientsRegular.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.fullName}
-                </option>
-              ))}
-            </select>
+                  <div className="modal-actions">
+                    <button type="submit">Save</button>
+                    <button type="button" onClick={closeModal}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <h3>Add Contract</h3>
+                <form onSubmit={handleSubmit}>
+                  <label htmlFor="clientId">Client:</label>
+                  <select name="clientId" required>
+                    <option value="">Select Client</option>
+                    {clientsRegular.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.fullName}
+                      </option>
+                    ))}
+                  </select>
 
-            <label htmlFor="routeId">Route:</label>
-            <select name="routeId" required>
-              <option value="">Select Route</option>
-              {routes.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.id}: {r.startLocationName} - {r.endLocationName}
-                </option>
-              ))}
-            </select>
+                  <label htmlFor="routeId">Route:</label>
+                  <select name="routeId" required>
+                    <option value="">Select Route</option>
+                    {routes.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.id}: {r.startLocationName} - {r.endLocationName}
+                      </option>
+                    ))}
+                  </select>
 
-            <label htmlFor="routePriceId">Route Prices</label>
-            <select name="routePriceId" required>
-              <option value="">Select Route Price</option>
-              {routePrices.map((r) => (
-                <option key={r.id} value={r.id}>
-                  Route {r.routeId} - {r.pricePerKm} per km
-                </option>
-              ))}
-            </select>
+                  <label htmlFor="routePriceId">Route Prices</label>
+                  <select name="routePriceId" required>
+                    <option value="">Select Route Price</option>
+                    {routePrices.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        Route {r.routeId} - {r.pricePerKm} per km
+                      </option>
+                    ))}
+                  </select>
 
-            <label htmlFor="forwarderOfferId">Forwarder Offers</label>
-            <select name="forwarderOfferId">
-              <option value="">Select Forwarder Offer</option>
-              {forwarderOffers.map((o) => (
-                <option key={o.id} value={o.id}>
-                  Offer {o.id} - {o.commissionRate}%
-                </option>
-              ))}
-            </select>
+                  <label htmlFor="forwarderOfferId">Forwarder Offers</label>
+                  <select name="forwarderOfferId">
+                    <option value="">Select Forwarder Offer</option>
+                    {forwarderOffers.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        Offer {o.id} - {o.commissionRate}%
+                      </option>
+                    ))}
+                  </select>
 
-            <label htmlFor="contractNumber">Contract Number:</label>
-            <input type="text" name="contractNumber" placeholder="Contract Number" required />
+                  <label htmlFor="contractNumber">Contract Number:</label>
+                  <input
+                    type="text"
+                    name="contractNumber"
+                    placeholder="Contract Number"
+                    required
+                  />
 
-            <label htmlFor="terms">Terms:</label>
-            <textarea name="terms" placeholder="Terms" />
+                  <label htmlFor="terms">Terms:</label>
+                  <textarea name="terms" placeholder="Terms" />
 
-            <label htmlFor="penaltyRatePerHour">Penalty Rate per Hour:</label>
-            <input type="number" name="penaltyRatePerHour" placeholder="Penalty Rate per Hour" />
+                  <label htmlFor="penaltyRatePerHour">
+                    Penalty Rate per Hour:
+                  </label>
+                  <input
+                    type="number"
+                    name="penaltyRatePerHour"
+                    placeholder="Penalty Rate per Hour"
+                  />
 
-            <label htmlFor="maxPenaltyPercent">Max Penalty Percent:</label>
-            <input type="number" name="maxPenaltyPercent" placeholder="Max Penalty Percent" />
+                  <label htmlFor="maxPenaltyPercent">
+                    Max Penalty Percent:
+                  </label>
+                  <input
+                    type="number"
+                    name="maxPenaltyPercent"
+                    placeholder="Max Penalty Percent"
+                  />
 
-            <div className="modal-actions">
-              <button type="submit">Add</button>
-              <button type="button" onClick={closeModal}>Cancel</button>
-            </div>
-          </form>
-        </>
+                  <div className="modal-actions">
+                    <button type="submit">Add</button>
+                    <button type="button" onClick={closeModal}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
-
     </div>
   );
 };

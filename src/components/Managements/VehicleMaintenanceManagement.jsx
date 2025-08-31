@@ -95,9 +95,13 @@ const VehicleMaintenanceManagement = () => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await vehicleMaintenanceService.delete(id);
+        const response = await vehicleMaintenanceService.delete(id);
+        if (response.success) {
+          toast.success("Maintenance record deleted successfully!");
+        } else {
+          toast.error(`Failed to delete maintenance record. Message: ${response.message}`);
+        }
         await fetchVehicleMaintenances();
-        toast.success("Maintenance record deleted successfully!");
       } catch (error) {
         toast.error("Failed to delete maintenance record. Please try again.");
         console.error("Error deleting vehicle maintenance:", error);
@@ -159,23 +163,31 @@ const VehicleMaintenanceManagement = () => {
     setLoading(true);
     try {
       if (selectedVehicleMaintenance) {
-        await vehicleMaintenanceService.update(selectedVehicleMaintenance.id, {
+        const response = await vehicleMaintenanceService.update(selectedVehicleMaintenance.id, {
           description: formData.description,
           severity: Number(formData.severity),
           maintenanceType: Number(formData.maintenanceType),
           repairCost: Number(formData.repairCost),
           resolvedAt: formData.resolvedAt || new Date().toISOString(),
         });
-        toast.success("Maintenance record updated successfully!");
+        if(response.success){
+          toast.success("Maintenance record updated successfully!");
+        }else{
+          toast.error(`Failed to update maintenance record. Message: ${response.message}`);
+        }
       } else {
-        await vehicleMaintenanceService.create({
+        const response = await vehicleMaintenanceService.create({
           vehicleId: Number(formData.vehicleId),
           description: formData.description,
           severity: Number(formData.severity),
           maintenanceType: Number(formData.maintenanceType),
           repairCost: Number(formData.repairCost),
         });
-        toast.success("Maintenance record created successfully!");
+        if(response.success){
+          toast.success("Maintenance record created successfully!");
+        }else{
+          toast.error(`Failed to create maintenance record. Message: ${response.message}`);
+        }
       }
       setModalOpen(false);
       setSelectedVehicleMaintenance(null);

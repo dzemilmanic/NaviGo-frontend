@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
-
+import { toast } from "react-toastify";
 const RouteManagement = () => {
   const [routes, setRoutes] = useState([]);
   const [search, setSearch] = useState("");
@@ -29,6 +29,7 @@ const RouteManagement = () => {
       setLocations(locationResponse.data);
       setCompanies(companyResponse.data);
     } catch (error) {
+      toast.error("Failed to load routes. Please try again.");
       console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
@@ -51,20 +52,82 @@ const RouteManagement = () => {
     document.body.style.overflow = 'auto';
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this route?")) {
-      setLoading(true);
-      try {
-        await routeService.delete(id);
-        await fetchRoutes();
-      } catch (error) {
-        console.error("Error deleting route:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
+    const handleDelete = async (id) => {
+      // Custom toast confirmation
+      const confirmDelete = () => {
+        toast.dismiss();
+        performDelete();
+      };
+  
+      const cancelDelete = () => {
+        toast.dismiss();
+        toast.info("Delete operation cancelled");
+      };
+  
+      const performDelete = async () => {
+        setLoading(true);
+        try {
+          const response = await routeService.delete(id);
+          if(response.success){
+            toast.success(`Route ${id} deleted successfully!`);
+          }else{
+            toast.error(`Failed to delete route. Message: ${response.message}`);
+          }
+          await fetchRoutes();
+        } catch (error) {
+          toast.error("Failed to delete route. Please try again.");
+          console.error("Error deleting route:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      // Show confirmation toast
+      toast.warn(
+        <div>
+          <p>Are you sure you want to delete route <strong>{id}</strong>?</p>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+            <button 
+              onClick={confirmDelete}
+              style={{
+                background: '#dc2626',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Delete
+            </button>
+            <button 
+              onClick={cancelDelete}
+              style={{
+                background: '#6b7280',
+                color: 'white',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>,
+        {
+          position: "top-center",
+          autoClose: false,
+          hideProgressBar: true,
+          closeOnClick: false,
+          pauseOnHover: true,
+          draggable: false,
+          closeButton: false,
+        }
+      );
+    };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -80,9 +143,23 @@ const RouteManagement = () => {
 
     try {
       if (selectedRoute) {
-        await routeService.update(selectedRoute.id, formData);
+        const response = await routeService.update(selectedRoute.id, formData);
+        if (!response.success) {
+          toast.error(
+            `Failed to update route. Message: ${response.message}`
+          );
+        } else {
+          toast.success(`Route ${selectedRoute.id} updated successfully!`);
+        }
       } else {
-        await routeService.create(formData);
+        const response = await routeService.create(formData);
+        if (!response.success) {
+          toast.error(
+            `Failed to create route. Message: ${response.message}`
+          );
+        } else {
+          toast.success("Route created successfully!");
+        }
       }
 
       await fetchRoutes();

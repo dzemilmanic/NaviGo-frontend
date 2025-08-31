@@ -66,9 +66,13 @@ const DriverManagement = () => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await driverService.delete(id);
+        const response = await driverService.delete(id);
+        if(response.success){
+          toast.success(`Driver ${driverName} deleted successfully!`);
+        }else{
+          toast.error(`Failed to delete driver. Message: ${response.message}`);
+        }
         await fetchDrivers();
-        toast.success(`Driver ${driverName} deleted successfully!`);
       } catch (error) {
         toast.error("Failed to delete driver. Please try again.");
         console.error("Error deleting driver:", error);
@@ -141,11 +145,19 @@ const DriverManagement = () => {
 
     try {
       if (selectedDriver) {
-        await driverService.update(selectedDriver.id, formData);
-        toast.success(`Driver ${formData.firstName} ${formData.lastName} updated successfully!`);
+        const response = await driverService.update(selectedDriver.id, formData);
+        if(!response.success) {
+          toast.error(`Failed to update driver. Message: ${response.message}`);
+        }else{
+          toast.success(`Driver ${formData.firstName} ${formData.lastName} updated successfully!`);
+        }
       } else {
-        await driverService.create(formData);
-        toast.success(`Driver ${formData.firstName} ${formData.lastName} created successfully!`);
+        const response = await driverService.create(formData);
+        if(!response.success) {
+          toast.error(`Failed to create driver. Message: ${response.message}`);
+        }else{
+          toast.success(`Driver ${formData.firstName} ${formData.lastName} created successfully!`);
+        }
       }
       
       await fetchDrivers();

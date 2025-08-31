@@ -61,9 +61,13 @@ const ShipmentStatusHistoryManagement = () => {
     const performDelete = async () => {
       setLoading(true);
       try {
-        await shipmentStatusHistoryService.delete(id);
+        const response = await shipmentStatusHistoryService.delete(id);
+        if(response.success){
+          toast.success("History entry deleted successfully!");
+        }else{
+          toast.error(`Failed to delete history entry. Message: ${response.message}`);
+        }
         await fetchData();
-        toast.success("History entry deleted successfully!");
       } catch (error) {
         toast.error("Failed to delete history entry. Please try again.");
         console.error("Error deleting history entry:", error);
@@ -130,8 +134,12 @@ const ShipmentStatusHistoryManagement = () => {
     setLoading(true);
     try {
       if (selectedHistory) {
-        await shipmentStatusHistoryService.update(selectedHistory.id, formData);
-        toast.success("History entry updated successfully!");
+        const response = await shipmentStatusHistoryService.update(selectedHistory.id, formData);
+        if(response.success){
+          toast.success("History entry updated successfully!");
+        }else{
+          toast.error(`Failed to update history entry. Message: ${response.message}`);
+        }
       } else {
         await shipmentStatusHistoryService.create(formData);
         toast.success("History entry created successfully!");
