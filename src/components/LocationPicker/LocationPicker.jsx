@@ -1,6 +1,6 @@
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import {useState} from 'React';
+import {useState} from 'react';
 const LocationPicker = ({ onSelect }) => {
   const [position, setPosition] = useState(null);
 
