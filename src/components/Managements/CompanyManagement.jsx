@@ -279,7 +279,7 @@ const CompanyManagement = ({ userType }) => {
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/*<th>ID</th>*/}
               <th>Name</th>
               <th>PIB</th>
               <th>Email</th>
@@ -300,7 +300,7 @@ const CompanyManagement = ({ userType }) => {
             ) : (
               filteredCompanies.map((company) => (
                 <tr key={company.id}>
-                  <td>{company.id}</td>
+                  {/* <td>{company.id}</td> */}
                   <td className="company-name">{company.companyName}</td>
                   <td>{company.pib}</td>
                   <td className="email-cell">{company.contactEmail}</td>

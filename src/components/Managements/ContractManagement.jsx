@@ -332,7 +332,7 @@ The payment terms, liability, and obligations are detailed below.`;
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/* <th>ID</th> */}
               <th>Contract Number</th>
               <th>Client</th>
               <th>Forwarder</th>
@@ -353,7 +353,7 @@ The payment terms, liability, and obligations are detailed below.`;
             ) : (
               contracts.map((c) => (
                 <tr key={c.id} className="table-row">
-                  <td>{c.id}</td>
+                  {/* <td>{c.id}</td> */}
                   <td>{c.contractNumber}</td>
                   <td>
                     {c.clientFullName}{" "}

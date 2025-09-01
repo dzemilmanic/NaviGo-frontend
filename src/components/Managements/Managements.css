@@ -222,6 +222,7 @@
   vertical-align: middle;
   word-break: break-word;
   position: relative;
+  
 }
 
 .management-table th {
@@ -235,6 +236,7 @@
   top: 0;
   z-index: 10;
   box-shadow: 0 2px 4px rgba(27, 60, 83, 0.1);
+  white-space: nowrap;
 }
 
 .management-table th:first-child {

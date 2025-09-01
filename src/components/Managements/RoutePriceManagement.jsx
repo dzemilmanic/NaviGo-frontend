@@ -204,7 +204,7 @@ const RoutePriceManagement = () => {
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/* <th>ID</th> */}
               <th>Route</th>
               <th>Vehicle Type</th>
               <th>Price per Km</th>
@@ -224,7 +224,7 @@ const RoutePriceManagement = () => {
             ) : (
               filteredRoutePrices.map((rp) => (
                 <tr key={rp.id} className="table-row">
-                  <td>{rp.id}</td>
+                  {/* <td>{rp.id}</td> */}
                   <td>{getRouteName(rp.routeId)}</td>
                   <td>
                     <span className="role-badge">{rp.vehicleTypeName}</span>

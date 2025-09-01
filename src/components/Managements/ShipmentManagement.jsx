@@ -217,7 +217,7 @@ const ShipmentManagement = () => {
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/* <th>ID</th> */}
               <th>Contract ID</th>
               <th>Vehicle</th>
               <th>Driver</th>
@@ -242,7 +242,7 @@ const ShipmentManagement = () => {
             ) : (
               shipments.map((s) => (
                 <tr key={s.id} className="table-row">
-                  <td>{s.id}</td>
+                  {/* <td>{s.id}</td> */}
                   <td>{s.contractName}</td>
                   <td>{s.vehicleName}</td>
                   <td>{s.driverName}</td>

@@ -188,7 +188,7 @@ const PickupChangeManagement = () => {
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/* <th>ID</th> */}
               <th>Shipment</th>
               <th>Old Time</th>
               <th>New Time</th>
@@ -210,7 +210,7 @@ const PickupChangeManagement = () => {
             ) : (
               pickupChanges.map((p) => (
                 <tr key={p.id} className="table-row">
-                  <td>{p.id}</td>
+                  {/* <td>{p.id}</td> */}
                   <td>{p.shipmentId}</td>
                   <td>{p.oldTime ? new Date(p.oldTime).toLocaleString() : 'N/A'}</td>
                   <td>{p.newTime ? new Date(p.newTime).toLocaleString() : 'N/A'}</td>

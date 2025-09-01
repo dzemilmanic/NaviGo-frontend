@@ -214,7 +214,7 @@ const DriverManagement = () => {
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/* <th>ID</th> */}
               <th>Company</th>
               <th>Full Name</th>
               <th>Phone</th>
@@ -236,7 +236,7 @@ const DriverManagement = () => {
             ) : (
               filteredDrivers.map((d) => (
                 <tr key={d.id} className="table-row">
-                  <td>{d.id}</td>
+                  {/* <td>{d.id}</td> */}
                   <td className="company-cell">
                     {d.companyName || getCompanyName(d.companyId)}
                   </td>

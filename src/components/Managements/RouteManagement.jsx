@@ -532,7 +532,7 @@ const RouteManagement = () => {
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/* <th>ID</th> */}
               <th>Company</th>
               <th>Start Location</th>
               <th>End Location</th>
@@ -554,7 +554,7 @@ const RouteManagement = () => {
             ) : (
               filteredRoutes.map((r) => (
                 <tr key={r.id} className="table-row">
-                  <td>{r.id}</td>
+                  {/* <td>{r.id}</td> */}
                   <td className="company-cell">
                     {getCompanyName(r.companyId)}
                   </td>

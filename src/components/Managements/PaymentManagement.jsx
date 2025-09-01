@@ -214,7 +214,7 @@ const PaymentManagement = () => {
         <table className="management-table">
           <thead>
             <tr>
-              <th>ID</th>
+              {/* <th>ID</th> */}
               <th>Contract</th>
               <th>Client</th>
               <th>Amount</th>
@@ -235,7 +235,7 @@ const PaymentManagement = () => {
             ) : (
               payments.map((p) => (
                 <tr key={p.id} className="table-row">
-                  <td>{p.id}</td>
+                  {/* <td>{p.id}</td> */}
                   <td>{p.contract}</td>
                   <td>{p.client}</td>
                   <td>{p.amount}</td>
