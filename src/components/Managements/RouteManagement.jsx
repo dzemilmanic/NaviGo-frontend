@@ -1,13 +1,67 @@
 import { useState, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  Marker,
+  Popup,
+  useMap,
+} from "react-leaflet";
+import polyline from "@mapbox/polyline";
+import L from "leaflet";
 import { routeService } from "../../services/routeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
-import { X } from "lucide-react";
+import { authService } from "../../services/authService";
+import { X, Map } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
+import "./RouteMapModal.css";
+import "leaflet/dist/leaflet.css";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-toastify";
 import LocationPicker from "../LocationPicker/LocationPicker";
+
+// Fix za default marker ikone u Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+// FitBounds komponenta
+const FitBounds = ({ bounds }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (bounds && bounds.length > 0) {
+      map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+    }
+  }, [bounds, map]);
+  return null;
+};
+
+// Custom ikone za start i end
+const createCustomIcon = (symbol) => {
+  return L.divIcon({
+    className: "custom-div-icon",
+    html: `<div class="marker-pin">${symbol}</div>`,
+    iconSize: [30, 42],
+    iconAnchor: [15, 42],
+    popupAnchor: [0, -42],
+  });
+};
+
+// Funkcija za formatiranje trajanja
+const formatDuration = (hours) => {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return `${h}h ${m}m`;
+};
 
 const RouteManagement = () => {
   const [routes, setRoutes] = useState([]);
@@ -16,6 +70,13 @@ const RouteManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Route Map Modal states
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [routeToView, setRouteToView] = useState(null);
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [mapLoading, setMapLoading] = useState(false);
+  const [mapError, setMapError] = useState(null);
 
   // Autocomplete states - inicijalizovano sa praznim nizovima
   const [startQuery, setStartQuery] = useState("");
@@ -39,6 +100,51 @@ const RouteManagement = () => {
   });
 
   const { user } = useAuth();
+
+  // Funkcija za otvaranje map modal-a
+  const openMapModal = async (route) => {
+    setIsMapModalOpen(true);
+    setRouteToView(route);
+    setMapLoading(true);
+    setMapError(null);
+    document.body.style.overflow = "hidden";
+
+    try {
+      // Učitaj detaljne informacije o ruti
+      const token = authService.getAccessToken();
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/Route/${route.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to load route details");
+
+      const routeDetails = await res.json();
+      
+      if (routeDetails.geometryEncoded) {
+        const decoded = polyline.decode(routeDetails.geometryEncoded);
+        const leafletCoords = decoded.map((c) => [c[0], c[1]]);
+        setRouteCoords(leafletCoords);
+      } else {
+        setMapError("Route geometry not available");
+      }
+    } catch (err) {
+      console.error("Error loading route details:", err);
+      setMapError("Failed to load route details");
+    } finally {
+      setMapLoading(false);
+    }
+  };
+
+  const closeMapModal = () => {
+    setIsMapModalOpen(false);
+    setRouteToView(null);
+    setRouteCoords([]);
+    setMapError(null);
+    document.body.style.overflow = "auto";
+  };
 
   const openLocationModal = (type) => {
     setLocationModalType(type);
@@ -341,13 +447,6 @@ const RouteManagement = () => {
     }
   };
 
-  const filteredRoutes = routes.filter(
-    (r) =>
-      r.startLocationName?.toLowerCase().includes(search.toLowerCase()) ||
-      r.endLocationName?.toLowerCase().includes(search.toLowerCase()) ||
-      r.companyName?.toLowerCase().includes(search.toLowerCase())
-  );
-
   const fetchRoutesAndCompanies = async () => {
     setLoading(true);
     try {
@@ -396,6 +495,13 @@ const RouteManagement = () => {
     if (!dateTimeString) return "—";
     return new Date(dateTimeString).toLocaleString();
   };
+
+  const filteredRoutes = routes.filter(
+    (r) =>
+      r.startLocationName?.toLowerCase().includes(search.toLowerCase()) ||
+      r.endLocationName?.toLowerCase().includes(search.toLowerCase()) ||
+      r.companyName?.toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loading) return <Loader />;
 
@@ -468,6 +574,18 @@ const RouteManagement = () => {
                   <td className="actions-cell">
                     <div className="action-buttons">
                       <button
+                        onClick={() => openMapModal(r)}
+                        className="action-btn view-btn"
+                        title="View route on map"
+                        style={{
+                          backgroundColor: "#10b981",
+                          color: "white",
+                        }}
+                      >
+                        <Map size={16} />
+                        View
+                      </button>
+                      <button
                         onClick={() => openModal(r)}
                         className="action-btn activate-btn"
                         title="Edit route"
@@ -490,6 +608,99 @@ const RouteManagement = () => {
         </table>
       </div>
 
+      {/* Route Map Modal */}
+      {isMapModalOpen && (
+        <div className="route-map-modal" onClick={closeMapModal}>
+          <div className="route-map-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="route-map-modal-header">
+              <div>
+                <h3 className="route-map-modal-title">
+                  Route #{routeToView?.id} - Map View
+                </h3>
+                <div className="route-info">
+                  <span>
+                    📍 {routeToView?.startLocationName} → {routeToView?.endLocationName}
+                  </span>
+                  {routeToView?.distanceKm && (
+                    <span>
+                      📏 {Math.round(routeToView.distanceKm)} km
+                    </span>
+                  )}
+                  {routeToView?.estimatedDurationHours && (
+                    <span>
+                      ⏱️ {formatDuration(routeToView.estimatedDurationHours)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeMapModal}
+                className="route-map-close-btn"
+                aria-label="Close map modal"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="route-map-container">
+              {mapLoading && (
+                <div className="map-loading">
+                  Loading route map...
+                </div>
+              )}
+              
+              {mapError && (
+                <div className="map-error">
+                  <p>Error: {mapError}</p>
+                </div>
+              )}
+
+              {!mapLoading && !mapError && (
+                <MapContainer
+                  center={[44.8176, 20.4569]}
+                  zoom={5}
+                  className="leaflet-container"
+                  key={routeToView?.id}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+
+                  {routeCoords.length > 0 && (
+                    <>
+                      <Polyline
+                        positions={routeCoords}
+                        pathOptions={{ color: "#4F46E5", weight: 5, opacity: 0.8 }}
+                      />
+
+                      <Marker position={routeCoords[0]} icon={createCustomIcon("🚀")}>
+                        <Popup>
+                          <strong>Start:</strong> {routeToView.startLocationName}
+                        </Popup>
+                      </Marker>
+
+                      <Marker
+                        position={routeCoords[routeCoords.length - 1]}
+                        icon={createCustomIcon("🏁")}
+                      >
+                        <Popup>
+                          <strong>End:</strong> {routeToView.endLocationName}
+                        </Popup>
+                      </Marker>
+
+                      <FitBounds bounds={routeCoords} />
+                    </>
+                  )}
+                </MapContainer>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Route Modal */}
       {isModalOpen && (
         <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -656,6 +867,7 @@ const RouteManagement = () => {
         </div>
       )}
 
+      {/* Location Modal */}
       {isLocationModalOpen && (
         <div className="modal" onClick={closeLocationModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

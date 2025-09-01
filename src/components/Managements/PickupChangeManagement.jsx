@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { pickupChangeService } from "../../services/pickupChangeService";
-import { shipmentService } from "../../services/shipmentService"; // za povezane pošiljke
+import { shipmentService } from "../../services/shipmentService";
+import { X } from "lucide-react";
+import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
-import { toast } from "react-toastify";
+
 const PickupChangeManagement = () => {
   const [pickupChanges, setPickupChanges] = useState([]);
   const [search, setSearch] = useState("");
@@ -11,45 +13,37 @@ const PickupChangeManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const fetchPickupChanges = async () => {
+
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await pickupChangeService.getAll({ search });
-      setPickupChanges(response.data);
+      const pickupChangesResponse = await pickupChangeService.getAll({ search });
+      const shipmentsResponse = await shipmentService.getAll();
+
+      setPickupChanges(pickupChangesResponse.data);
+      setShipments(shipmentsResponse.data);
     } catch (error) {
       toast.error("Failed to load pickup changes. Please try again.");
-      console.error("Error fetching pickup changes:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchShipments = async () => {
-    setLoading(true);
-    try {
-      const response = await shipmentService.getAll();
-      setShipments(response.data);
-    } catch (error) {
-      toast.error("Failed to load shipments. Please try again.");
-      console.error("Error fetching shipments:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPickupChanges();
-    fetchShipments();
+    fetchData();
   }, [search]);
 
   const openModal = (pickupChange = null) => {
     setSelectedPickupChange(pickupChange);
     setIsModalOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
     setSelectedPickupChange(null);
     setIsModalOpen(false);
+    document.body.style.overflow = 'auto';
   };
 
   const handleDelete = async (id) => {
@@ -69,13 +63,11 @@ const PickupChangeManagement = () => {
       try {
         const response = await pickupChangeService.delete(id);
         if (response.success) {
-          toast.success(`Pickup change ${id} deleted successfully!`);
+          toast.success("Pickup change deleted successfully!");
         } else {
-          toast.error(
-            `Failed to delete pickup change. Message: ${response.message}`
-          );
+          toast.error(`Failed to delete pickup change. Message: ${response.message}`);
         }
-        await fetchPickupChanges();
+        await fetchData();
       } catch (error) {
         toast.error("Failed to delete pickup change. Please try again.");
         console.error("Error deleting pickup change:", error);
@@ -87,34 +79,32 @@ const PickupChangeManagement = () => {
     // Show confirmation toast
     toast.warn(
       <div>
-        <p>
-          Are you sure you want to delete pickup change <strong>{id}</strong>?
-        </p>
-        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
-          <button
+        <p>Are you sure you want to delete this pickup change?</p>
+        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
+          <button 
             onClick={confirmDelete}
             style={{
-              background: "#dc2626",
-              color: "white",
-              border: "none",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "12px",
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
             }}
           >
             Delete
           </button>
-          <button
+          <button 
             onClick={cancelDelete}
             style={{
-              background: "#6b7280",
-              color: "white",
-              border: "none",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "12px",
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px'
             }}
           >
             Cancel
@@ -141,123 +131,165 @@ const PickupChangeManagement = () => {
       newTime: form.newTime.value,
     };
     setLoading(true);
+    
     try {
       if (selectedPickupChange) {
-        const response = await pickupChangeService.update(
-          selectedPickupChange.id,
-          formData
-        );
-        if (!response.success) {
-          toast.error(
-            `Failed to update pickup change. Message: ${response.message}`
-          );
+        const response = await pickupChangeService.update(selectedPickupChange.id, formData);
+        if (response.success) {
+          toast.success("Pickup change updated successfully!");
         } else {
-          toast.success(
-            `Pickup change ${selectedPickupChange.id} updated successfully!`
-          );
+          toast.error(`Failed to update pickup change. Message: ${response.message}`);
         }
       } else {
         const response = await pickupChangeService.create(formData);
-        if (!response.success) {
-          toast.error(
-            `Failed to create pickup change. Message: ${response.message}`
-          );
+        if (response.success) {
+          toast.success("Pickup change created successfully!");
         } else {
-          toast.success(
-            `Pickup change ${formData.shipmentId} created successfully!`
-          );
+          toast.error(`Failed to create pickup change. Message: ${response.message}`);
         }
       }
-      fetchPickupChanges();
+      
+      await fetchData();
       closeModal();
     } catch (error) {
+      toast.error("Failed to save pickup change. Please try again.");
       console.error("Error saving pickup change:", error);
     } finally {
       setLoading(false);
     }
   };
+
   if (loading) {
     return <Loader />;
   }
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search pickup changes..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={() => openModal()}>Add Pickup Change</button>
+        <div className="header-content">
+          <h2 className="header-title">Pickup Change Management</h2>
+          <p className="header-subtitle">Manage pickup time changes and track modifications</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search pickup changes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add Pickup Change
+          </button>
+        </div>
       </div>
 
-      <table className="management-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Shipment</th>
-            <th>Old Time</th>
-            <th>New Time</th>
-            <th>Change Count</th>
-            <th>Additional Fee</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pickupChanges.map((p) => (
-            <tr key={p.id}>
-              <td>{p.id}</td>
-              <td>{p.shipmentId}</td>
-              <td>{p.oldTime}</td>
-              <td>{p.newTime}</td>
-              <td>{p.changeCount}</td>
-              <td>{p.additionalFee}</td>
-              <td>{p.pickupChangesStatus}</td>
-              <td>
-                <button onClick={() => openModal(p)}>Edit</button>
-                <button onClick={() => handleDelete(p.id)}>Delete</button>
-              </td>
+      <div className="table-container">
+        <table className="management-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Shipment</th>
+              <th>Old Time</th>
+              <th>New Time</th>
+              <th>Change Count</th>
+              <th>Additional Fee</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {pickupChanges.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="empty-row">
+                  <div className="empty-state">
+                    <p>No pickup changes found matching your search criteria.</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              pickupChanges.map((p) => (
+                <tr key={p.id} className="table-row">
+                  <td>{p.id}</td>
+                  <td>{p.shipmentId}</td>
+                  <td>{p.oldTime ? new Date(p.oldTime).toLocaleString() : 'N/A'}</td>
+                  <td>{p.newTime ? new Date(p.newTime).toLocaleString() : 'N/A'}</td>
+                  <td>{p.changeCount}</td>
+                  <td>{p.additionalFee}</td>
+                  <td>{p.pickupChangesStatus}</td>
+                  <td className="actions-cell">
+                    <div className="action-buttons">
+                      <button 
+                        onClick={() => openModal(p)}
+                        className="action-btn activate-btn"
+                        title="Edit pickup change"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(p.id)}
+                        className="action-btn delete-btn"
+                        title="Delete pickup change"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {isModalOpen && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>
-              {selectedPickupChange
-                ? "Edit Pickup Change"
-                : "Add Pickup Change"}
-            </h3>
-            <form onSubmit={handleSubmit}>
-              <select
-                name="shipmentId"
-                defaultValue={selectedPickupChange?.shipmentId || ""}
-                required
+        <div className="modal" onClick={closeModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedPickupChange ? "Edit Pickup Change" : "Add Pickup Change"}</h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
               >
-                <option value="">Select Shipment</option>
-                {shipments.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.id} - {s.description}
-                  </option>
-                ))}
-              </select>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label htmlFor="shipmentId">Shipment:</label>
+                <select
+                  name="shipmentId"
+                  defaultValue={selectedPickupChange?.shipmentId || ""}
+                  required
+                >
+                  <option value="">Select Shipment</option>
+                  {shipments.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.id} - {s.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <input
-                type="datetime-local"
-                name="newTime"
-                defaultValue={selectedPickupChange?.newTime || ""}
-                required
-              />
+              <div className="form-group">
+                <label htmlFor="newTime">New Time:</label>
+                <input
+                  type="datetime-local"
+                  name="newTime"
+                  defaultValue={selectedPickupChange?.newTime || ""}
+                  required
+                />
+              </div>
 
               <div className="modal-actions">
-                <button type="submit">
-                  {selectedPickupChange ? "Save" : "Add"}
-                </button>
-                <button type="button" onClick={closeModal}>
+                <button type="button" onClick={closeModal} className="cancel-btn">
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  {selectedPickupChange ? "Save" : "Add"}
                 </button>
               </div>
             </form>
