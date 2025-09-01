@@ -13,7 +13,7 @@ import PickupChangeManagement from "../../../components/Managements/PickupChange
 import ShipmentDocumentManagement from "../../../components/Managements/ShipmentDocumentManagement";
 import VehicleMaintenanceManagement from "../../../components/Managements/VehicleMaintenanceManagement";
 import ShipmentStatusHistoryManagement from "../../../components/Managements/ShipmentStatusHistoryManagement";
-
+import CarrierStats from "../../../components/Stats/CarrierStats";
 import { 
   LogOut, 
   Menu, 
@@ -48,6 +48,7 @@ const CompanyAdminDashboard = ({ companyType }) => {
   const dashboardConfig = {
     Carrier: {
       sidebarButtons: [
+        { name: "Carrier Stats", icon: CalendarClock, component: <CarrierStats /> },
         { name: "Vehicles", icon: Truck, component: <VehicleManagement /> },
         { name: "Vehicle Maintenances", icon: Wrench, component: <VehicleMaintenanceManagement /> },
         { name: "Shipments", icon: Package, component: <ShipmentManagement /> },

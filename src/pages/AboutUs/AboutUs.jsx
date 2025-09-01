@@ -1,5 +1,5 @@
 import "./AboutUs.css";
-
+import logo from "../../assets/logo.png";
 const AboutUs = () => {
   return (
     <div className="about-us">
@@ -33,7 +33,12 @@ const AboutUs = () => {
       <section className="about-main-content">
         <div className="about-container">
           <div className="about-intro-section">
-            <h2>Who are we?</h2>
+            <h2 className="about-logo-title">
+  Who are
+  <img src={logo} alt="logo" className="about-logo-img" />
+  ?
+</h2>
+
             <p>
               NaviGo is an advanced digital platform that enables transport
               companies, freight forwarders, and clients to efficiently manage
@@ -42,7 +47,6 @@ const AboutUs = () => {
               industry through technology.
             </p>
           </div>
-
           {/* How It Works */}
           <div className="about-how-it-works">
             <h2>How does our platform work?</h2>
