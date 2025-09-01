@@ -120,16 +120,7 @@ const Navbar = () => {
               Home
             </Link>
           </li>
-          <li>
-            <Link to="about" onClick={() => setIsMenuOpen(false)}>
-              About Us
-            </Link>
-          </li>
-          <li>
-            <Link to="news" onClick={() => setIsMenuOpen(false)}>
-              News
-            </Link>
-          </li>
+          
           {isAuthenticated && (
             <>
               <li>

@@ -16,22 +16,21 @@ import Navbar from "./components/Navbar/Navbar.jsx";
 import Footer from "./components/Footer/Footer.jsx";
 
 import Home from "./components/Home/Home.jsx";
-import Services from "./components/Services/Services.jsx";
-import Features from "./components/Features/Features.jsx";
+
 import Login from "./components/Login/Login.jsx";
 import Register from "./components/Register/Register.jsx";
 import Cookies from "./pages/Cookies.jsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.jsx";
 import TermsOfServices from "./pages/TermsOfServices.jsx";
 import RouteMap from "./pages/RouteMap/RouteMap.jsx";
-import News from "./pages/News/News.jsx";
+
 import SuperAdminLayout from "./components/Layouts/SuperAdmin/SuperAdminLayout.jsx";
 import SuperAdminDashboard from "./pages/Dashboards/SuperAdmin/SuperAdminDashboard.jsx";
 import CompanyAdminLayout from "./components/Layouts/CompanyAdmin/CompanyAdminLayout.jsx";
 import CompanyAdminDashboard from "./pages/Dashboards/CompanyAdmin/CompanyAdminDashboard.jsx";
 import RegularUserLayout from "./components/Layouts/RegularUser/RegularUserLayout.jsx";
 import RegularUserDashboard from "./pages/Dashboards/RegularUser/RegularUserDashboard.jsx";
-import AboutUs from "./pages/AboutUs/AboutUs.jsx";
+
 import Error from './pages/Error/Error.jsx'
 
 const UnauthorizedPage = () => (
@@ -92,8 +91,6 @@ useEffect(() => {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/features" element={<Features />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/cookies" element={<Cookies />} />
@@ -101,8 +98,6 @@ useEffect(() => {
         <Route path="/terms-of-service" element={<TermsOfServices />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/routes" element={<RouteMap />} />
-        <Route path="/news" element={<News />} />
-        <Route path="/about" element={<AboutUs />} />
 
         {/* SuperAdmin Routes */}
         <Route
