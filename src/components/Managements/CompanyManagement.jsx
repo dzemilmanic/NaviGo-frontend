@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { companyService } from "../../services/companyService";
-import { X } from "lucide-react";
+import { X, FileImage, Building } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from '../Loader/Loader';
@@ -13,6 +13,11 @@ const CompanyManagement = ({ userType }) => {
   const [newStatus, setNewStatus] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  
+  // Image modal states
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageType, setImageType] = useState(''); // 'logo' or 'proof'
 
   // Status mapping for display
   const getStatusText = (status) => {
@@ -54,12 +59,53 @@ const CompanyManagement = ({ userType }) => {
     }
   };
 
+  // Image modal functions
+  const openImageModal = (imageUrl, type) => {
+    if (!imageUrl) return;
+    setSelectedImage(imageUrl);
+    setImageType(type);
+    setIsImageModalOpen(true);
+  };
+
+  const closeImageModal = () => {
+    setIsImageModalOpen(false);
+    setSelectedImage(null);
+    setImageType('');
+  };
+
+  // Image preview component
+  const ImagePreview = ({ url, type, companyName }) => {
+    const [imageError, setImageError] = useState(false);
+    
+    if (!url || imageError) {
+      return (
+        <div className="image-preview-placeholder">
+          {type === 'logo' ? <Building size={16} /> : <FileImage size={16} />}
+        </div>
+      );
+    }
+
+    return (
+      <div 
+        className="image-preview-container"
+        onClick={() => openImageModal(url, type)}
+        title={`View ${type} for ${companyName}`}
+      >
+        <img
+          src={url}
+          alt={`${type} for ${companyName}`}
+          className="image-preview"
+          onError={() => setImageError(true)}
+        />
+      </div>
+    );
+  };
+
   const fetchCompanies = async () => {
     setLoading(true);
     try {
       const response = await companyService.getAll();
       setCompanies(response.data);
-      //toast.success("Companies loaded successfully!");
     } catch (error) {
       toast.error("Failed to load companies. Please try again.");
       console.error("Error fetching companies:", error);
@@ -93,7 +139,6 @@ const CompanyManagement = ({ userType }) => {
     const statusText = getStatusText(newStatus);
     const companyName = selectedCompanyForStatus.companyName;
 
-    // Custom toast confirmation
     const confirmUpdate = () => {
       toast.dismiss();
       performStatusUpdate();
@@ -125,7 +170,6 @@ const CompanyManagement = ({ userType }) => {
       }
     };
 
-    // Show confirmation toast
     toast.info(
       <div>
         <p>Change status of <strong>{companyName}</strong> to <strong>{statusText}</strong>?</p>
@@ -173,7 +217,6 @@ const CompanyManagement = ({ userType }) => {
   };
 
   const handleDelete = async (id, companyName) => {
-    // Custom toast confirmation
     const confirmDelete = () => {
       toast.dismiss();
       performDelete();
@@ -202,7 +245,6 @@ const CompanyManagement = ({ userType }) => {
       }
     };
 
-    // Show confirmation toast
     toast.warn(
       <div>
         <p>Are you sure you want to delete company <strong>{companyName}</strong>?</p>
@@ -222,7 +264,7 @@ const CompanyManagement = ({ userType }) => {
             Delete
           </button>
           <button 
-            onClick={cancelDelete}
+            onClick={cancelUpdate}
             style={{
               background: '#6b7280',
               color: 'white',
@@ -279,19 +321,20 @@ const CompanyManagement = ({ userType }) => {
         <table className="management-table">
           <thead>
             <tr>
-              {/*<th>ID</th>*/}
               <th>Name</th>
               <th>PIB</th>
               <th>Email</th>
               <th>Type</th>
               <th>Status</th>
               <th>Actions</th>
+              <th>Logo</th>
+              <th>Proof</th>
             </tr>
           </thead>
           <tbody>
             {filteredCompanies.length === 0 ? (
               <tr>
-                <td colSpan="7" className="empty-row">
+                <td colSpan="8" className="empty-row">
                   <div className="empty-state">
                     <p>No companies found matching your search criteria.</p>
                   </div>
@@ -300,7 +343,6 @@ const CompanyManagement = ({ userType }) => {
             ) : (
               filteredCompanies.map((company) => (
                 <tr key={company.id}>
-                  {/* <td>{company.id}</td> */}
                   <td className="company-name">{company.companyName}</td>
                   <td>{company.pib}</td>
                   <td className="email-cell">{company.contactEmail}</td>
@@ -309,6 +351,20 @@ const CompanyManagement = ({ userType }) => {
                     <span className={`status-badge ${getStatusClass(company.companyStatus)}`}>
                       {getStatusText(company.companyStatus)}
                     </span>
+                  </td>
+                  <td className="image-cell">
+                    <ImagePreview 
+                      url={company.logoUrl} 
+                      type="logo" 
+                      companyName={company.companyName}
+                    />
+                  </td>
+                  <td className="image-cell">
+                    <ImagePreview 
+                      url={company.proofFileUrl} 
+                      type="proof" 
+                      companyName={company.companyName}
+                    />
                   </td>
                   <td className="actions-cell">
                     <div className="action-buttons">
@@ -328,6 +384,7 @@ const CompanyManagement = ({ userType }) => {
                       </button>
                     </div>
                   </td>
+                  
                 </tr>
               ))
             )}
@@ -381,6 +438,37 @@ const CompanyManagement = ({ userType }) => {
               >
                 {isUpdatingStatus ? "Updating..." : "Update Status"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal */}
+      {isImageModalOpen && selectedImage && (
+        <div className="image-modal-overlay" onClick={closeImageModal}>
+          <div className="image-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="image-modal-header">
+              <h3 className="image-modal-title">
+                {imageType === 'logo' ? 'Company Logo' : 'Proof Document'}
+              </h3>
+              <button className="close-btn" onClick={closeImageModal}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="image-modal-body">
+              <img
+                src={selectedImage}
+                alt={`${imageType} preview`}
+                className="modal-image"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+              <div className="image-error-fallback" style={{ display: 'none' }}>
+                <FileImage size={48} />
+                <p>Unable to load image</p>
+              </div>
             </div>
           </div>
         </div>

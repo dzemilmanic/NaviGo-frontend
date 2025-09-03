@@ -115,7 +115,7 @@ const UserManagement = () => {
         closeButton: false,
       }
     );
-  };
+  }; 
 
   const handleActivateDeactivate = async (id, currentStatus, userName) => {
     const newStatus = currentStatus === "Active" ? "Inactive" : "Active";

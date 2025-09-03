@@ -13,7 +13,7 @@ import { routeService } from "../../services/routeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
 import { authService } from "../../services/authService";
-import { X, Map } from "lucide-react";
+import { X, Map, MapPin } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
 import "./RouteMapModal.css";
@@ -78,14 +78,16 @@ const RouteManagement = () => {
   const [mapLoading, setMapLoading] = useState(false);
   const [mapError, setMapError] = useState(null);
 
-  // Autocomplete states - inicijalizovano sa praznim nizovima
+  // Autocomplete states
   const [startQuery, setStartQuery] = useState("");
   const [startResults, setStartResults] = useState([]);
   const [selectedStart, setSelectedStart] = useState(null);
+  const [startSearchLoading, setStartSearchLoading] = useState(false);
 
   const [endQuery, setEndQuery] = useState("");
   const [endResults, setEndResults] = useState([]);
   const [selectedEnd, setSelectedEnd] = useState(null);
+  const [endSearchLoading, setEndSearchLoading] = useState(false);
 
   // Location modal states
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -207,6 +209,52 @@ const RouteManagement = () => {
     };
   };
 
+  // Funkcija za učitavanje postojećih lokacija rute
+  const loadRouteLocations = async (route) => {
+    try {
+      // Učitaj start lokaciju
+      if (route.startLocationId) {
+        const startResponse = await locationService.getById(route.startLocationId);
+        if (startResponse.success) {
+          const startLoc = startResponse.data;
+          const startLocationData = {
+            place_id: startLoc.id,
+            display_name: startLoc.fullAddress || `${startLoc.city}, ${startLoc.country}`,
+            lat: startLoc.latitude,
+            lon: startLoc.longitude,
+            city: startLoc.city,
+            country: startLoc.country,
+            ZIP: startLoc.zip,
+          };
+          setSelectedStart(startLocationData);
+          setStartQuery(startLocationData.display_name);
+        }
+      }
+
+      // Učitaj end lokaciju
+      if (route.endLocationId) {
+        const endResponse = await locationService.getById(route.endLocationId);
+        if (endResponse.success) {
+          const endLoc = endResponse.data;
+          const endLocationData = {
+            place_id: endLoc.id,
+            display_name: endLoc.fullAddress || `${endLoc.city}, ${endLoc.country}`,
+            lat: endLoc.latitude,
+            lon: endLoc.longitude,
+            city: endLoc.city,
+            country: endLoc.country,
+            ZIP: endLoc.zip,
+          };
+          setSelectedEnd(endLocationData);
+          setEndQuery(endLocationData.display_name);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading route locations:", error);
+      toast.error("Failed to load route locations");
+    }
+  };
+
   const handleDelete = async (id) => {
     const confirmDelete = () => {
       toast.dismiss();
@@ -283,11 +331,14 @@ const RouteManagement = () => {
     );
   };
 
-  const handleLocationSearch = async (query, setResults) => {
+  const handleLocationSearch = async (query, setResults, setSearchLoading) => {
     if (!query || query.length < 3) {
       setResults([]);
+      setSearchLoading(false);
       return;
     }
+
+    setSearchLoading(true);
 
     try {
       const apiKey = import.meta.env.VITE_MAP_API_KEY;
@@ -301,6 +352,7 @@ const RouteManagement = () => {
       const data = await res.json();
       if (!data.results || data.results.length === 0) {
         setResults([]);
+        setSearchLoading(false);
         return;
       }
 
@@ -318,14 +370,44 @@ const RouteManagement = () => {
           "Unknown city",
         country: r.components.country || "Unknown country",
         ZIP: r.components.postcode || "00000",
+        place_id: `${r.geometry.lat}-${r.geometry.lng}`, // Generate a unique ID
       }));
 
       setResults(formattedResults);
     } catch (err) {
       console.error("Location search error:", err);
       setResults([]);
+    } finally {
+      setSearchLoading(false);
     }
   };
+
+  // Debounce funkcija za search
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (startQuery && startQuery.length >= 3) {
+        handleLocationSearch(startQuery, setStartResults, setStartSearchLoading);
+      } else {
+        setStartResults([]);
+        setStartSearchLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [startQuery]);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (endQuery && endQuery.length >= 3) {
+        handleLocationSearch(endQuery, setEndResults, setEndSearchLoading);
+      } else {
+        setEndResults([]);
+        setEndSearchLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [endQuery]);
 
   // Funkcija za dodavanje lokacije iz modal-a
   const handleLocationSubmit = async (e) => {
@@ -468,22 +550,36 @@ const RouteManagement = () => {
     fetchRoutesAndCompanies();
   }, []);
 
-  const openModal = (route = null) => {
+  const openModal = async (route = null) => {
     setSelectedRoute(route);
+    setIsModalOpen(true);
+    document.body.style.overflow = "hidden";
+
+    // Reset states prvo
     setSelectedStart(null);
     setStartQuery("");
     setStartResults([]);
     setSelectedEnd(null);
     setEndQuery("");
     setEndResults([]);
-    setIsModalOpen(true);
-    document.body.style.overflow = "hidden";
+
+    if (route) {
+      // Edit mode - učitaj postojeće lokacije
+      await loadRouteLocations(route);
+    }
   };
 
   const closeModal = () => {
     setSelectedRoute(null);
     setIsModalOpen(false);
     document.body.style.overflow = "auto";
+    // Reset states
+    setSelectedStart(null);
+    setStartQuery("");
+    setStartResults([]);
+    setSelectedEnd(null);
+    setEndQuery("");
+    setEndResults([]);
   };
 
   const getCompanyName = (companyId) => {
@@ -503,7 +599,7 @@ const RouteManagement = () => {
       r.companyName?.toLowerCase().includes(search.toLowerCase())
   );
 
-  if (loading) return <Loader />;
+  if (loading && !isModalOpen) return <Loader />;
 
   return (
     <div className="management-container">
@@ -523,6 +619,7 @@ const RouteManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
+            <MapPin size={16} />
             Add Route
           </button>
         </div>
@@ -532,7 +629,6 @@ const RouteManagement = () => {
         <table className="management-table">
           <thead>
             <tr>
-              {/* <th>ID</th> */}
               <th>Company</th>
               <th>Start Location</th>
               <th>End Location</th>
@@ -545,7 +641,7 @@ const RouteManagement = () => {
           <tbody>
             {filteredRoutes.length === 0 ? (
               <tr>
-                <td colSpan="8" className="empty-row">
+                <td colSpan="7" className="empty-row">
                   <div className="empty-state">
                     <p>No routes found matching your search criteria.</p>
                   </div>
@@ -554,7 +650,6 @@ const RouteManagement = () => {
             ) : (
               filteredRoutes.map((r) => (
                 <tr key={r.id} className="table-row">
-                  {/* <td>{r.id}</td> */}
                   <td className="company-cell">
                     {getCompanyName(r.companyId)}
                   </td>
@@ -721,90 +816,138 @@ const RouteManagement = () => {
                 <div className="form-row">
                   <div className="form-group">
                     <label>Start Location:</label>
-                    <input
-                      type="text"
-                      value={startQuery}
-                      onChange={(e) => {
-                        setStartQuery(e.target.value);
-                        handleLocationSearch(e.target.value, setStartResults);
-                      }}
-                      placeholder="Search start location..."
-                      required
-                    />
-                    {startResults && startResults.length > 0 && (
-                      <ul className="search-results">
-                        {startResults.map((loc) => (
-                          <li
-                            key={loc.place_id}
-                            onClick={() => {
-                              setSelectedStart(loc);
-                              setStartQuery(loc.display_name);
-                              setStartResults([]);
-                            }}
-                          >
-                            {loc.display_name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {startQuery &&
-                      startQuery.length >= 3 &&
-                      startResults &&
-                      startResults.length === 0 && (
-                        <div className="add-location-container">
-                          <button
-                            type="button"
-                            onClick={() => openLocationModal("start")}
-                            className="add-location-btn"
-                          >
-                            Add Start Location
-                          </button>
+                    <div className="autocomplete-container">
+                      <div className="location-input-wrapper">
+                        <input
+                          type="text"
+                          value={startQuery}
+                          onChange={(e) => {
+                            setStartQuery(e.target.value);
+                            setSelectedStart(null);
+                          }}
+                          placeholder="Search start location..."
+                          className={selectedStart ? "selected-location" : ""}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => openLocationModal("start")}
+                          className="map-picker-btn"
+                          title="Pick location on map"
+                        >
+                          <Map size={16} />
+                          Map
+                        </button>
+                      </div>
+                      
+                      {selectedStart && (
+                        <div className="location-status">
+                          Selected: {selectedStart.display_name}
                         </div>
                       )}
+                      
+                      {startSearchLoading && (
+                        <div className="search-results loading">
+                          Searching locations...
+                        </div>
+                      )}
+                      
+                      {!startSearchLoading && startResults && startResults.length > 0 && (
+                        <ul className="search-results">
+                          {startResults.map((loc) => (
+                            <li
+                              key={loc.place_id || `${loc.lat}-${loc.lon}`}
+                              onClick={() => {
+                                setSelectedStart(loc);
+                                setStartQuery(loc.display_name);
+                                setStartResults([]);
+                              }}
+                            >
+                              {loc.display_name}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      
+                      {!startSearchLoading && 
+                       startQuery &&
+                       startQuery.length >= 3 &&
+                       startResults &&
+                       startResults.length === 0 && 
+                       !selectedStart && (
+                        <div className="search-results">
+                          <li className="no-results">No locations found</li>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="form-group">
                     <label>End Location:</label>
-                    <input
-                      type="text"
-                      value={endQuery}
-                      onChange={(e) => {
-                        setEndQuery(e.target.value);
-                        handleLocationSearch(e.target.value, setEndResults);
-                      }}
-                      placeholder="Search end location..."
-                      required
-                    />
-                    {endResults && endResults.length > 0 && (
-                      <ul className="search-results">
-                        {endResults.map((loc) => (
-                          <li
-                            key={loc.place_id}
-                            onClick={() => {
-                              setSelectedEnd(loc);
-                              setEndQuery(loc.display_name);
-                              setEndResults([]);
-                            }}
-                          >
-                            {loc.display_name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {endQuery &&
-                      endQuery.length >= 3 &&
-                      endResults &&
-                      endResults.length === 0 && (
-                        <div className="add-location-container">
-                          <button
-                            type="button"
-                            onClick={() => openLocationModal("end")}
-                            className="add-location-btn"
-                          >
-                            Add End Location
-                          </button>
+                    <div className="autocomplete-container">
+                      <div className="location-input-wrapper">
+                        <input
+                          type="text"
+                          value={endQuery}
+                          onChange={(e) => {
+                            setEndQuery(e.target.value);
+                            setSelectedEnd(null);
+                          }}
+                          placeholder="Search end location..."
+                          className={selectedEnd ? "selected-location" : ""}
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => openLocationModal("end")}
+                          className="map-picker-btn"
+                          title="Pick location on map"
+                        >
+                          <Map size={16} />
+                          Map
+                        </button>
+                      </div>
+                      
+                      {selectedEnd && (
+                        <div className="location-status">
+                          Selected: {selectedEnd.display_name}
                         </div>
                       )}
+                      
+                      {endSearchLoading && (
+                        <div className="search-results loading">
+                          Searching locations...
+                        </div>
+                      )}
+                      
+                      {!endSearchLoading && endResults && endResults.length > 0 && (
+                        <ul className="search-results">
+                          {endResults.map((loc) => (
+                            <li
+                              key={loc.place_id || `${loc.lat}-${loc.lon}`}
+                              onClick={() => {
+                                setSelectedEnd(loc);
+                                setEndQuery(loc.display_name);
+                                setEndResults([]);
+                              }}
+                            >
+                              {loc.display_name}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      
+                      {!endSearchLoading && 
+                       endQuery &&
+                       endQuery.length >= 3 &&
+                       endResults &&
+                       endResults.length === 0 && 
+                       !selectedEnd && (
+                        <div className="search-results">
+                          <li className="no-results">No locations found</li>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -859,7 +1002,7 @@ const RouteManagement = () => {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? "Saving..." : selectedRoute ? "Save" : "Add"}
+                  {loading ? "Saving..." : selectedRoute ? "Save Changes" : "Create Route"}
                 </button>
               </div>
             </form>
