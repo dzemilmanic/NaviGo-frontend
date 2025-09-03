@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from "react-router-dom";
-
+import SupportChat from "../SupportChat/SupportChat";
 import { ArrowRight, Truck, Users, BarChart3 } from 'lucide-react';
 import './Home.css';
 import logo from "../../assets/logo.png";
 
 const Home = () => {
   return (
+    <>
     <div className="home-page">
       {/* Hero Section with Video */}
       <section className="home-hero-section">
@@ -176,6 +177,8 @@ const Home = () => {
         </div>
       </section>
     </div>
+    <SupportChat />
+    </>
   );
 };
 

@@ -1,9 +1,9 @@
 /* Modern Support Chat Styles */
 :root {
-  --primary-color: #007bff;
-  --primary-hover: #0056b3;
-  --secondary-color: #6c757d;
-  --success-color: #28a745;
+  --primary-color: #1B3C53;
+  --primary-hover: #456882;
+  --secondary-color: #D2C1B6;
+  --success-color: #28a745; 
   --danger-color: #dc3545;
   --warning-color: #ffc107;
   --info-color: #17a2b8;
@@ -132,6 +132,7 @@
 .header-title {
   font-size: 16px;
   font-weight: 600;
+  color: white;
 }
 
 .chat-close-button {
