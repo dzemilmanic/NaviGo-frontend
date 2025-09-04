@@ -18,6 +18,7 @@ import {
   validateRegistrationData,
 } from "../../utils/userMapper";
 import Loader from "../Loader/Loader";
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -41,8 +42,6 @@ const Register = () => {
   const [isCompanyAdmin, setIsCompanyAdmin] = useState(false);
   // Registration state
   const [isRegistering, setIsRegistering] = useState(false);
-  const [registrationError, setRegistrationError] = useState("");
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   // Real-time validations
   useEffect(() => {
@@ -150,11 +149,6 @@ const Register = () => {
       ...prev,
       [name]: value,
     }));
-
-    // Clear any registration errors when user starts typing
-    if (registrationError) {
-      setRegistrationError("");
-    }
   };
 
   const handleUserTypeSelect = (type) => {
@@ -197,72 +191,66 @@ const Register = () => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
+
   const handleSetCompanyAdmin = (val)=>{
     setIsCompanyAdmin(val);
   }
  
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  // Clear previous errors
-  setRegistrationError("");
-  setRegistrationSuccess(false);
-
-  // Validate all data
-  const validation = validateRegistrationData(
-    formData,
-    validations,
-    clientType,
-    selectedCompany
-  );
-
-  if (!validation.isValid) {
-    setRegistrationError(validation.errors.join(". "));
-    return;
-  }
-
-  setIsRegistering(true);
-
-  try {
-    // Map form data to backend format, including isCompanyAdmin logic
-    const userCreateDto = mapRegistrationData(
+    // Validate all data
+    const validation = validateRegistrationData(
       formData,
+      validations,
       clientType,
-      selectedCompany,
-      isCompanyAdmin
+      selectedCompany
     );
 
-    console.log("Sending registration data:", { ...userCreateDto, password: "[HIDDEN]" });
-
-    // Call backend registration API
-    const result = await authService.register(userCreateDto);
-
-    if (result.success) {
-      setRegistrationSuccess(true);
-      setRegistrationError("");
-
-      // Show success message briefly then redirect
-      setTimeout(() => {
-        navigate("/login", {
-          state: {
-            message:
-              "Registration successful! Please check your email for verification before logging in.",
-            email: formData.email,
-          },
-        });
-      }, 2000);
-    } else {
-      setRegistrationError(result.message);
+    if (!validation.isValid) {
+      toast.error(validation.errors.join(". "));
+      return;
     }
-  } catch (error) {
-    console.error("Registration error:", error);
-    setRegistrationError(
-      "Registration failed. Please check your connection and try again."
-    );
-  } finally {
-    setIsRegistering(false);
-  }
-};
+
+    setIsRegistering(true);
+
+    try {
+      // Map form data to backend format, including isCompanyAdmin logic
+      const userCreateDto = mapRegistrationData(
+        formData,
+        clientType,
+        selectedCompany,
+        isCompanyAdmin
+      );
+
+      console.log("Sending registration data:", { ...userCreateDto, password: "[HIDDEN]" });
+
+      // Call backend registration API
+      const result = await authService.register(userCreateDto);
+
+      if (result.success) {
+        toast.success("Registration successful! Please check your email for verification before logging in.");
+
+        // Show success message briefly then redirect
+        setTimeout(() => {
+          navigate("/login", {
+            state: {
+              message:
+                "Registration successful! Please check your email for verification before logging in.",
+              email: formData.email,
+            },
+          });
+        }, 2000);
+      } else {
+        toast.error(result.message || "Registration failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed. Please check your connection and try again.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -308,40 +296,6 @@ const Register = () => {
               <p className="form-subtitle">
                 Fill in your information to get started
               </p>
-
-              {/* Registration Status Messages */}
-              {registrationError && (
-                <div
-                  className="error-message"
-                  style={{
-                    background: "#fee",
-                    color: "#c53030",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    marginBottom: "20px",
-                    border: "1px solid #fed7d7",
-                  }}
-                >
-                  {registrationError}
-                </div>
-              )}
-
-              {registrationSuccess && (
-                <div
-                  className="success-message"
-                  style={{
-                    background: "#f0fff4",
-                    color: "#2f855a",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    marginBottom: "20px",
-                    border: "1px solid #9ae6b4",
-                  }}
-                >
-                  Registration successful! Please check your email for
-                  verification. Redirecting to login...
-                </div>
-              )}
 
               <div className="input-row">
                 <div className="input-group">

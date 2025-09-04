@@ -13,6 +13,8 @@ const UserManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 5;
 
   const fetchData = async () => {
     setLoading(true);
@@ -208,10 +210,17 @@ const UserManagement = () => {
     
     setLoading(true);
     try {
-      await userService.create(formData);
+      // Check if creating SuperAdmin (userRole = 4)
+      if (formData.userRole === 4) {
+        await userService.createSuperAdmin(formData);
+        toast.success(`SuperAdmin ${formData.firstName} ${formData.lastName} created successfully!`);
+      } else {
+        await userService.create(formData);
+        toast.success(`User ${formData.firstName} ${formData.lastName} created successfully!`);
+      }
+      
       await fetchData();
       closeModal();
-      toast.success(`User ${formData.firstName} ${formData.lastName} created successfully!`);
       form.reset();
     } catch (error) {
       toast.error("Failed to create user. Please check your input and try again.");
@@ -226,6 +235,74 @@ const UserManagement = () => {
     `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const endIndex = startIndex + usersPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const renderPaginationButtons = () => {
+    const buttons = [];
+    const maxVisiblePages = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Previous button
+    if (currentPage > 1) {
+      buttons.push(
+        <button
+          key="prev"
+          onClick={() => handlePageChange(currentPage - 1)}
+          className="pagination-btn pagination-nav"
+        >
+          ‹
+        </button>
+      );
+    }
+
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`pagination-btn ${currentPage === i ? 'pagination-active' : ''}`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    // Next button
+    if (currentPage < totalPages) {
+      buttons.push(
+        <button
+          key="next"
+          onClick={() => handlePageChange(currentPage + 1)}
+          className="pagination-btn pagination-nav"
+        >
+          ›
+        </button>
+      );
+    }
+
+    return buttons;
+  };
 
   if (loading) {
     return <Loader/>;
@@ -266,16 +343,16 @@ const UserManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.length === 0 ? (
+            {currentUsers.length === 0 ? (
               <tr>
                 <td colSpan="7" className="empty-row">
                   <div className="empty-state">
-                    <p>No users found matching your search criteria.</p>
+                    <p>{filteredUsers.length === 0 ? "No users found matching your search criteria." : "No users on this page."}</p>
                   </div>
                 </td>
               </tr>
             ) : (
-              filteredUsers.map((u) => (
+              currentUsers.map((u) => (
                 <tr key={u.id} className="table-row">
                   <td className="email-cell">{u.email}</td>
                   <td className="name-cell">
@@ -322,6 +399,20 @@ const UserManagement = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {filteredUsers.length > usersPerPage && (
+        <div className="pagination-container">
+          <div className="pagination-info">
+            <span>
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+            </span>
+          </div>
+          <div className="pagination-controls">
+            {renderPaginationButtons()}
+          </div>
+        </div>
+      )}
 
       {/* Enhanced Modal */}
       {isModalOpen && (

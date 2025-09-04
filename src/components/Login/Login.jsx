@@ -6,6 +6,8 @@ import "./Login.css";
 import Loader from "../Loader/Loader";
 import { GoogleLogin } from "@react-oauth/google";
 import ForgotPassword from "../ForgotPassword/ForgotPassword";
+import { toast } from 'react-toastify';
+
 const Login = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -15,7 +17,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
@@ -43,9 +44,6 @@ const Login = () => {
         [name]: "",
       }));
     }
-    if (apiError) {
-      setApiError("");
-    }
   };
 
   const validateForm = () => {
@@ -72,12 +70,13 @@ const Login = () => {
 
     if (Object.keys(newErrors).length === 0) {
       setLoading(true);
-      setApiError("");
 
       try {
         const result = await login(formData);
 
         if (result.success) {
+          toast.success("Login successful! Welcome back.");
+          
           const rolePaths = {
             SuperAdmin: "/superadmin",
             CompanyAdmin: "/companyadmin",
@@ -87,21 +86,27 @@ const Login = () => {
           const userRole = result.user.role;
           navigate(rolePaths[userRole] || "/", { replace: true });
         } else {
-          setApiError(result.message || "Login failed. Please try again.");
+          toast.error(result.message || "Login failed. Please check your credentials and try again.");
         }
       } catch (error) {
-        setApiError("An unexpected error occurred. Please try again.");
+        console.error("Login error:", error);
+        toast.error("An unexpected error occurred. Please try again.");
       } finally {
         setLoading(false);
       }
     } else {
       setErrors(newErrors);
+      
+      // Show toast for validation errors
+      const errorMessages = Object.values(newErrors);
+      toast.error(`Please fix the following: ${errorMessages.join(", ")}`);
     }
   };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
   const handleGoogleLogin = async (credentialResponse) => {
     try {
       const idToken = credentialResponse.credential;
@@ -110,6 +115,9 @@ const Login = () => {
       if (!result.success) {
         throw new Error(result.message || "Google login failed");
       }
+
+      toast.success("Google login successful! Welcome back.");
+
       const rolePaths = {
         SuperAdmin: "/superadmin",
         CompanyAdmin: "/companyadmin",
@@ -119,13 +127,16 @@ const Login = () => {
       const userRole = result.user.role;
       navigate(rolePaths[userRole] || "/", { replace: true });
     } catch (err) {
-      console.error(err.message);
+      console.error("Google login error:", err.message);
+      toast.error("Google login failed. Please try again.");
     }
   };
+
   // Show loader while page is loading
   if (pageLoading) {
     return <Loader message="Loading..." />;
   }
+
   return (
     <div className="login-container">
       <div className="login-background">
@@ -150,13 +161,6 @@ const Login = () => {
               <p className="form-subtitle">
                 Enter your credentials to access the platform
               </p>
-
-              {apiError && (
-                <div className="error-banner">
-                  <AlertCircle size={20} />
-                  <span>{apiError}</span>
-                </div>
-              )}
 
               <div className="input-group">
                 <label htmlFor="email">Email Address</label>
@@ -219,7 +223,7 @@ const Login = () => {
                 </a>
                 <GoogleLogin
                   onSuccess={handleGoogleLogin}
-                  onError={() => console.log("Google login failed")}
+                  onError={() => toast.error("Google login failed. Please try again.")}
                 />
               </div>
 

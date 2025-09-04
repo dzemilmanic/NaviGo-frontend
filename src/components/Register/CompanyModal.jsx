@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Search, Plus, Building, X } from "lucide-react";
+import { Search, Plus, Building, X, Upload, FileText, Image, RefreshCw } from "lucide-react";
 import { companyService } from "../../services/companyService";
 import "./CompanyModal.css";
-import { apiService } from "../../services/api";
+import { toast } from 'react-toastify';
 
 const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
   const [step, setStep] = useState("search"); // 'search' or 'add'
@@ -11,7 +11,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
     companyName: "",
     address: "",
     contactEmail: "",
-    website: null,
+    website: "",
     description: "",
     maxCommissionRate: null,
     proofFileUrl: null,
@@ -29,7 +29,10 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState("");
+  const [fileUploading, setFileUploading] = useState({
+    logo: false,
+    proof: false
+  });
 
   const handleInputChange = (e) => {
     const { name, type, files, value } = e.target;
@@ -38,32 +41,51 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
       ...prev,
       [name]: type === "file" ? files[0] : value,
     }));
-
-    if (error) setError("");
   };
 
   const searchCompanyByPIB = async () => {
-    if (!companyData.pib) return;
+    if (!companyData.pib) {
+      toast.error("Please enter a PIB number to search");
+      return;
+    }
 
     setIsSearching(true);
-    setError("");
+    setSearchResults([]);
+    setSelectedCompany(null);
 
     try {
-      const result = await companyService.searchByPib(
-        companyData.pib,
-        userType === "client" ? 1 : userType === "shipper" ? 2 : 3
-      );
+      console.log('Searching for PIB:', companyData.pib, 'Type:', companyData.companyType);
+      
+      const result = await companyService.searchByPib(companyData.pib, companyData.companyType);
 
       if (result.success) {
-        setSearchResults(result.data);
+        let companies = [];
+        
+        if (Array.isArray(result.data)) {
+          companies = result.data;
+        } else if (result.data?.items) {
+          companies = result.data.items;
+        } else {
+          companies = [];
+        }
+        
+        console.log('Search results:', companies);
+        setSearchResults(companies);
+        
+        if (companies.length > 0) {
+          toast.success(`Found ${companies.length} company(ies) with that PIB.`);
+        } else {
+          toast.info("No companies found with that PIB number.");
+        }
       } else {
+        console.error('Search failed:', result.message);
         setSearchResults([]);
-        setError(result.message);
+        toast.error(result.message || "Failed to search for companies.");
       }
     } catch (error) {
       console.error("Company search error:", error);
       setSearchResults([]);
-      setError("Failed to search for companies. Please try again.");
+      toast.error("Failed to search for companies. Please try again.");
     } finally {
       setIsSearching(false);
     }
@@ -71,19 +93,19 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
 
   const selectCompany = (company) => {
     setSelectedCompany(company);
-    setError("");
+    toast.info(`Selected company: ${company.companyName}`);
   };
 
   const proceedWithNewCompany = () => {
     setStep("add");
     setSearchResults([]);
-    setError("");
+    setSelectedCompany(null);
+    toast.info("Adding new company to database...");
   };
 
   const handleBackToSearch = () => {
     setStep("search");
     setSelectedCompany(null);
-    setError("");
   };
 
   const mapCompanyTypeToEnum = (userType) => {
@@ -99,6 +121,37 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
     }
   };
 
+  const uploadFile = async (file, fileType) => {
+    setFileUploading(prev => ({ ...prev, [fileType]: true }));
+    
+    try {
+      console.log(`Uploading ${fileType}:`, file.name);
+      
+      const uploadResult = await companyService.uploadFile(file);
+      
+      if (uploadResult.success) {
+        const fileUrl = uploadResult.data?.url || 
+                       uploadResult.data?.filePath || 
+                       uploadResult.data?.fileUrl ||
+                       uploadResult.url;
+        
+        if (fileUrl) {
+          toast.success(`${fileType === 'logo' ? 'Logo' : 'Proof document'} uploaded successfully!`);
+          return fileUrl;
+        }
+      }
+      
+      toast.error(`Failed to upload ${fileType === 'logo' ? 'logo' : 'proof document'}`);
+      return null;
+    } catch (error) {
+      console.error(`${fileType} upload error:`, error);
+      toast.error(`Failed to upload ${fileType === 'logo' ? 'logo' : 'proof document'}. Please try again.`);
+      return null;
+    } finally {
+      setFileUploading(prev => ({ ...prev, [fileType]: false }));
+    }
+  };
+
   const handleSaveCompany = async () => {
     // Validacija obaveznih polja
     if (
@@ -106,35 +159,53 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
       !companyData.address ||
       !companyData.contactEmail
     ) {
-      setError(
-        "Please fill in all required fields (Company Name, Address, Email)"
-      );
+      toast.error("Please fill in all required fields (Company Name, Address, Email)");
       return;
     }
 
     // Validacija email-a
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(companyData.contactEmail)) {
-      setError("Please enter a valid email address");
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    // Validacija proof file-a za nove kompanije
+    if (!companyData.proofFileUrl) {
+      toast.error("Please upload a proof document");
       return;
     }
 
     setIsCreating(true);
-    setError(""); // resetuj prethodni error
 
     try {
-      // Upload fajlova ako su File objekti, inače koristi postojeće URL-ove
-      let proofFileUrl =
-        companyData.proofFileUrl instanceof File
-          ? (await companyService.uploadFile(companyData.proofFileUrl)).url
-          : companyData.proofFileUrl;
+      console.log('Creating company, starting file uploads...');
+      
+      // Upload fajlova sekvencijalno
+      let logoUrl = null;
+      let proofFileUrl = null;
 
-      let logoUrl =
-        companyData.logoUrl instanceof File
-          ? (await companyService.uploadFile(companyData.logoUrl)).url
-          : companyData.logoUrl;
+      // Upload logo ako je odabran
+      if (companyData.logoUrl instanceof File) {
+        logoUrl = await uploadFile(companyData.logoUrl, 'logo');
+        if (!logoUrl) {
+          setIsCreating(false);
+          return;
+        }
+      }
 
-      // DTO koji backend očekuje
+      // Upload proof dokumenta (obavezan)
+      if (companyData.proofFileUrl instanceof File) {
+        proofFileUrl = await uploadFile(companyData.proofFileUrl, 'proof');
+        if (!proofFileUrl) {
+          setIsCreating(false);
+          return;
+        }
+      } else {
+        proofFileUrl = companyData.proofFileUrl;
+      }
+
+      // DTO koji backend očekuje sa ispravnim nazivima svojstava
       const newCompanyDto = {
         CompanyName: companyData.companyName,
         PIB: companyData.pib,
@@ -144,37 +215,82 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
         Description: companyData.description || null,
         CompanyType: mapCompanyTypeToEnum(userType),
         MaxCommissionRate:
-          userType === "shipper" ? Number(companyData.maxCommissionRate) : null,
+          userType === "shipper" ? Number(companyData.maxCommissionRate) || null : null,
         ProofFileUrl: proofFileUrl,
         LogoUrl: logoUrl,
       };
 
-      console.log("Creating company:", newCompanyDto);
+      console.log("Creating company with mapped data:", newCompanyDto);
 
-      // Pošalji DTO ka backendu
-      const result = await companyService.create(newCompanyDto);
+      // Kreiraj kompaniju
+      const createResult = await companyService.create(newCompanyDto);
 
-      if (result.success) {
-        onCompanySelect(result.data.company);
+      if (createResult.success) {
+        // Dohvati kreiranu kompaniju preko getById da dobijem ispravan format
+        const companyId = createResult.data?.id || createResult.data?.company?.id;
+        
+        if (companyId) {
+          console.log('Company created, fetching by ID to get correct format:', companyId);
+          
+          const getByIdResult = await companyService.getById(companyId);
+          
+          if (getByIdResult.success) {
+            const createdCompany = getByIdResult.data;
+            toast.success(`Company ${companyData.companyName} created successfully!`);
+            console.log('Company fetched with correct format:', createdCompany);
+            
+            // Proslijedi kompaniju u istom formatu kao što vraća getAll
+            onCompanySelect(createdCompany);
+            companyAdmin(true);
+            
+          } else {
+            toast.error('Company created but failed to fetch details. Please try searching for it.');
+          }
+        } else {
+          toast.error('Company creation response missing ID');
+        }
       } else {
-        // Backend error sada ide direktno u modal
-        console.log(result);
-        setError(result.error || "Failed to create company.");
+        console.error("Company creation failed:", createResult);
+        toast.error(createResult.message || "Failed to create company. Please try again.");
       }
     } catch (err) {
       console.error("Company creation error:", err);
-      setError("Failed to create company. Please try again.");
+      toast.error("Failed to create company. Please try again.");
     } finally {
       setIsCreating(false);
-      companyAdmin(true);
     }
   };
 
   const handleContinueWithSelected = () => {
     if (selectedCompany) {
+      toast.success(`Continuing with ${selectedCompany.companyName}`);
       onCompanySelect(selectedCompany);
+      companyAdmin(false);
     }
   };
+
+  const getFileIcon = (fileType) => {
+    return fileType === 'logo' ? <Image size={16} /> : <FileText size={16} />;
+  };
+
+  const getFileLabel = (file, fileType) => {
+    if (file instanceof File) {
+      return (
+        <span className="file-selected">
+          {getFileIcon(fileType)}
+          {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+        </span>
+      );
+    }
+    return `Select ${fileType === 'logo' ? 'logo' : 'proof document'}`;
+  };
+
+  const handleRefreshSearch = async () => {
+    if (companyData.pib) {
+      await searchCompanyByPIB();
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -187,21 +303,6 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
             <X size={24} />
           </button>
         </div>
-
-        {error && (
-          <div
-            style={{
-              background: "#fee",
-              color: "#c53030",
-              padding: "12px",
-              borderRadius: "8px",
-              margin: "0 20px 20px 20px",
-              border: "1px solid #fed7d7",
-            }}
-          >
-            {error}
-          </div>
-        )}
 
         {step === "search" && (
           <div className="modal-body">
@@ -216,19 +317,36 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                     value={companyData.pib}
                     onChange={handleInputChange}
                     placeholder="Enter PIB number"
+                    disabled={isSearching}
                   />
-                  <button
-                    type="button"
-                    className="search-btn"
-                    onClick={searchCompanyByPIB}
-                    disabled={isSearching || !companyData.pib}
-                  >
-                    <Search size={20} />
-                  </button>
+                  <div className="search-buttons">
+                    <button
+                      type="button"
+                      className="search-btn"
+                      onClick={searchCompanyByPIB}
+                      disabled={isSearching || !companyData.pib}
+                    >
+                      {isSearching ? (
+                        <div className="spinner small"></div>
+                      ) : (
+                        <Search size={20} />
+                      )}
+                    </button>
+                    {searchResults.length > 0 && (
+                      <button
+                        type="button"
+                        className="refresh-btn"
+                        onClick={handleRefreshSearch}
+                        disabled={isSearching}
+                        title="Refresh search"
+                      >
+                        <RefreshCw size={20} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <small className="input-hint">
-                  Enter your company's PIB number to search for existing
-                  companies
+                  Enter your company's PIB number to search for existing companies
                 </small>
               </div>
 
@@ -239,7 +357,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                 </div>
               )}
 
-              {searchResults.length > 0 && (
+              {searchResults.length > 0 && !isSearching && (
                 <div className="search-results">
                   <h4>Found Companies:</h4>
                   {searchResults.map((company) => (
@@ -256,6 +374,9 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                         <div className="company-details">
                           <small>PIB: {company.pib}</small>
                           <small>Email: {company.contactEmail}</small>
+                          {company.website && (
+                            <small>Web: {company.website}</small>
+                          )}
                         </div>
                       </div>
                       {selectedCompany?.id === company.id && (
@@ -268,8 +389,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
 
               {companyData.pib &&
                 searchResults.length === 0 &&
-                !isSearching &&
-                !error && (
+                !isSearching && (
                   <div className="no-results">
                     <div className="no-results-icon">🔍</div>
                     <p>No company found with PIB number: {companyData.pib}</p>
@@ -326,18 +446,39 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                   onChange={handleInputChange}
                   placeholder="Enter company name"
                   required
+                  disabled={isCreating}
                 />
               </div>
+
               <div className="input-group">
-                <label htmlFor="logo">Company Logo</label>
-                <input
-                  type="file"
-                  id="logoUrl"
-                  name="logoUrl"
-                  onChange={handleInputChange}
-                  accept="image/*"
-                />
+                <label htmlFor="logoUrl">Company Logo</label>
+                <div className="file-input-container">
+                  <label htmlFor="logoUrl" className={`file-input-label ${companyData.logoUrl ? 'has-file' : ''}`}>
+                    {fileUploading.logo ? (
+                      <div className="uploading-indicator">
+                        <div className="spinner small"></div>
+                        Uploading logo...
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={16} />
+                        {getFileLabel(companyData.logoUrl, 'logo')}
+                      </>
+                    )}
+                  </label>
+                  <input
+                    type="file"
+                    id="logoUrl"
+                    name="logoUrl"
+                    onChange={handleInputChange}
+                    accept="image/*"
+                    disabled={isCreating || fileUploading.logo}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+                <small className="input-hint">PNG, JPG or GIF (max 5MB)</small>
               </div>
+
               <div className="input-group">
                 <label htmlFor="address">Address *</label>
                 <input
@@ -348,6 +489,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                   onChange={handleInputChange}
                   placeholder="Enter company address"
                   required
+                  disabled={isCreating}
                 />
               </div>
 
@@ -361,6 +503,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                   onChange={handleInputChange}
                   placeholder="Enter company email"
                   required
+                  disabled={isCreating}
                 />
               </div>
 
@@ -373,6 +516,7 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                   value={companyData.website}
                   onChange={handleInputChange}
                   placeholder="https://company-website.com"
+                  disabled={isCreating}
                 />
               </div>
 
@@ -385,40 +529,65 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                   onChange={handleInputChange}
                   placeholder="Brief description of your company..."
                   rows="4"
+                  disabled={isCreating}
                 />
               </div>
+
               <div className="input-group">
-                <label htmlFor="proofFile">Proof Document *</label>
-                <input
-                  type="file"
-                  id="proofFileUrl"
-                  name="proofFileUrl"
-                  onChange={handleInputChange}
-                  placeholder="Select proof document"
-                />
+                <label htmlFor="proofFileUrl">Proof Document *</label>
+                <div className="file-input-container">
+                  <label htmlFor="proofFileUrl" className={`file-input-label ${companyData.proofFileUrl ? 'has-file' : ''}`}>
+                    {fileUploading.proof ? (
+                      <div className="uploading-indicator">
+                        <div className="spinner small"></div>
+                        Uploading document...
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={16} />
+                        {getFileLabel(companyData.proofFileUrl, 'proof')}
+                      </>
+                    )}
+                  </label>
+                  <input
+                    type="file"
+                    id="proofFileUrl"
+                    name="proofFileUrl"
+                    onChange={handleInputChange}
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    disabled={isCreating || fileUploading.proof}
+                    style={{ display: 'none' }}
+                    required
+                  />
+                </div>
+                <small className="input-hint">PDF, DOC, DOCX, JPG, PNG (max 10MB)</small>
               </div>
+
+              {userType === "shipper" && (
+                <div className="input-group">
+                  <label htmlFor="maxCommissionRate">Max Commission Rate *</label>
+                  <input
+                    type="number"
+                    id="maxCommissionRate"
+                    name="maxCommissionRate"
+                    value={companyData.maxCommissionRate}
+                    onChange={handleInputChange}
+                    placeholder="Enter max commission rate as a percentage"
+                    min="0"
+                    max="100"
+                    required
+                    disabled={isCreating}
+                  />
+                </div>
+              )}
             </form>
-            {userType === "shipper" && (
-              <div className="input-group">
-                <label htmlFor="maxCommissionRate">Max Commission Rate *</label>
-                <input
-                  type="number"
-                  id="maxCommissionRate"
-                  name="maxCommissionRate"
-                  value={companyData.maxCommissionRate}
-                  onChange={handleInputChange}
-                  placeholder="Enter max commission rate as a percentage"
-                  min="0"
-                  max="100"
-                  required
-                />
-              </div>
-            )}
+
             <div className="modal-footer">
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={handleBackToSearch}
+                disabled={isCreating || fileUploading.logo || fileUploading.proof}
               >
                 Back to Search
               </button>
@@ -428,34 +597,141 @@ const CompanyModal = ({ userType, onCompanySelect, onClose, companyAdmin }) => {
                 onClick={handleSaveCompany}
                 disabled={
                   isCreating ||
+                  fileUploading.logo ||
+                  fileUploading.proof ||
                   !companyData.companyName ||
                   !companyData.address ||
-                  !companyData.contactEmail
+                  !companyData.contactEmail ||
+                  !companyData.proofFileUrl ||
+                  (userType === "shipper" && !companyData.maxCommissionRate)
                 }
               >
                 {isCreating ? (
                   <>
-                    <div
-                      className="spinner"
-                      style={{
-                        width: "16px",
-                        height: "16px",
-                        border: "2px solid #ffffff",
-                        borderTop: "2px solid transparent",
-                        borderRadius: "50%",
-                        animation: "spin 1s linear infinite",
-                      }}
-                    ></div>
-                    Creating...
+                    <div className="spinner small"></div>
+                    Creating Company...
                   </>
                 ) : (
-                  "Save Company"
+                  <>
+                    <Plus size={16} />
+                    Save Company
+                  </>
                 )}
               </button>
             </div>
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        .search-input-container {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .search-buttons {
+          display: flex;
+          gap: 4px;
+        }
+
+        .search-btn, .refresh-btn {
+          min-width: 44px;
+          height: 44px;
+          border: none;
+          background: #3b82f6;
+          color: white;
+          border-radius: 8px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+        }
+
+        .search-btn:hover, .refresh-btn:hover {
+          background: #2563eb;
+        }
+
+        .search-btn:disabled, .refresh-btn:disabled {
+          background: #9ca3af;
+          cursor: not-allowed;
+        }
+
+        .refresh-btn {
+          background: #6b7280;
+        }
+
+        .refresh-btn:hover {
+          background: #4b5563;
+        }
+
+        .file-input-container {
+          position: relative;
+        }
+
+        .file-input-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 16px;
+          border: 2px dashed #d1d5db;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          background: #f9fafb;
+          color: #6b7280;
+          font-size: 14px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .file-input-label:hover {
+          border-color: #3b82f6;
+          background: #eff6ff;
+          color: #1d4ed8;
+        }
+
+        .file-input-label.has-file {
+          border-color: #10b981;
+          background: #ecfdf5;
+          color: #047857;
+        }
+
+        .uploading-indicator {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #3b82f6;
+        }
+
+        .file-selected {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #047857;
+        }
+
+        .spinner.small {
+          width: 16px;
+          height: 16px;
+          border: 2px solid #e5e7eb;
+          border-top: 2px solid #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        .input-hint {
+          color: #6b7280;
+          font-size: 12px;
+          margin-top: 4px;
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

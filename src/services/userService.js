@@ -1,4 +1,4 @@
-import { apiService, API_ENDPOINTS } from './api';
+import { apiService } from './api';
 
 class UserService {
   async getAll(searchParams = {}) {
@@ -46,6 +46,10 @@ class UserService {
       token,
       newPassword
     });
+  }
+
+  async checkLoginEligibility(email) {
+    return apiService.get(`/user/check-login-eligibility?email=${encodeURIComponent(email)}`);
   }
 }
 
