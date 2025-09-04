@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { MessageCircle, X, Send } from 'lucide-react';
 import './SupportChat.css';
 
 const SupportChat = ({ userEmail = 'user' }) => {
@@ -6,7 +7,7 @@ const SupportChat = ({ userEmail = 'user' }) => {
   
   const [messages, setMessages] = useState([
     {
-      message: `Hello ${userEmail}, welcome to the Digital Platform for Logistics and Transportation Companies. How can I assist you with managing transportation, reservations or shipment tracking?`,
+      message: `Hello ${userEmail}! Welcome to NaviGo - your comprehensive logistics platform. I'm here to help you with fleet management, route planning, shipment tracking, booking transport, and all your logistics needs. How can I assist you today?`,
       sender: "NaviGo Assistant",
       direction: "incoming",
       timestamp: new Date().toISOString(),
@@ -22,17 +23,48 @@ const SupportChat = ({ userEmail = 'user' }) => {
   const systemMessage = {
     role: "system",
     content: `
-You are an expert in logistics, transportation, and digital platforms for goods transportation.
-Please respond to questions related to:
-- Vehicle and driver management
-- Route and shipment tracking
-- Reservations and transportation pricing
-- Monitoring shipments and delivery status
-- Rules for delays and penalties
-- Communication with forwarders and clients
-- Security and geolocation checks
-Please respond professionally and in a friendly manner, helping users to better use the platform.
-Please respond exclusively in **English**.
+You are the NaviGo Assistant, an expert AI helper EXCLUSIVELY for NaviGo - a comprehensive logistics platform that connects transport companies, freight forwarders, and clients who need cargo transportation services.
+
+CRITICAL: You ONLY answer questions related to NaviGo platform and logistics. For ANY question not related to NaviGo, transportation, logistics, or shipping, you MUST politely decline and redirect the conversation back to NaviGo topics.
+
+PLATFORM INFORMATION:
+NaviGo is located in Belgrade, Serbia at Knez Mihailova 42. Contact: +381 11 123 4567, email: info@navigo.rs
+
+FEATURES BY USER TYPE:
+
+TRANSPORT COMPANIES can use NaviGo for:
+- Fleet and driver management
+- Route and shipment planning
+- Automatic pricing creation
+- Vehicle tracking and maintenance
+- Failure and service management
+
+FREIGHT FORWARDERS can:
+- Get overview of all available routes
+- Book transport for their clients
+- Manage commissions
+- Track delivery status
+- Access special offers for urgent cases
+
+CLIENTS can:
+- Search transport companies
+- Filter by destination and price
+- Book vehicles up to 7 days in advance
+- Track shipments in real-time
+- Manage transportation costs transparently
+
+INSTRUCTIONS:
+- ONLY respond to questions about NaviGo platform, logistics, transportation, and shipping
+- For ANY unrelated questions (general knowledge, other topics, personal questions, etc.), politely say: "I'm the NaviGo Assistant and I can only help with questions related to our logistics platform, transportation services, fleet management, shipment tracking, and booking. How can I assist you with NaviGo today?"
+- Always be helpful, professional, and knowledgeable about logistics and transportation
+- Provide specific guidance on how to use NaviGo features
+- When users ask about pricing, booking, tracking, or fleet management, give detailed helpful advice
+- If someone asks about contact information, provide the Belgrade office details
+- Help users understand how the platform benefits their specific role (transport company, freight forwarder, or client)
+- Suggest relevant NaviGo features based on user questions
+- Be proactive in offering solutions for common logistics challenges
+- If someone asks about competitors or other platforms, redirect them to NaviGo's advantages
+- Always respond in English in a friendly, professional manner
 `,
   };
 
@@ -82,7 +114,6 @@ Please respond exclusively in **English**.
     setInput('');
     setIsTyping(true);
     
-    // Reset textarea height
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
     }
@@ -92,7 +123,7 @@ Please respond exclusively in **English**.
     } catch (error) {
       console.error('Error:', error);
       setMessages(prev => [...prev, {
-        message: "Sorry, I'm experiencing technical difficulties. Please try again later.",
+        message: "I apologize, but I'm experiencing technical difficulties at the moment. Please try again in a few moments, or contact our support team directly at +381 11 123 4567 or info@navigo.rs for immediate assistance.",
         sender: "NaviGo Assistant",
         direction: "incoming",
         timestamp: new Date().toISOString(),
@@ -102,56 +133,55 @@ Please respond exclusively in **English**.
     }
   };
 
-const getAIResponse = async (userMessage) => {
-  setIsTyping(true);
+  const getAIResponse = async (userMessage) => {
+    setIsTyping(true);
 
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "mistralai/mixtral-8x7b-instruct",
-        messages: [
-          { role: "system", content: systemMessage.content },
-          { role: "user", content: userMessage },
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      }),
-    });
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "mistralai/mixtral-8x7b-instruct",
+          messages: [
+            { role: "system", content: systemMessage.content },
+            { role: "user", content: userMessage },
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+        }),
+      });
 
-    if (!response.ok) throw new Error(`API error: ${response.status}`);
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (data?.choices?.[0]?.message?.content) {
-      const reply = {
-        message: data.choices[0].message.content.trim(),
-        sender: "NaviGo Asistent",
+      if (data?.choices?.[0]?.message?.content) {
+        const reply = {
+          message: data.choices[0].message.content.trim(),
+          sender: "NaviGo Assistant",
+          direction: "incoming",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, reply]);
+      } else {
+        throw new Error("Unexpected response format from AI.");
+      }
+    } catch (error) {
+      console.error(error);
+      const errorReply = {
+        message: "I'm sorry, but I encountered an error while processing your request. Please try again or contact our support team at info@navigo.rs for direct assistance.",
+        sender: "NaviGo Assistant",
         direction: "incoming",
         timestamp: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, reply]);
-    } else {
-      throw new Error("Unexpected response format from AI.");
+      setMessages((prev) => [...prev, errorReply]);
+    } finally {
+      setIsTyping(false);
     }
-  } catch (error) {
-    console.error(error);
-    const errorReply = {
-      message: "Error related to the AI assistant. Please try again later.",
-      sender: "NaviGo Asistent",
-      direction: "incoming",
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, errorReply]);
-  } finally {
-    setIsTyping(false);
-  }
-};
-
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -171,15 +201,22 @@ const getAIResponse = async (userMessage) => {
   return (
     <div className="support-chat-wrapper">
       <button className="chat-toggle-button" onClick={toggleChat}>
-        <span className="toggle-icon">{isOpen ? '✕' : '💬'}</span>
-        <span className="toggle-text">{isOpen ? 'Close Chat' : 'Open Chat'}</span>
+        <div className="toggle-content">
+          {isOpen ? <X size={20} /> : <MessageCircle size={20} />}
+          <span className="toggle-text">{isOpen ? 'Close Chat' : 'NaviGo Help'}</span>
+        </div>
       </button>
 
       <div className={`support-chat ${isOpen ? 'open' : ''}`}>
         <div className="chat-header">
           <div className="header-content">
-            <span className="header-title">NaviGo Assistant</span>
-            <button className="chat-close-button" onClick={closeChat}>×</button>
+            <div className="header-info">
+              <span className="header-title">NaviGo Assistant</span>
+              <span className="header-subtitle">Logistics & Transportation Support</span>
+            </div>
+            <button className="chat-close-button" onClick={closeChat}>
+              <X size={18} />
+            </button>
           </div>
         </div>
 
@@ -203,7 +240,7 @@ const getAIResponse = async (userMessage) => {
                   <span></span>
                   <span></span>
                   <span></span>
-                  <span className="typing-text">Assistant is typing...</span>
+                  <span className="typing-text">NaviGo Assistant is typing...</span>
                 </div>
               </div>
             </div>
@@ -219,7 +256,7 @@ const getAIResponse = async (userMessage) => {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a question..."
+            placeholder="Ask about NaviGo"
             rows="1"
             disabled={isTyping}
           />
@@ -228,11 +265,14 @@ const getAIResponse = async (userMessage) => {
             onClick={handleSend}
             disabled={!input.trim() || isTyping}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22,2 15,22 11,13 2,9"></polygon>
-            </svg>
+            <Send size={18} />
           </button>
+        </div>
+
+        <div className="chat-footer">
+          <div className="footer-links">
+            <span className="footer-contact">Need direct help? Call +381 11 123 4567</span>
+          </div>
         </div>
       </div>
     </div>
