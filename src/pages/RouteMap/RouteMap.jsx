@@ -7,12 +7,14 @@ import {
   Popup,
   useMap,
 } from "react-leaflet";
+import { toast } from "react-toastify";
+import BookingModal from "../../components/BookingModal/BookingModal";
+import Loader from "../../components/Loader/Loader";
 import polyline from "@mapbox/polyline";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./RouteMap.css";
-import { authService } from "../../services/authService";
-
+import { useAuth } from "../../contexts/AuthContext";
 // Fix za default marker ikone u Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -60,7 +62,9 @@ const RouteMap = () => {
   const [routeCoords, setRouteCoords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const { user, token } = useAuth();
+  const [bookingModal, setBookingModal] = useState(false);
+  console.log(user);
   // Paging i sortiranje
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -70,15 +74,15 @@ const RouteMap = () => {
   // Client-side search
   const [searchTerm, setSearchTerm] = useState("");
 
-  const token = authService.getAccessToken();
-
   const loadRoutes = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/Route?SortBy=${sortBy}&SortDirection=${sortDirection}&Page=${page}&PageSize=${pageSize}`,
+        `${
+          import.meta.env.VITE_API_URL
+        }/Route?SortBy=${sortBy}&SortDirection=${sortDirection}&Page=${page}&PageSize=${pageSize}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -118,158 +122,182 @@ const RouteMap = () => {
     );
   });
 
-  if (loading) return <div className="loading">Učitavanje ruta...</div>;
+  if (loading) return <Loader />;
   if (error)
     return (
       <div className="error">
-        <p>Greška: {error}</p>
+        <p>Error: {error}</p>
       </div>
     );
-
+  const handleBooking = () => {
+    setBookingModal(true);
+  };
+  const handleClose = () => {
+    setBookingModal(false);
+  };
   return (
-    <div className="route-map-wrapper">
-      {/* Sidebar */}
-      <div className="routes-sidebar">
-        <h2>Rute ({filteredRoutes.length})</h2>
+    <>
+      <div className="route-map-wrapper">
+        {/* Sidebar */}
+        <div className="routes-sidebar">
+          <h2>Routes ({filteredRoutes.length})</h2>
 
-        {/* Search */}
-        <div className="search-box" style={{ marginBottom: "1rem" }}>
-          <input
-            type="text"
-            placeholder="Pretraži rute po lokacijama..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.4rem 0.6rem",
-              borderRadius: "6px",
-              border: "1px solid #cbd5e1",
-              fontSize: "0.9rem",
-            }}
-          />
-        </div>
+          {/* Search */}
+          <div className="search-box" style={{ marginBottom: "1rem" }}>
+            <input
+              type="text"
+              placeholder="Search routes by locations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "0.4rem 0.6rem",
+                borderRadius: "6px",
+                border: "1px solid #cbd5e1",
+                fontSize: "0.9rem",
+              }}
+            />
+          </div>
 
-        {/* Sortiranje */}
-        <div className="sorting-controls">
-          <label>
-            Sort By:
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="Id">ID</option>
-              <option value="DistanceKm">Distance</option>
-              <option value="EstimatedDurationHours">Duration</option>
-            </select>
-          </label>
-
-          <label>
-            Direction:
-            <select
-              value={sortDirection}
-              onChange={(e) => setSortDirection(e.target.value)}
-            >
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
-            </select>
-          </label>
-        </div>
-
-        <ul>
-          {filteredRoutes.map((route) => (
-            <li
-              key={route.id}
-              className={selectedRoute?.id === route.id ? "active" : ""}
-              onClick={() => handleRouteSelect(route)}
-            >
-              <strong>Ruta #{route.id}</strong>
-              <p>
-                {route.startLocationName} → {route.endLocationName}
-              </p>
-              <p>
-                📏 {route.distanceKm ? Math.round(route.distanceKm) + " km" : "N/A"}{" "}
-                • ⏱️{" "}
-                {route.estimatedDurationHours
-                  ? formatDuration(route.estimatedDurationHours)
-                  : "N/A"}
-              </p>
-            </li>
-          ))}
-        </ul>
-
-        {/* Paging */}
-        <div className="paging-controls">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Previous
-          </button>
-          <span>Page {page}</span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={routes.length < pageSize}
-          >
-            Next
-          </button>
-
-          <label>
-            Page Size:
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-            >
-              {[5, 10, 20, 50].map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </div>
-
-      {/* Mapa */}
-      <div className="map-container">
-        <MapContainer
-          center={[44.8176, 20.4569]}
-          zoom={5}
-          className="leaflet-container"
-          key={selectedRoute?.id}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-
-          {routeCoords.length > 0 && (
-            <>
-              <Polyline
-                positions={routeCoords}
-                pathOptions={{ color: "#4F46E5", weight: 5, opacity: 0.8 }}
-              />
-
-              <Marker position={routeCoords[0]} icon={createCustomIcon("🚀")}>
-                <Popup>
-                  <strong>Start:</strong> {selectedRoute.startLocationName}
-                </Popup>
-              </Marker>
-
-              <Marker
-                position={routeCoords[routeCoords.length - 1]}
-                icon={createCustomIcon("🏁")}
+          {/* Sortiranje */}
+          <div className="sorting-controls">
+            <label>
+              Sort By:
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
               >
-                <Popup>
-                  <strong>End:</strong> {selectedRoute.endLocationName}
-                </Popup>
-              </Marker>
+                <option value="Id">ID</option>
+                <option value="DistanceKm">Distance</option>
+                <option value="EstimatedDurationHours">Duration</option>
+              </select>
+            </label>
 
-              <FitBounds bounds={routeCoords} />
-            </>
-          )}
-        </MapContainer>
+            <label>
+              Direction:
+              <select
+                value={sortDirection}
+                onChange={(e) => setSortDirection(e.target.value)}
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </label>
+          </div>
+
+          <ul>
+            {filteredRoutes.map((route) => (
+              <li
+                key={route.id}
+                className={selectedRoute?.id === route.id ? "active" : ""}
+                onClick={() => handleRouteSelect(route)}
+              >
+                <strong>Route #{route.id}</strong>
+                <p>
+                  {route.startLocationName} → {route.endLocationName}
+                </p>
+                <p>
+                  📏{" "}
+                  {route.distanceKm
+                    ? Math.round(route.distanceKm) + " km"
+                    : "N/A"}{" "}
+                  • ⏱️{" "}
+                  {route.estimatedDurationHours
+                    ? formatDuration(route.estimatedDurationHours)
+                    : "N/A"}
+                </p>
+                {(user.role === "RegularUser" ||
+                  (user.role === "CompanyAdmin" &&
+                    user.companyId &&
+                    user.companyType === "Client")) && (
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={() => handleBooking()}
+                  >
+                    Book Drive
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {/* Paging */}
+          <div className="paging-controls">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </button>
+            <span>Page {page}</span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={routes.length < pageSize}
+            >
+              Next
+            </button>
+
+            <label>
+              Page Size:
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+              >
+                {[5, 10, 20, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        {/* Mapa */}
+        <div className="map-container">
+          <MapContainer
+            center={[44.8176, 20.4569]}
+            zoom={5}
+            className="leaflet-container"
+            key={selectedRoute?.id}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+
+            {routeCoords.length > 0 && (
+              <>
+                <Polyline
+                  positions={routeCoords}
+                  pathOptions={{ color: "#4F46E5", weight: 5, opacity: 0.8 }}
+                />
+
+                <Marker position={routeCoords[0]} icon={createCustomIcon("🚀")}>
+                  <Popup>
+                    <strong>Start:</strong> {selectedRoute.startLocationName}
+                  </Popup>
+                </Marker>
+
+                <Marker
+                  position={routeCoords[routeCoords.length - 1]}
+                  icon={createCustomIcon("🏁")}
+                >
+                  <Popup>
+                    <strong>End:</strong> {selectedRoute.endLocationName}
+                  </Popup>
+                </Marker>
+
+                <FitBounds bounds={routeCoords} />
+              </>
+            )}
+          </MapContainer>
+        </div>
       </div>
-    </div>
+      {bookingModal && (
+        <BookingModal onClose={handleClose} route={selectedRoute} />
+      )}
+    </>
   );
 };
 

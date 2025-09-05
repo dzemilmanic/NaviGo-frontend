@@ -749,7 +749,12 @@
   font-size: 14px;
   letter-spacing: 0.2px;
 }
-
+.form-info{
+  font-weight: 600;
+  color: var(--primary-dark);
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
 /* Enhanced Form Elements */
 .modal-content input[type="text"],
 .modal-content textarea,

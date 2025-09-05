@@ -93,9 +93,10 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuthStatus();
   }, []);
-
+  const token = authService.getAccessToken();
   const value = {
     user,
+    token,
     isAuthenticated,
     loading,
     login,
