@@ -4,8 +4,8 @@ import { contractService } from "../../services/contractService";
 import { vehicleService } from "../../services/vehicleService";
 import { driverService } from "../../services/driverService";
 import { cargoTypeService } from "../../services/cargoTypeService";
-import { X } from "lucide-react";
-import { toast } from 'react-toastify';
+import { X, Trash2, Pencil } from "lucide-react";
+import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 
@@ -23,7 +23,7 @@ const ShipmentManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const shipmentResponse = await shipmentService.getAll({ search });
+      const shipmentResponse = await shipmentService.getAll();
       const contractResponse = await contractService.getAll();
       const vehicleResponse = await vehicleService.getAll();
       const driverResponse = await driverService.getAll();
@@ -45,21 +45,21 @@ const ShipmentManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const openModal = (shipment = null) => {
     setSelectedShipment(shipment);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedShipment(null);
     setIsModalOpen(false);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
-  const handleDelete = async (id, shipmentDescription) => {
+  const handleDelete = async (id) => {
     // Custom toast confirmation
     const confirmDelete = () => {
       toast.dismiss();
@@ -75,10 +75,12 @@ const ShipmentManagement = () => {
       setLoading(true);
       try {
         const response = await shipmentService.delete(id);
-        if(response.success){
+        if (response.success) {
           toast.success("Shipment deleted successfully!");
-        }else{
-          toast.error(`Failed to delete shipment. Message: ${response.message}`);
+        } else {
+          toast.error(
+            `Failed to delete shipment. Message: ${response.message}`
+          );
         }
         await fetchData();
       } catch (error) {
@@ -93,31 +95,31 @@ const ShipmentManagement = () => {
     toast.warn(
       <div>
         <p>Are you sure you want to delete this shipment?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -150,11 +152,16 @@ const ShipmentManagement = () => {
           actualArrival: form.actualArrival.value,
         };
 
-        const response = await shipmentService.update(selectedShipment.id, updateData);
-        if(response.success){
+        const response = await shipmentService.update(
+          selectedShipment.id,
+          updateData
+        );
+        if (response.success) {
           toast.success("Shipment updated successfully!");
-        }else{
-          toast.error(`Failed to update shipment. Message: ${response.message}`);
+        } else {
+          toast.error(
+            `Failed to update shipment. Message: ${response.message}`
+          );
         }
       } else {
         // CREATE payload
@@ -171,9 +178,11 @@ const ShipmentManagement = () => {
         };
 
         const response = await shipmentService.create(createData);
-        if(!response.success){
-          toast.error(`Failed to create shipment. Message: ${response.message}`);
-        }else{
+        if (!response.success) {
+          toast.error(
+            `Failed to create shipment. Message: ${response.message}`
+          );
+        } else {
           toast.success("Shipment created successfully!");
         }
       }
@@ -191,13 +200,26 @@ const ShipmentManagement = () => {
   if (loading) {
     return <Loader />;
   }
-
+  const filteredShipments = shipments.filter((s) =>
+    [
+      s.contractName,
+      s.vehicleName,
+      s.driverName,
+      s.cargoTypeName,
+      s.description,
+      s.status,
+    ]
+      .filter(Boolean) // izbaci null/undefined vrednosti
+      .some((field) => field.toLowerCase().includes(search.toLowerCase()))
+  );
   return (
     <div className="management-container">
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Shipment Management</h2>
-          <p className="header-subtitle">Manage shipments and track deliveries</p>
+          <p className="header-subtitle">
+            Manage shipments and track deliveries
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -208,7 +230,7 @@ const ShipmentManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Shipment
+            Add Shipment ➕
           </button>
         </div>
       </div>
@@ -231,7 +253,7 @@ const ShipmentManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {shipments.length === 0 ? (
+            {filteredShipments.length === 0 ? (
               <tr>
                 <td colSpan="11" className="empty-row">
                   <div className="empty-state">
@@ -240,7 +262,7 @@ const ShipmentManagement = () => {
                 </td>
               </tr>
             ) : (
-              shipments.map((s) => (
+              filteredShipments.map((s) => (
                 <tr key={s.id} className="table-row">
                   {/* <td>{s.id}</td> */}
                   <td>{s.contractName}</td>
@@ -254,19 +276,19 @@ const ShipmentManagement = () => {
                   <td>{new Date(s.scheduledArrival).toLocaleString()}</td>
                   <td className="actions-cell">
                     <div className="action-buttons">
-                      <button 
+                      <button
                         onClick={() => openModal(s)}
                         className="action-btn activate-btn"
                         title="Edit shipment"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(s.id, s.description)}
                         className="action-btn delete-btn"
                         title="Delete shipment"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -291,8 +313,8 @@ const ShipmentManagement = () => {
                 <X size={20} />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit}>
+
+            <form onSubmit={handleSubmit} className="user-form">
               {/* CREATE polja - vidi se samo kad dodaješ */}
               {!selectedShipment && (
                 <>
@@ -365,7 +387,9 @@ const ShipmentManagement = () => {
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="scheduledDeparture">Choose Departure:</label>
+                    <label htmlFor="scheduledDeparture">
+                      Choose Departure:
+                    </label>
                     <input
                       type="datetime-local"
                       name="scheduledDeparture"
@@ -400,7 +424,10 @@ const ShipmentManagement = () => {
                 <>
                   <div className="form-group">
                     <label htmlFor="status">Status</label>
-                    <select name="status" defaultValue={selectedShipment.status}>
+                    <select
+                      name="status"
+                      defaultValue={selectedShipment.status}
+                    >
                       <option value="0">Scheduled</option>
                       <option value="1">In Transit</option>
                       <option value="2">Delayed</option>
@@ -430,7 +457,11 @@ const ShipmentManagement = () => {
               )}
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">

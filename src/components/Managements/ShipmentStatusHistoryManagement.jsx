@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { shipmentStatusHistoryService } from "../../services/shipmentStatusHistoryService";
 import { shipmentService } from "../../services/shipmentService";
-import { X } from "lucide-react";
+import { X, Pencil, Trash2 } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
@@ -17,7 +17,7 @@ const ShipmentStatusHistoryManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const historyResponse = await shipmentStatusHistoryService.getAll({ search });
+      const historyResponse = await shipmentStatusHistoryService.getAll();
       const shipmentResponse = await shipmentService.getAll();
       setHistories(historyResponse.data);
       setShipments(shipmentResponse.data);
@@ -32,7 +32,7 @@ const ShipmentStatusHistoryManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const openModal = (history = null) => {
     setSelectedHistory(history);
@@ -155,6 +155,16 @@ const ShipmentStatusHistoryManagement = () => {
   };
 
   if (loading) return <Loader />;
+const filteredHistories = histories.filter((h) =>
+  [
+    h.shipmentStatus,
+    h.notes
+  ]
+    .filter(Boolean) // ignoriše null/undefined
+    .some((field) =>
+      field.toString().toLowerCase().includes(search.toLowerCase())
+    )
+);
 
   return (
     <div className="management-container">
@@ -172,7 +182,7 @@ const ShipmentStatusHistoryManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add History Entry
+            Add History Entry ➕
           </button>
         </div>
       </div>
@@ -189,7 +199,7 @@ const ShipmentStatusHistoryManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {histories.length === 0 ? (
+            {filteredHistories.length === 0 ? (
               <tr>
                 <td colSpan="5" className="empty-row">
                   <div className="empty-state">
@@ -198,7 +208,7 @@ const ShipmentStatusHistoryManagement = () => {
                 </td>
               </tr>
             ) : (
-              histories.map((h) => (
+              filteredHistories.map((h) => (
                 <tr key={h.id} className="table-row">
                   <td>{h.id}</td>
                   <td>{h.shipmentId}</td>
@@ -215,14 +225,14 @@ const ShipmentStatusHistoryManagement = () => {
                         className="action-btn activate-btn"
                         title="Edit history entry"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(h.id)}
                         className="action-btn delete-btn"
                         title="Delete history entry"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -248,7 +258,7 @@ const ShipmentStatusHistoryManagement = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="user-form">
               <div className="form-group">
                 <label htmlFor="shipmentId">Shipment</label>
                 <select

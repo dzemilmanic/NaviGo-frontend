@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { userService } from "../../services/userService";
 import { companyService } from "../../services/companyService";
-import { Menu, X } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
@@ -324,7 +324,7 @@ const UserManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add New User
+            Add New User ➕
           </button>
         </div>
       </div>
@@ -382,14 +382,14 @@ const UserManagement = () => {
                         className={`action-btn ${u.userStatus === 'Active' ? 'deactivate-btn' : 'activate-btn'}`}
                         title={u.userStatus === "Active" ? "Deactivate user" : "Activate user"}
                       >
-                        {u.userStatus === "Active" ? "Deactivate" : "Activate"}
+                        {u.userStatus === "Active" ? <X size={16} /> : "✔" }
                       </button>
                       <button 
                         onClick={() => handleDelete(u.id, `${u.firstName} ${u.lastName}`)}
                         className="action-btn delete-btn"
                         title="Delete user"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

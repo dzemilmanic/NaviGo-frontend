@@ -7,13 +7,14 @@ import {
   Popup,
   useMap,
 } from "react-leaflet";
+import { Pencil, Trash2 } from "lucide-react";
 import polyline from "@mapbox/polyline";
 import L from "leaflet";
 import { routeService } from "../../services/routeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
 import { authService } from "../../services/authService";
-import { X, Map, MapPin } from "lucide-react";
+import { X, Map, MapPin, Pen } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
 import "./RouteMapModal.css";
@@ -124,7 +125,7 @@ const RouteManagement = () => {
       if (!res.ok) throw new Error("Failed to load route details");
 
       const routeDetails = await res.json();
-      
+
       if (routeDetails.geometryEncoded) {
         const decoded = polyline.decode(routeDetails.geometryEncoded);
         const leafletCoords = decoded.map((c) => [c[0], c[1]]);
@@ -214,12 +215,15 @@ const RouteManagement = () => {
     try {
       // Učitaj start lokaciju
       if (route.startLocationId) {
-        const startResponse = await locationService.getById(route.startLocationId);
+        const startResponse = await locationService.getById(
+          route.startLocationId
+        );
         if (startResponse.success) {
           const startLoc = startResponse.data;
           const startLocationData = {
             place_id: startLoc.id,
-            display_name: startLoc.fullAddress || `${startLoc.city}, ${startLoc.country}`,
+            display_name:
+              startLoc.fullAddress || `${startLoc.city}, ${startLoc.country}`,
             lat: startLoc.latitude,
             lon: startLoc.longitude,
             city: startLoc.city,
@@ -238,7 +242,8 @@ const RouteManagement = () => {
           const endLoc = endResponse.data;
           const endLocationData = {
             place_id: endLoc.id,
-            display_name: endLoc.fullAddress || `${endLoc.city}, ${endLoc.country}`,
+            display_name:
+              endLoc.fullAddress || `${endLoc.city}, ${endLoc.country}`,
             lat: endLoc.latitude,
             lon: endLoc.longitude,
             city: endLoc.city,
@@ -386,7 +391,11 @@ const RouteManagement = () => {
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       if (startQuery && startQuery.length >= 3) {
-        handleLocationSearch(startQuery, setStartResults, setStartSearchLoading);
+        handleLocationSearch(
+          startQuery,
+          setStartResults,
+          setStartSearchLoading
+        );
       } else {
         setStartResults([]);
         setStartSearchLoading(false);
@@ -678,21 +687,20 @@ const RouteManagement = () => {
                         }}
                       >
                         <Map size={16} />
-                        View
                       </button>
                       <button
                         onClick={() => openModal(r)}
                         className="action-btn activate-btn"
                         title="Edit route"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
                       <button
                         onClick={() => handleDelete(r.id)}
                         className="action-btn delete-btn"
                         title="Delete route"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -706,7 +714,10 @@ const RouteManagement = () => {
       {/* Route Map Modal */}
       {isMapModalOpen && (
         <div className="route-map-modal" onClick={closeMapModal}>
-          <div className="route-map-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="route-map-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="route-map-modal-header">
               <div>
                 <h3 className="route-map-modal-title">
@@ -714,12 +725,11 @@ const RouteManagement = () => {
                 </h3>
                 <div className="route-info">
                   <span>
-                    📍 {routeToView?.startLocationName} → {routeToView?.endLocationName}
+                    📍 {routeToView?.startLocationName} →{" "}
+                    {routeToView?.endLocationName}
                   </span>
                   {routeToView?.distanceKm && (
-                    <span>
-                      📏 {Math.round(routeToView.distanceKm)} km
-                    </span>
+                    <span>📏 {Math.round(routeToView.distanceKm)} km</span>
                   )}
                   {routeToView?.estimatedDurationHours && (
                     <span>
@@ -740,11 +750,9 @@ const RouteManagement = () => {
 
             <div className="route-map-container">
               {mapLoading && (
-                <div className="map-loading">
-                  Loading route map...
-                </div>
+                <div className="map-loading">Loading route map...</div>
               )}
-              
+
               {mapError && (
                 <div className="map-error">
                   <p>Error: {mapError}</p>
@@ -767,12 +775,20 @@ const RouteManagement = () => {
                     <>
                       <Polyline
                         positions={routeCoords}
-                        pathOptions={{ color: "#4F46E5", weight: 5, opacity: 0.8 }}
+                        pathOptions={{
+                          color: "#4F46E5",
+                          weight: 5,
+                          opacity: 0.8,
+                        }}
                       />
 
-                      <Marker position={routeCoords[0]} icon={createCustomIcon("🚀")}>
+                      <Marker
+                        position={routeCoords[0]}
+                        icon={createCustomIcon("🚀")}
+                      >
                         <Popup>
-                          <strong>Start:</strong> {routeToView.startLocationName}
+                          <strong>Start:</strong>{" "}
+                          {routeToView.startLocationName}
                         </Popup>
                       </Marker>
 
@@ -811,7 +827,7 @@ const RouteManagement = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="user-form">
               <div className="form-section">
                 <div className="form-row">
                   <div className="form-group">
@@ -839,46 +855,48 @@ const RouteManagement = () => {
                           Map
                         </button>
                       </div>
-                      
+
                       {selectedStart && (
                         <div className="location-status">
                           Selected: {selectedStart.display_name}
                         </div>
                       )}
-                      
+
                       {startSearchLoading && (
                         <div className="search-results loading">
                           Searching locations...
                         </div>
                       )}
-                      
-                      {!startSearchLoading && startResults && startResults.length > 0 && (
-                        <ul className="search-results">
-                          {startResults.map((loc) => (
-                            <li
-                              key={loc.place_id || `${loc.lat}-${loc.lon}`}
-                              onClick={() => {
-                                setSelectedStart(loc);
-                                setStartQuery(loc.display_name);
-                                setStartResults([]);
-                              }}
-                            >
-                              {loc.display_name}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      
-                      {!startSearchLoading && 
-                       startQuery &&
-                       startQuery.length >= 3 &&
-                       startResults &&
-                       startResults.length === 0 && 
-                       !selectedStart && (
-                        <div className="search-results">
-                          <li className="no-results">No locations found</li>
-                        </div>
-                      )}
+
+                      {!startSearchLoading &&
+                        startResults &&
+                        startResults.length > 0 && (
+                          <ul className="search-results">
+                            {startResults.map((loc) => (
+                              <li
+                                key={loc.place_id || `${loc.lat}-${loc.lon}`}
+                                onClick={() => {
+                                  setSelectedStart(loc);
+                                  setStartQuery(loc.display_name);
+                                  setStartResults([]);
+                                }}
+                              >
+                                {loc.display_name}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                      {!startSearchLoading &&
+                        startQuery &&
+                        startQuery.length >= 3 &&
+                        startResults &&
+                        startResults.length === 0 &&
+                        !selectedStart && (
+                          <div className="search-results">
+                            <li className="no-results">No locations found</li>
+                          </div>
+                        )}
                     </div>
                   </div>
 
@@ -907,46 +925,48 @@ const RouteManagement = () => {
                           Map
                         </button>
                       </div>
-                      
+
                       {selectedEnd && (
                         <div className="location-status">
                           Selected: {selectedEnd.display_name}
                         </div>
                       )}
-                      
+
                       {endSearchLoading && (
                         <div className="search-results loading">
                           Searching locations...
                         </div>
                       )}
-                      
-                      {!endSearchLoading && endResults && endResults.length > 0 && (
-                        <ul className="search-results">
-                          {endResults.map((loc) => (
-                            <li
-                              key={loc.place_id || `${loc.lat}-${loc.lon}`}
-                              onClick={() => {
-                                setSelectedEnd(loc);
-                                setEndQuery(loc.display_name);
-                                setEndResults([]);
-                              }}
-                            >
-                              {loc.display_name}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      
-                      {!endSearchLoading && 
-                       endQuery &&
-                       endQuery.length >= 3 &&
-                       endResults &&
-                       endResults.length === 0 && 
-                       !selectedEnd && (
-                        <div className="search-results">
-                          <li className="no-results">No locations found</li>
-                        </div>
-                      )}
+
+                      {!endSearchLoading &&
+                        endResults &&
+                        endResults.length > 0 && (
+                          <ul className="search-results">
+                            {endResults.map((loc) => (
+                              <li
+                                key={loc.place_id || `${loc.lat}-${loc.lon}`}
+                                onClick={() => {
+                                  setSelectedEnd(loc);
+                                  setEndQuery(loc.display_name);
+                                  setEndResults([]);
+                                }}
+                              >
+                                {loc.display_name}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                      {!endSearchLoading &&
+                        endQuery &&
+                        endQuery.length >= 3 &&
+                        endResults &&
+                        endResults.length === 0 &&
+                        !selectedEnd && (
+                          <div className="search-results">
+                            <li className="no-results">No locations found</li>
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>
@@ -1002,7 +1022,11 @@ const RouteManagement = () => {
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? "Saving..." : selectedRoute ? "Save Changes" : "Create Route"}
+                  {loading
+                    ? "Saving..."
+                    : selectedRoute
+                    ? "Save Changes"
+                    : "Create Route"}
                 </button>
               </div>
             </form>

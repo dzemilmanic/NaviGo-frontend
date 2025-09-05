@@ -6,8 +6,8 @@ import { routePriceService } from "../../services/routePriceService";
 import { routeService } from "../../services/routeService";
 import { userService } from "../../services/userService";
 import { useAuth } from "../../contexts/AuthContext";
-import { X, Download } from "lucide-react";
-import { toast } from 'react-toastify';
+import { X, Download, Trash2, Pencil } from "lucide-react";
+import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 import { jsPDF } from "jspdf";
@@ -29,7 +29,7 @@ const ContractManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const contractsResponse = await contractService.getAll({ search });
+      const contractsResponse = await contractService.getAll();
       const [
         clientsCompanyData,
         allUsersData,
@@ -93,7 +93,7 @@ const ContractManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const generateContractPDF = (contract) => {
     const doc = new jsPDF();
@@ -157,13 +157,13 @@ The payment terms, liability, and obligations are detailed below.`;
   const openModal = (contract = null) => {
     setSelectedContract(contract);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedContract(null);
     setIsModalOpen(false);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   const handleDelete = async (id, contractNumber) => {
@@ -185,7 +185,9 @@ The payment terms, liability, and obligations are detailed below.`;
         if (response.success) {
           toast.success("Contract deleted successfully!");
         } else {
-          toast.error(`Failed to delete contract. Message: ${response.message}`);
+          toast.error(
+            `Failed to delete contract. Message: ${response.message}`
+          );
         }
         await fetchData();
       } catch (error) {
@@ -199,32 +201,35 @@ The payment terms, liability, and obligations are detailed below.`;
     // Show confirmation toast
     toast.warn(
       <div>
-        <p>Are you sure you want to delete contract <strong>{contractNumber}</strong>?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <p>
+          Are you sure you want to delete contract{" "}
+          <strong>{contractNumber}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -247,7 +252,7 @@ The payment terms, liability, and obligations are detailed below.`;
     e.preventDefault();
     const form = e.target;
     setLoading(true);
-    
+
     try {
       if (selectedContract) {
         const statusMap = {
@@ -266,11 +271,16 @@ The payment terms, liability, and obligations are detailed below.`;
           maxPenaltyPercent: Number(form.maxPenaltyPercent.value),
         };
 
-        const response = await contractService.update(selectedContract.id, updateData);
+        const response = await contractService.update(
+          selectedContract.id,
+          updateData
+        );
         if (response.success) {
           toast.success("Contract updated successfully!");
         } else {
-          toast.error(`Failed to update contract. Message: ${response.message}`);
+          toast.error(
+            `Failed to update contract. Message: ${response.message}`
+          );
         }
       } else {
         const createData = {
@@ -289,7 +299,9 @@ The payment terms, liability, and obligations are detailed below.`;
         if (response.success) {
           toast.success("Contract created successfully!");
         } else {
-          toast.error(`Failed to create contract. Message: ${response.message}`);
+          toast.error(
+            `Failed to create contract. Message: ${response.message}`
+          );
         }
       }
 
@@ -306,13 +318,36 @@ The payment terms, liability, and obligations are detailed below.`;
   if (loading) {
     return <Loader />;
   }
+  const filteredContracts = contracts.filter((c) =>
+    [
+      c.clientId?.toString(),
+      c.clientFullName,
+      c.forwarderId?.toString(),
+      c.forwarderCompanyName,
+      c.routeId?.toString(),
+      c.contractNumber,
+      c.contractDate,
+      c.terms,
+      c.contractStatus,
+      c.penaltyRatePerHour?.toString(),
+      c.maxPenaltyPercent?.toString(),
+      c.validUntil,
+      c.signedDate,
+    ]
+      .filter(Boolean)
+      .some((field) =>
+        field.toString().toLowerCase().includes(search.toLowerCase())
+      )
+  );
 
   return (
     <div className="management-container">
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Contract Management</h2>
-          <p className="header-subtitle">Manage transportation contracts and agreements</p>
+          <p className="header-subtitle">
+            Manage transportation contracts and agreements
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -323,7 +358,7 @@ The payment terms, liability, and obligations are detailed below.`;
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Contract
+            Add Contract ➕
           </button>
         </div>
       </div>
@@ -342,7 +377,7 @@ The payment terms, liability, and obligations are detailed below.`;
             </tr>
           </thead>
           <tbody>
-            {contracts.length === 0 ? (
+            {filteredContracts.length === 0 ? (
               <tr>
                 <td colSpan="7" className="empty-row">
                   <div className="empty-state">
@@ -351,7 +386,7 @@ The payment terms, liability, and obligations are detailed below.`;
                 </td>
               </tr>
             ) : (
-              contracts.map((c) => (
+              filteredContracts.map((c) => (
                 <tr key={c.id} className="table-row">
                   {/* <td>{c.id}</td> */}
                   <td>{c.contractNumber}</td>
@@ -360,8 +395,9 @@ The payment terms, liability, and obligations are detailed below.`;
                     {clientsCompany.find((client) => client.id === c.clientId)
                       ?.companyName
                       ? "(" +
-                        clientsCompany.find((client) => client.id === c.clientId)
-                          ?.companyName +
+                        clientsCompany.find(
+                          (client) => client.id === c.clientId
+                        )?.companyName +
                         ")"
                       : ""}
                   </td>
@@ -370,26 +406,26 @@ The payment terms, liability, and obligations are detailed below.`;
                   <td>{c.contractStatus}</td>
                   <td className="actions-cell">
                     <div className="action-buttons">
-                      <button 
+                      <button
                         onClick={() => openModal(c)}
                         className="action-btn activate-btn"
                         title="Edit contract"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(c.id, c.contractNumber)}
                         className="action-btn delete-btn"
                         title="Delete contract"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => generateContractPDF(c)}
                         className="action-btn download-btn"
                         title="Download contract PDF"
                       >
-                        Download
+                        <Download size={16} />
                       </button>
                     </div>
                   </td>
@@ -414,8 +450,8 @@ The payment terms, liability, and obligations are detailed below.`;
                 <X size={20} />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit}>
+
+            <form onSubmit={handleSubmit} className="user-form">
               {!selectedContract && (
                 <>
                   <div className="form-group">
@@ -477,7 +513,9 @@ The payment terms, liability, and obligations are detailed below.`;
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="penaltyRatePerHour">Penalty Rate per Hour:</label>
+                    <label htmlFor="penaltyRatePerHour">
+                      Penalty Rate per Hour:
+                    </label>
                     <input
                       type="number"
                       name="penaltyRatePerHour"
@@ -486,7 +524,9 @@ The payment terms, liability, and obligations are detailed below.`;
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="maxPenaltyPercent">Max Penalty Percent:</label>
+                    <label htmlFor="maxPenaltyPercent">
+                      Max Penalty Percent:
+                    </label>
                     <input
                       type="number"
                       name="maxPenaltyPercent"
@@ -522,7 +562,9 @@ The payment terms, liability, and obligations are detailed below.`;
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="penaltyRatePerHour">Penalty Rate per Hour:</label>
+                    <label htmlFor="penaltyRatePerHour">
+                      Penalty Rate per Hour:
+                    </label>
                     <input
                       type="number"
                       name="penaltyRatePerHour"
@@ -532,7 +574,9 @@ The payment terms, liability, and obligations are detailed below.`;
                   </div>
 
                   <div className="form-group">
-                    <label htmlFor="maxPenaltyPercent">Max Penalty Percent:</label>
+                    <label htmlFor="maxPenaltyPercent">
+                      Max Penalty Percent:
+                    </label>
                     <input
                       type="number"
                       name="maxPenaltyPercent"
@@ -544,7 +588,11 @@ The payment terms, liability, and obligations are detailed below.`;
               )}
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">

@@ -3,7 +3,7 @@ import { vehicleService } from "../../services/vehicleService";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
-import { X } from "lucide-react";
+import { X, Pencil, Trash2 } from "lucide-react";
 import { toast } from 'react-toastify';
 import Loader from "../Loader/Loader";
 import { useAuth } from "../../contexts/AuthContext";
@@ -242,7 +242,7 @@ const VehicleManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Vehicle
+            Add Vehicle ➕
           </button>
         </div>
       </div>
@@ -336,13 +336,13 @@ const VehicleManagement = () => {
                 className="edit-button"
                 onClick={() => openModal(vehicle)}
               >
-                Edit
+                <Pencil size={16} />
               </button>
               <button
                 className="delete-button"
                 onClick={() => handleDelete(vehicle.id, `${vehicle.brand} ${vehicle.model}`)}
               >
-                Delete
+                <Trash2 size={16} />
               </button>
             </div>
           </div>

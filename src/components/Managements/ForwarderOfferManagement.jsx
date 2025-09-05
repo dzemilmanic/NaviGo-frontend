@@ -6,6 +6,7 @@ import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
 import Loader from "../Loader/Loader";
 import { toast } from "react-toastify";
+import { X, Trash2, Pencil, Trash } from "lucide-react";
 const ForwarderOfferManagement = () => {
   const [offers, setOffers] = useState([]);
   const [search, setSearch] = useState("");
@@ -18,7 +19,7 @@ const ForwarderOfferManagement = () => {
   const fetchOffers = async () => {
     setLoading(true);
     try {
-      const response = await forwarderOfferService.getAll({ search });
+      const response = await forwarderOfferService.getAll();
       setOffers(response.data);
     } catch (error) {
       toast.error("Failed to load offers. Please try again.");
@@ -58,7 +59,7 @@ const ForwarderOfferManagement = () => {
     fetchOffers();
     fetchRoutes();
     fetchForwarders();
-  }, [search]);
+  }, []);
 
   const openModal = (offer = null) => {
     setSelectedOffer(offer);
@@ -193,16 +194,44 @@ const ForwarderOfferManagement = () => {
     }
   };
   if (loading) return <Loader />;
+  const filteredOffers = offers.filter((o) =>
+    [
+      o.id?.toString(),
+      o.routeId?.toString(),
+      o.forwarderId?.toString(),
+      o.commissionRate?.toString(),
+      o.discountRate?.toString(),
+      o.forwarderOfferStatus,
+      o.rejectionReason,
+      o.createdAt,
+      o.expiresAt,
+      o.forwarderCompanyName,
+    ]
+      .filter(Boolean)
+      .some((field) =>
+        field.toString().toLowerCase().includes(search.toLowerCase())
+      )
+  );
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search offers..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={() => openModal()}>Add Offer</button>
+        <div className="header-content">
+          <h2 className="header-title">Forwarder Offer Management</h2>
+          <p className="header-subtitle">Manage and update forwarder offers</p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search offers..."
+            value={search}
+            className="search-input"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add Offer ➕
+          </button>
+        </div>
       </div>
 
       <table className="management-table">
@@ -219,7 +248,7 @@ const ForwarderOfferManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {offers.map((o) => (
+          {filteredOffers.map((o) => (
             <tr key={o.id}>
               <td>{o.id}</td>
               <td>{o.routeId}</td>
@@ -228,9 +257,21 @@ const ForwarderOfferManagement = () => {
               <td>{o.discountRate}</td>
               <td>{o.forwarderOfferStatus}</td>
               <td>{o.expiresAt?.split("T")[0]}</td>
-              <td>
-                <button onClick={() => openModal(o)}>Edit</button>
-                <button onClick={() => handleDelete(o.id)}>Delete</button>
+              <td className="actions-cell">
+                <div className="action-buttons">
+                  <button
+                    className="action-btn activate-btn"
+                    onClick={() => openModal(o)}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={() => handleDelete(o.id)}
+                  >
+                    <Trash size={16} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -240,47 +281,85 @@ const ForwarderOfferManagement = () => {
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <h3>{selectedOffer ? "Edit Offer" : "Add Offer"}</h3>
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="routeId">Route</label>
-              <select
-                name="routeId"
-                defaultValue={selectedOffer?.routeId || ""}
-                required
+            <div className="modal-header">
+              <h3>{selectedOffer ? "Edit Offer" : "Add Offer"}</h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
               >
-                <option value="">Select Route</option>
-                {routes.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {`Route ${r.id}`}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="commissionRate">Commission Rate</label>
-              <input
-                type="number"
-                name="commissionRate"
-                placeholder="Commission Rate"
-                defaultValue={selectedOffer?.commissionRate || null}
-                required
-              />
-              <label htmlFor="discountRate">Discount Rate</label>
-              <input
-                type="number"
-                name="discountRate"
-                placeholder="Discount Rate"
-                defaultValue={selectedOffer?.discountRate || null}
-              />
-              <label htmlFor="expiresAt">Expires At</label>
-              <input
-                type="date"
-                name="expiresAt"
-                defaultValue={selectedOffer?.expiresAt?.split("T")[0] || ""}
-              />
-
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="user-form">
+              <div className="form-section">
+                <div className="form-group">
+                  <label htmlFor="routeId">Route</label>
+                  <select
+                    name="routeId"
+                    defaultValue={selectedOffer?.routeId || ""}
+                    required
+                  >
+                    <option value="">Select Route</option>
+                    {routes.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {`Route ${r.id}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-section">
+                <div className="form-group">
+                  <div className="form-section">
+                    <div className="form-group">
+                      <label htmlFor="commissionRate">Commission Rate</label>
+                      <input
+                        type="number"
+                        name="commissionRate"
+                        placeholder="Commission Rate"
+                        defaultValue={selectedOffer?.commissionRate || null}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="form-section">
+                    <div className="form-group">
+                      <label htmlFor="discountRate">Discount Rate</label>
+                      <input
+                        type="number"
+                        name="discountRate"
+                        placeholder="Discount Rate"
+                        defaultValue={selectedOffer?.discountRate || null}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-section">
+                    <div className="form-group">
+                      <label htmlFor="expiresAt">Expires At</label>
+                      <input
+                        type="date"
+                        name="expiresAt"
+                        defaultValue={
+                          selectedOffer?.expiresAt?.split("T")[0] || ""
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div className="modal-actions">
-                <button type="submit">{selectedOffer ? "Save" : "Add"}</button>
-                <button type="button" onClick={closeModal}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                  disabled={loading}
+                >
                   Cancel
+                </button>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                  {selectedOffer ? "Save" : "Add"}
                 </button>
               </div>
             </form>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { paymentService } from "../../services/paymentService";
 import { contractService } from "../../services/contractService";
 import { userService } from "../../services/userService";
-import { X } from "lucide-react";
+import { X, Trash2, Pencil } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,7 +22,7 @@ const PaymentManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const paymentsResponse = await paymentService.getAll({ search });
+      const paymentsResponse = await paymentService.getAll();
       const contractsResponse = await contractService.getAll();
       const clientsResponse = await userService.getAll();
 
@@ -39,7 +39,7 @@ const PaymentManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const openModal = (payment = null) => {
     setSelectedPayment(payment);
@@ -188,6 +188,22 @@ const PaymentManagement = () => {
   if (loading) {
     return <Loader />;
   }
+const filteredPayments = payments.filter((p) =>
+  [
+    p.contract,
+    p.amount?.toString(),
+    p.paymentDate,
+    p.paymentStatus,
+    p.receiptUrl,
+    p.client,
+    p.contractId?.toString(),
+    p.clientId?.toString()
+  ]
+    .filter(Boolean)
+    .some((field) =>
+      field.toString().toLowerCase().includes(search.toLowerCase())
+    )
+);
 
   return (
     <div className="management-container">
@@ -205,7 +221,7 @@ const PaymentManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Payment
+            Add Payment ➕
           </button>
         </div>
       </div>
@@ -224,7 +240,7 @@ const PaymentManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {payments.length === 0 ? (
+            {filteredPayments.length === 0 ? (
               <tr>
                 <td colSpan="7" className="empty-row">
                   <div className="empty-state">
@@ -233,7 +249,7 @@ const PaymentManagement = () => {
                 </td>
               </tr>
             ) : (
-              payments.map((p) => (
+              filteredPayments.map((p) => (
                 <tr key={p.id} className="table-row">
                   {/* <td>{p.id}</td> */}
                   <td>{p.contract}</td>
@@ -261,14 +277,14 @@ const PaymentManagement = () => {
                         className="action-btn activate-btn"
                         title="Edit payment"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(p.id)}
                         className="action-btn delete-btn"
                         title="Delete payment"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -294,7 +310,7 @@ const PaymentManagement = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="user-form">
               <div className="form-group">
                 <label htmlFor="contractId">Contract:</label>
                 <select

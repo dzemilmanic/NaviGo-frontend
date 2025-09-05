@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { driverService } from "../../services/driverService";
 import { companyService } from "../../services/companyService";
-import { X } from "lucide-react";
-import { toast } from 'react-toastify';
+import { X, Trash2, Pencil } from "lucide-react";
+import { toast } from "react-toastify";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,7 +22,7 @@ const DriverManagement = () => {
     try {
       const [driverResponse, companyResponse] = await Promise.all([
         driverService.getAll(),
-        companyService.getAll()
+        companyService.getAll(),
       ]);
       setDrivers(driverResponse.data);
       setCompanies(companyResponse.data);
@@ -42,13 +42,13 @@ const DriverManagement = () => {
   const openModal = (driver = null) => {
     setSelectedDriver(driver);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedDriver(null);
     setIsModalOpen(false);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   const handleDelete = async (id, driverName) => {
@@ -67,9 +67,9 @@ const DriverManagement = () => {
       setLoading(true);
       try {
         const response = await driverService.delete(id);
-        if(response.success){
+        if (response.success) {
           toast.success(`Driver ${driverName} deleted successfully!`);
-        }else{
+        } else {
           toast.error(`Failed to delete driver. Message: ${response.message}`);
         }
         await fetchDrivers();
@@ -84,32 +84,34 @@ const DriverManagement = () => {
     // Show confirmation toast
     toast.warn(
       <div>
-        <p>Are you sure you want to delete driver <strong>{driverName}</strong>?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <p>
+          Are you sure you want to delete driver <strong>{driverName}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -145,21 +147,28 @@ const DriverManagement = () => {
 
     try {
       if (selectedDriver) {
-        const response = await driverService.update(selectedDriver.id, formData);
-        if(!response.success) {
+        const response = await driverService.update(
+          selectedDriver.id,
+          formData
+        );
+        if (!response.success) {
           toast.error(`Failed to update driver. Message: ${response.message}`);
-        }else{
-          toast.success(`Driver ${formData.firstName} ${formData.lastName} updated successfully!`);
+        } else {
+          toast.success(
+            `Driver ${formData.firstName} ${formData.lastName} updated successfully!`
+          );
         }
       } else {
         const response = await driverService.create(formData);
-        if(!response.success) {
+        if (!response.success) {
           toast.error(`Failed to create driver. Message: ${response.message}`);
-        }else{
-          toast.success(`Driver ${formData.firstName} ${formData.lastName} created successfully!`);
+        } else {
+          toast.success(
+            `Driver ${formData.firstName} ${formData.lastName} created successfully!`
+          );
         }
       }
-      
+
       await fetchDrivers();
       closeModal();
     } catch (error) {
@@ -171,14 +180,17 @@ const DriverManagement = () => {
   };
 
   // Filter drivers on frontend
-  const filteredDrivers = drivers.filter((d) =>
-    `${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-    d.licenseNumber.toLowerCase().includes(search.toLowerCase()) ||
-    d.phoneNumber.toLowerCase().includes(search.toLowerCase())
+  const filteredDrivers = drivers.filter(
+    (d) =>
+      `${d.firstName} ${d.lastName}`
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      d.licenseNumber.toLowerCase().includes(search.toLowerCase()) ||
+      d.phoneNumber.toLowerCase().includes(search.toLowerCase())
   );
 
   const getCompanyName = (companyId) => {
-    const company = companies.find(c => c.id === companyId);
+    const company = companies.find((c) => c.id === companyId);
     return company ? company.companyName : "Unknown Company";
   };
 
@@ -194,7 +206,9 @@ const DriverManagement = () => {
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Driver Management</h2>
-          <p className="header-subtitle">Manage drivers and their information</p>
+          <p className="header-subtitle">
+            Manage drivers and their information
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -205,7 +219,7 @@ const DriverManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Driver
+            Add Driver ➕
           </button>
         </div>
       </div>
@@ -243,7 +257,8 @@ const DriverManagement = () => {
                   <td className="name-cell">
                     <div className="user-info">
                       <div className="user-avatar">
-                        {d.firstName.charAt(0)}{d.lastName.charAt(0)}
+                        {d.firstName.charAt(0)}
+                        {d.lastName.charAt(0)}
                       </div>
                       <span>{`${d.firstName} ${d.lastName}`}</span>
                     </div>
@@ -252,25 +267,33 @@ const DriverManagement = () => {
                   <td>{d.licenseNumber}</td>
                   <td>{formatDate(d.licenseExpiry)}</td>
                   <td className="status-cell">
-                    <span className={`status-badge ${d.driverStatus === 'Active' ? 'status-active' : 'status-inactive'}`}>
+                    <span
+                      className={`status-badge ${
+                        d.driverStatus === "Active"
+                          ? "status-active"
+                          : "status-inactive"
+                      }`}
+                    >
                       {d.driverStatus}
                     </span>
                   </td>
                   <td className="actions-cell">
                     <div className="action-buttons">
-                      <button 
+                      <button
                         onClick={() => openModal(d)}
                         className="action-btn activate-btn"
                         title="Edit driver"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
-                      <button 
-                        onClick={() => handleDelete(d.id, `${d.firstName} ${d.lastName}`)}
+                      <button
+                        onClick={() =>
+                          handleDelete(d.id, `${d.firstName} ${d.lastName}`)
+                        }
                         className="action-btn delete-btn"
                         title="Delete driver"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -295,8 +318,8 @@ const DriverManagement = () => {
                 <X size={20} />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit}>
+
+            <form onSubmit={handleSubmit} className="user-form">
               <div className="form-section">
                 <div className="form-row">
                   <div className="form-group">
@@ -367,7 +390,9 @@ const DriverManagement = () => {
                     <input
                       type="date"
                       name="licenseExpiry"
-                      defaultValue={selectedDriver?.licenseExpiry?.split("T")[0] || ""}
+                      defaultValue={
+                        selectedDriver?.licenseExpiry?.split("T")[0] || ""
+                      }
                     />
                   </div>
                   <div className="form-group">
@@ -375,18 +400,25 @@ const DriverManagement = () => {
                     <input
                       type="date"
                       name="hireDate"
-                      defaultValue={selectedDriver?.hireDate?.split("T")[0] || ""}
+                      defaultValue={
+                        selectedDriver?.hireDate?.split("T")[0] || ""
+                      }
                     />
                   </div>
                 </div>
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn" disabled={loading}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                  disabled={loading}
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? "Saving..." : (selectedDriver ? "Save" : "Add")}
+                  {loading ? "Saving..." : selectedDriver ? "Save" : "Add"}
                 </button>
               </div>
             </form>

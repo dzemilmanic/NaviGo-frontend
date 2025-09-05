@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { routePriceService } from "../../services/routePriceService";
 import { routeService } from "../../services/routeService";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
-import { X } from "lucide-react";
+import { X, Trash2, Pencil } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
 import { toast } from "react-toastify";
@@ -18,12 +18,13 @@ const RoutePriceManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [routePricesResponse, routesResponse, vehicleTypesResponse] = await Promise.all([
-        routePriceService.getAll({ search }),
-        routeService.getAll(),
-        vehicleTypeService.getAll()
-      ]);
-      
+      const [routePricesResponse, routesResponse, vehicleTypesResponse] =
+        await Promise.all([
+          routePriceService.getAll({ search }),
+          routeService.getAll(),
+          vehicleTypeService.getAll(),
+        ]);
+
       setRoutePrices(routePricesResponse.data);
       setRoutes(routesResponse.data);
       setVehicleTypes(vehicleTypesResponse.data);
@@ -40,104 +41,109 @@ const RoutePriceManagement = () => {
   }, []);
 
   // Filter route prices on frontend
-  const filteredRoutePrices = routePrices.filter((rp) =>
-    rp.vehicleTypeName?.toLowerCase().includes(search.toLowerCase()) ||
-    rp.routeId?.toString().includes(search.toLowerCase())
+  const filteredRoutePrices = routePrices.filter(
+    (rp) =>
+      rp.vehicleTypeName?.toLowerCase().includes(search.toLowerCase()) ||
+      rp.routeId?.toString().includes(search.toLowerCase())
   );
 
   const openModal = (routePrice = null) => {
     setSelectedRoutePrice(routePrice);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedRoutePrice(null);
     setIsModalOpen(false);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
-    const handleDelete = async (id) => {
-      // Custom toast confirmation
-      const confirmDelete = () => {
-        toast.dismiss();
-        performDelete();
-      };
-  
-      const cancelDelete = () => {
-        toast.dismiss();
-        toast.info("Delete operation cancelled");
-      };
-  
-      const performDelete = async () => {
-        setLoading(true);
-        try {
-          const response = await routePriceService.delete(id);
-          if(response.success){
-            toast.success(`Route price ${id} deleted successfully!`);
-          }else{
-            toast.error(`Failed to delete route price. Message: ${response.message}`);
-          }
-          await fetchData();
-        } catch (error) {
-          toast.error("Failed to delete route price. Please try again.");
-          console.error("Error deleting route price:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      // Show confirmation toast
-      toast.warn(
-        <div>
-          <p>Are you sure you want to delete route price <strong>{id}</strong>?</p>
-          <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-            <button 
-              onClick={confirmDelete}
-              style={{
-                background: '#dc2626',
-                color: 'white',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              Delete
-            </button>
-            <button 
-              onClick={cancelDelete}
-              style={{
-                background: '#6b7280',
-                color: 'white',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>,
-        {
-          position: "top-center",
-          autoClose: false,
-          hideProgressBar: true,
-          closeOnClick: false,
-          pauseOnHover: true,
-          draggable: false,
-          closeButton: false,
-        }
-      );
+  const handleDelete = async (id) => {
+    // Custom toast confirmation
+    const confirmDelete = () => {
+      toast.dismiss();
+      performDelete();
     };
+
+    const cancelDelete = () => {
+      toast.dismiss();
+      toast.info("Delete operation cancelled");
+    };
+
+    const performDelete = async () => {
+      setLoading(true);
+      try {
+        const response = await routePriceService.delete(id);
+        if (response.success) {
+          toast.success(`Route price ${id} deleted successfully!`);
+        } else {
+          toast.error(
+            `Failed to delete route price. Message: ${response.message}`
+          );
+        }
+        await fetchData();
+      } catch (error) {
+        toast.error("Failed to delete route price. Please try again.");
+        console.error("Error deleting route price:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>
+          Are you sure you want to delete route price <strong>{id}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmDelete}
+            style={{
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Delete
+          </button>
+          <button
+            onClick={cancelDelete}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const form = e.target;
       const formData = {
@@ -148,21 +154,30 @@ const RoutePriceManagement = () => {
       };
 
       if (selectedRoutePrice) {
-        const response = await routePriceService.update(selectedRoutePrice.id, formData);
+        const response = await routePriceService.update(
+          selectedRoutePrice.id,
+          formData
+        );
         if (response.success) {
-          toast.success(`Route price ${selectedRoutePrice.id} updated successfully!`);
-        }else{
-          toast.error(`Failed to update route price. Message: ${response.message}`);
+          toast.success(
+            `Route price ${selectedRoutePrice.id} updated successfully!`
+          );
+        } else {
+          toast.error(
+            `Failed to update route price. Message: ${response.message}`
+          );
         }
       } else {
         const response = await routePriceService.create(formData);
-        if(response.success){
+        if (response.success) {
           toast.success(`Route price created successfully!`);
-        }else{
-          toast.error(`Failed to create route price. Message: ${response.message}`);
+        } else {
+          toast.error(
+            `Failed to create route price. Message: ${response.message}`
+          );
         }
       }
-      
+
       await fetchData();
       closeModal();
     } catch (error) {
@@ -173,8 +188,12 @@ const RoutePriceManagement = () => {
   };
 
   const getRouteName = (routeId) => {
-    const route = routes.find(r => r.id === routeId);
-    return route ? `${route.startLocationName || route.startLocationId} → ${route.endLocationName || route.endLocationId}` : `Route ${routeId}`;
+    const route = routes.find((r) => r.id === routeId);
+    return route
+      ? `${route.startLocationName || route.startLocationId} → ${
+          route.endLocationName || route.endLocationId
+        }`
+      : `Route ${routeId}`;
   };
 
   if (loading) return <Loader />;
@@ -184,7 +203,9 @@ const RoutePriceManagement = () => {
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Route Price Management</h2>
-          <p className="header-subtitle">Manage pricing for different routes and vehicle types</p>
+          <p className="header-subtitle">
+            Manage pricing for different routes and vehicle types
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -196,7 +217,7 @@ const RoutePriceManagement = () => {
           />
           <button onClick={() => openModal()} className="primary-btn">
             Add Route Price
-          </button>
+➕          </button>
         </div>
       </div>
 
@@ -233,19 +254,19 @@ const RoutePriceManagement = () => {
                   <td className="price-cell">${rp.minimumPrice}</td>
                   <td className="actions-cell">
                     <div className="action-buttons">
-                      <button 
+                      <button
                         onClick={() => openModal(rp)}
                         className="action-btn activate-btn"
                         title="Edit route price"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(rp.id)}
                         className="action-btn delete-btn"
                         title="Delete route price"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -260,7 +281,9 @@ const RoutePriceManagement = () => {
         <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{selectedRoutePrice ? "Edit Route Price" : "Add Route Price"}</h3>
+              <h3>
+                {selectedRoutePrice ? "Edit Route Price" : "Add Route Price"}
+              </h3>
               <button
                 type="button"
                 onClick={closeModal}
@@ -270,12 +293,16 @@ const RoutePriceManagement = () => {
                 <X size={20} />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit}>
+
+            <form onSubmit={handleSubmit} className="user-form">
               <div className="form-section">
                 <div className="form-group">
                   <label htmlFor="routeId">Route:</label>
-                  <select name="routeId" defaultValue={selectedRoutePrice?.routeId || ""} required>
+                  <select
+                    name="routeId"
+                    defaultValue={selectedRoutePrice?.routeId || ""}
+                    required
+                  >
                     <option value="">Select Route</option>
                     {routes.map((r) => (
                       <option key={r.id} value={r.id}>
@@ -332,11 +359,16 @@ const RoutePriceManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn" disabled={loading}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                  disabled={loading}
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? "Saving..." : (selectedRoutePrice ? "Save" : "Add")}
+                  {loading ? "Saving..." : selectedRoutePrice ? "Save" : "Add"}
                 </button>
               </div>
             </form>

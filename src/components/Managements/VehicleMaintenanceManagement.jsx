@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { vehicleMaintenanceService } from "../../services/vehicleMaintenanceService";
 import { vehicleService } from "../../services/vehicleService";
-import { X } from "lucide-react";
+import { X, Trash2, Pencil } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
@@ -240,7 +240,7 @@ const VehicleMaintenanceManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Vehicle Maintenance
+            Add Vehicle Maintenance ➕
           </button>
         </div>
       </div>
@@ -293,14 +293,14 @@ const VehicleMaintenanceManagement = () => {
                         className="action-btn activate-btn"
                         title="Edit maintenance record"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(vm.id, vm.description)}
                         className="action-btn delete-btn"
                         title="Delete maintenance record"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -330,7 +330,7 @@ const VehicleMaintenanceManagement = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="user-form">
               {!selectedVehicleMaintenance && (
                 <div className="form-group">
                   <label htmlFor="vehicle">Vehicle</label>

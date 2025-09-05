@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
-import { X } from "lucide-react";
+import { X, Trash2, Pencil } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from '../Loader/Loader';
@@ -16,9 +16,8 @@ const VehicleTypeManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await vehicleTypeService.getAll({ search });
+      const response = await vehicleTypeService.getAll();
       setVehicleTypes(response.data);
-      //toast.success("Vehicle types loaded successfully!");
     } catch (error) {
       toast.error("Failed to load vehicle types. Please try again.");
       console.error("Error fetching vehicle types:", error);
@@ -29,7 +28,7 @@ const VehicleTypeManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const openModal = (type = null) => {
     setSelectedType(type);
@@ -178,7 +177,7 @@ const VehicleTypeManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add New Vehicle Type
+            Add New Vehicle Type ➕
           </button>
         </div>
       </div>
@@ -219,14 +218,14 @@ const VehicleTypeManagement = () => {
                         className="action-btn edit-btn"
                         title="Edit vehicle type"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(t.id, t.typeName)}
                         className="action-btn delete-btn"
                         title="Delete vehicle type"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

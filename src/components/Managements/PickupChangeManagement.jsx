@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { pickupChangeService } from "../../services/pickupChangeService";
 import { shipmentService } from "../../services/shipmentService";
-import { X } from "lucide-react";
-import { toast } from 'react-toastify';
+import { X, Trash2, Pencil, Pen } from "lucide-react";
+import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 
@@ -17,7 +17,7 @@ const PickupChangeManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const pickupChangesResponse = await pickupChangeService.getAll({ search });
+      const pickupChangesResponse = await pickupChangeService.getAll();
       const shipmentsResponse = await shipmentService.getAll();
 
       setPickupChanges(pickupChangesResponse.data);
@@ -32,18 +32,18 @@ const PickupChangeManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const openModal = (pickupChange = null) => {
     setSelectedPickupChange(pickupChange);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedPickupChange(null);
     setIsModalOpen(false);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   const handleDelete = async (id) => {
@@ -65,7 +65,9 @@ const PickupChangeManagement = () => {
         if (response.success) {
           toast.success("Pickup change deleted successfully!");
         } else {
-          toast.error(`Failed to delete pickup change. Message: ${response.message}`);
+          toast.error(
+            `Failed to delete pickup change. Message: ${response.message}`
+          );
         }
         await fetchData();
       } catch (error) {
@@ -80,31 +82,31 @@ const PickupChangeManagement = () => {
     toast.warn(
       <div>
         <p>Are you sure you want to delete this pickup change?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -131,24 +133,31 @@ const PickupChangeManagement = () => {
       newTime: form.newTime.value,
     };
     setLoading(true);
-    
+
     try {
       if (selectedPickupChange) {
-        const response = await pickupChangeService.update(selectedPickupChange.id, formData);
+        const response = await pickupChangeService.update(
+          selectedPickupChange.id,
+          formData
+        );
         if (response.success) {
           toast.success("Pickup change updated successfully!");
         } else {
-          toast.error(`Failed to update pickup change. Message: ${response.message}`);
+          toast.error(
+            `Failed to update pickup change. Message: ${response.message}`
+          );
         }
       } else {
         const response = await pickupChangeService.create(formData);
         if (response.success) {
           toast.success("Pickup change created successfully!");
         } else {
-          toast.error(`Failed to create pickup change. Message: ${response.message}`);
+          toast.error(
+            `Failed to create pickup change. Message: ${response.message}`
+          );
         }
       }
-      
+
       await fetchData();
       closeModal();
     } catch (error) {
@@ -162,13 +171,30 @@ const PickupChangeManagement = () => {
   if (loading) {
     return <Loader />;
   }
+  const filteredPickupChanges = pickupChanges.filter((pc) =>
+    [
+      pc.id?.toString(),
+      pc.shipmentId?.toString(),
+      pc.clientId?.toString(),
+      pc.oldTime,
+      pc.newTime,
+      pc.changeCount?.toString(),
+      pc.additionalFee?.toString(),
+    ]
+      .filter(Boolean)
+      .some((field) =>
+        field.toString().toLowerCase().includes(search.toLowerCase())
+      )
+  );
 
   return (
     <div className="management-container">
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Pickup Change Management</h2>
-          <p className="header-subtitle">Manage pickup time changes and track modifications</p>
+          <p className="header-subtitle">
+            Manage pickup time changes and track modifications
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -179,7 +205,7 @@ const PickupChangeManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Pickup Change
+            Add Pickup Change ➕
           </button>
         </div>
       </div>
@@ -199,39 +225,45 @@ const PickupChangeManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {pickupChanges.length === 0 ? (
+            {filteredPickupChanges.length === 0 ? (
               <tr>
                 <td colSpan="8" className="empty-row">
                   <div className="empty-state">
-                    <p>No pickup changes found matching your search criteria.</p>
+                    <p>
+                      No pickup changes found matching your search criteria.
+                    </p>
                   </div>
                 </td>
               </tr>
             ) : (
-              pickupChanges.map((p) => (
+              filteredPickupChanges.map((p) => (
                 <tr key={p.id} className="table-row">
                   {/* <td>{p.id}</td> */}
                   <td>{p.shipmentId}</td>
-                  <td>{p.oldTime ? new Date(p.oldTime).toLocaleString() : 'N/A'}</td>
-                  <td>{p.newTime ? new Date(p.newTime).toLocaleString() : 'N/A'}</td>
+                  <td>
+                    {p.oldTime ? new Date(p.oldTime).toLocaleString() : "N/A"}
+                  </td>
+                  <td>
+                    {p.newTime ? new Date(p.newTime).toLocaleString() : "N/A"}
+                  </td>
                   <td>{p.changeCount}</td>
                   <td>{p.additionalFee}</td>
                   <td>{p.pickupChangesStatus}</td>
                   <td className="actions-cell">
                     <div className="action-buttons">
-                      <button 
+                      <button
                         onClick={() => openModal(p)}
                         className="action-btn activate-btn"
                         title="Edit pickup change"
                       >
-                        Edit
+                        <Pencil size={16} />
                       </button>
-                      <button 
+                      <button
                         onClick={() => handleDelete(p.id)}
                         className="action-btn delete-btn"
                         title="Delete pickup change"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -246,7 +278,11 @@ const PickupChangeManagement = () => {
         <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{selectedPickupChange ? "Edit Pickup Change" : "Add Pickup Change"}</h3>
+              <h3>
+                {selectedPickupChange
+                  ? "Edit Pickup Change"
+                  : "Add Pickup Change"}
+              </h3>
               <button
                 type="button"
                 onClick={closeModal}
@@ -256,8 +292,8 @@ const PickupChangeManagement = () => {
                 <X size={20} />
               </button>
             </div>
-            
-            <form onSubmit={handleSubmit}>
+
+            <form onSubmit={handleSubmit} className="user-form">
               <div className="form-group">
                 <label htmlFor="shipmentId">Shipment:</label>
                 <select
@@ -285,7 +321,11 @@ const PickupChangeManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">

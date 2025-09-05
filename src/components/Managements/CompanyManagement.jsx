@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { companyService } from "../../services/companyService";
-import { X, FileImage, Building } from "lucide-react";
+import { X, Building, Trash2, RotateCcw, Eye } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from '../Loader/Loader';
@@ -14,10 +14,9 @@ const CompanyManagement = ({ userType }) => {
   const [loading, setLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   
-  // Image modal states
+  // Logo modal states (only for logo now)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [imageType, setImageType] = useState(''); // 'logo' or 'proof'
 
   // Status mapping for display
   const getStatusText = (status) => {
@@ -59,28 +58,26 @@ const CompanyManagement = ({ userType }) => {
     }
   };
 
-  // Image modal functions
-  const openImageModal = (imageUrl, type) => {
+  // Logo modal functions
+  const openImageModal = (imageUrl) => {
     if (!imageUrl) return;
     setSelectedImage(imageUrl);
-    setImageType(type);
     setIsImageModalOpen(true);
   };
 
   const closeImageModal = () => {
     setIsImageModalOpen(false);
     setSelectedImage(null);
-    setImageType('');
   };
 
-  // Image preview component
-  const ImagePreview = ({ url, type, companyName }) => {
+  // Logo preview component
+  const LogoPreview = ({ url, companyName }) => {
     const [imageError, setImageError] = useState(false);
     
     if (!url || imageError) {
       return (
         <div className="image-preview-placeholder">
-          {type === 'logo' ? <Building size={16} /> : <FileImage size={16} />}
+          <Building size={16} />
         </div>
       );
     }
@@ -88,16 +85,34 @@ const CompanyManagement = ({ userType }) => {
     return (
       <div 
         className="image-preview-container"
-        onClick={() => openImageModal(url, type)}
-        title={`View ${type} for ${companyName}`}
+        onClick={() => openImageModal(url)}
+        title={`View logo for ${companyName}`}
       >
         <img
           src={url}
-          alt={`${type} for ${companyName}`}
+          alt={`Logo for ${companyName}`}
           className="image-preview"
           onError={() => setImageError(true)}
         />
       </div>
+    );
+  };
+
+  // Proof file link component
+  const ProofFileLink = ({ url }) => {
+    if (!url) {
+      return <span>-</span>;
+    }
+
+    return (
+      <a 
+        href={url} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="proof-link"
+      >
+        <Eye size={16} />
+      </a>
     );
   };
 
@@ -264,7 +279,7 @@ const CompanyManagement = ({ userType }) => {
             Delete
           </button>
           <button 
-            onClick={cancelUpdate}
+            onClick={cancelDelete}
             style={{
               background: '#6b7280',
               color: 'white',
@@ -326,9 +341,9 @@ const CompanyManagement = ({ userType }) => {
               <th>Email</th>
               <th>Type</th>
               <th>Status</th>
-              <th>Actions</th>
               <th>Logo</th>
               <th>Proof</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -353,18 +368,19 @@ const CompanyManagement = ({ userType }) => {
                     </span>
                   </td>
                   <td className="image-cell">
-                    <ImagePreview 
-                      url={company.logoUrl} 
-                      type="logo" 
-                      companyName={company.companyName}
-                    />
+                    {company.logoUrl ? (
+                      <LogoPreview 
+                        url={company.logoUrl} 
+                        companyName={company.companyName}
+                      />
+                    ) : (
+                      <div className="image-preview-placeholder">
+                        <Building size={16} />
+                      </div>
+                    )}
                   </td>
-                  <td className="image-cell">
-                    <ImagePreview 
-                      url={company.proofFileUrl} 
-                      type="proof" 
-                      companyName={company.companyName}
-                    />
+                  <td className="proof-cell">
+                    <ProofFileLink url={company.proofFileUrl} />
                   </td>
                   <td className="actions-cell">
                     <div className="action-buttons">
@@ -373,14 +389,14 @@ const CompanyManagement = ({ userType }) => {
                         onClick={() => openStatusModal(company)}
                         title="Change status"
                       >
-                        Change Status
+                        <RotateCcw size={16} />
                       </button>
                       <button 
                         onClick={() => handleDelete(company.id, company.companyName)}
                         className="action-btn delete-btn"
                         title="Delete company"
                       >
-                        Delete
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -425,14 +441,14 @@ const CompanyManagement = ({ userType }) => {
             </div>
             <div className="company-status-modal-actions">
               <button 
-                className="cancel-btn" 
+                className="action-btn cancel-btn" 
                 onClick={closeStatusModal}
                 disabled={isUpdatingStatus}
               >
                 Cancel
               </button>
               <button 
-                className="submit-btn" 
+                className="action-btn submit-btn" 
                 onClick={handleStatusUpdate}
                 disabled={isUpdatingStatus}
               >
@@ -443,14 +459,12 @@ const CompanyManagement = ({ userType }) => {
         </div>
       )}
 
-      {/* Image Modal */}
+      {/* Logo Modal - Only for logos now */}
       {isImageModalOpen && selectedImage && (
         <div className="image-modal-overlay" onClick={closeImageModal}>
           <div className="image-modal" onClick={(e) => e.stopPropagation()}>
             <div className="image-modal-header">
-              <h3 className="image-modal-title">
-                {imageType === 'logo' ? 'Company Logo' : 'Proof Document'}
-              </h3>
+              <h3 className="image-modal-title">Company Logo</h3>
               <button className="close-btn" onClick={closeImageModal}>
                 <X size={20} />
               </button>
@@ -458,7 +472,7 @@ const CompanyManagement = ({ userType }) => {
             <div className="image-modal-body">
               <img
                 src={selectedImage}
-                alt={`${imageType} preview`}
+                alt="Logo preview"
                 className="modal-image"
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -466,8 +480,8 @@ const CompanyManagement = ({ userType }) => {
                 }}
               />
               <div className="image-error-fallback" style={{ display: 'none' }}>
-                <FileImage size={48} />
-                <p>Unable to load image</p>
+                <Building size={48} />
+                <p>Unable to load logo</p>
               </div>
             </div>
           </div>

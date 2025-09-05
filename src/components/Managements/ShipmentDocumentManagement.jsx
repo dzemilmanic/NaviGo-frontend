@@ -4,6 +4,7 @@ import { shipmentService } from "../../services/shipmentService";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 import { toast } from "react-toastify";
+import { Trash2, Pencil, X } from "lucide-react";
 const ShipmentDocumentManagement = () => {
   const [documents, setDocuments] = useState([]);
   const [shipments, setShipments] = useState([]);
@@ -15,7 +16,7 @@ const ShipmentDocumentManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const docsResponse = await shipmentDocumentService.getAll({ search });
+      const docsResponse = await shipmentDocumentService.getAll();
       const shipmentsResponse = await shipmentService.getAll();
 
       setDocuments(docsResponse.data);
@@ -30,7 +31,7 @@ const ShipmentDocumentManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, [search]);
+  }, []);
 
   const openModal = (doc = null) => {
     setSelectedDocument(doc);
@@ -191,16 +192,42 @@ const ShipmentDocumentManagement = () => {
   if (loading) {
     return <Loader />;
   }
+  const filteredDocuments = documents.filter((d) =>
+  [
+    d.documentType,
+    d.fileUrl,
+    d.uploadDate,
+    d.expiryDate,
+    d.verified ? "verified" : "not verified",
+    d.shipmentId?.toString()
+  ]
+    .filter(Boolean)
+    .some((field) =>
+      field.toString().toLowerCase().includes(search.toLowerCase())
+    )
+);
+
   return (
     <div className="management-container">
       <div className="management-header">
-        <input
-          type="text"
-          placeholder="Search documents..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button onClick={() => openModal()}>Add Document</button>
+        <div className="header-content">
+          <h2 className="header-title">Shipment Document Management</h2>
+          <p className="header-subtitle">
+            Manage shipment documents for your shipments.
+          </p>
+        </div>
+        <div className="header-actions">
+          <input
+            type="text"
+            placeholder="Search documents..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+          <button onClick={() => openModal()} className="primary-btn">
+            Add Document ➕
+          </button>
+        </div>
       </div>
 
       <table className="management-table">
@@ -214,7 +241,7 @@ const ShipmentDocumentManagement = () => {
           </tr>
         </thead>
         <tbody>
-          {documents.map((doc) => (
+          {filteredDocuments.map((doc) => (
             <tr key={doc.id}>
               <td>{doc.id}</td>
               <td>{doc.shipmentId}</td>
@@ -224,9 +251,21 @@ const ShipmentDocumentManagement = () => {
                   View
                 </a>{" "}
               </td>
-              <td>
-                <button onClick={() => openModal(doc)}>Edit</button>
-                <button onClick={() => handleDelete(doc.id)}>Delete</button>
+              <td className="actions-cell">
+                <div className="action-buttons">
+                  <button
+                    className="action-btn activate-btn"
+                    onClick={() => openModal(doc)}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={() => handleDelete(doc.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </td>
             </tr>
           ))}
@@ -236,57 +275,90 @@ const ShipmentDocumentManagement = () => {
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <h3>{selectedDocument ? "Edit Document" : "Add Document"}</h3>
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="shipmentId">Shipment</label>
-              <select
-                name="shipmentId"
-                defaultValue={selectedDocument?.shipmentId || ""}
-                required
+            <div className="modal-header">
+              <h3>{selectedDocument ? "Edit Document" : "Add Document"}</h3>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="modal-close-btn"
+                aria-label="Close modal"
               >
-                <option value="">Select Shipment</option>
-                {shipments.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.id} - {s.description}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="documentType">Document Type</label>
-              <select
-                name="documentType"
-                defaultValue={selectedDocument?.documentType || ""}
-                required
-              >
-                <option value="">Select Document Type</option>
-                <option value={0}>Bill of Lading</option>
-                <option value={1}>Invoice</option>
-                <option value={2}>Packing List</option>
-                <option value={3}>Customs Declaration</option>
-                <option value={4}>Insurance Certificate</option>
-                <option value={99}>Other</option>
-              </select>
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="user-form">
+              <div className="form-section">
+                <div className="form-group">
+                  <label htmlFor="shipmentId">Shipment</label>
+                  <select
+                    name="shipmentId"
+                    defaultValue={selectedDocument?.shipmentId || ""}
+                    required
+                  >
+                    <option value="">Select Shipment</option>
+                    {shipments.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.id} - {s.description}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-              <div className="file-input-wrapper">
-                <label htmlFor="receiptFile">
-                  {fileUrl
-                    ? `Selected: ${fileUrl.name}`
-                    : "Select Receipt File"}
-                </label>
-                <input
-                  type="file"
-                  id="receiptFile"
-                  name="receiptFile"
-                  accept="image/*,.pdf"
-                  onChange={handleFileChange}
-                />
+              <div className="form-section">
+                <div className="form-group">
+                  <label htmlFor="documentType">Document Type</label>
+                  <select
+                    name="documentType"
+                    defaultValue={selectedDocument?.documentType || ""}
+                    required
+                  >
+                    <option value="">Select Document Type</option>
+                    <option value={0}>Bill of Lading</option>
+                    <option value={1}>Invoice</option>
+                    <option value={2}>Packing List</option>
+                    <option value={3}>Customs Declaration</option>
+                    <option value={4}>Insurance Certificate</option>
+                    <option value={99}>Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-group">
+                  <div className="file-input-wrapper">
+                    <label htmlFor="receiptFile">
+                      {fileUrl
+                        ? `Selected: ${fileUrl.name}`
+                        : "Select Receipt File"}
+                    </label>
+                    <input
+                      type="file"
+                      id="receiptFile"
+                      name="receiptFile"
+                      accept="image/*,.pdf"
+                      onChange={handleFileChange}
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="modal-actions">
-                <button type="submit">
-                  {selectedDocument ? "Save" : "Add"}
-                </button>
-                <button type="button" onClick={closeModal}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                  disabled={loading}
+                >
                   Cancel
+                </button>
+                <button
+                  button
+                  type="submit"
+                  className="submit-btn"
+                  disabled={loading}
+                >
+                  {selectedDocument ? "Save" : "Add"}
                 </button>
               </div>
             </form>

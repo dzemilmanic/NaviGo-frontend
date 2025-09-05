@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { cargoTypeService } from "../../services/cargoTypeService";
-import { X } from "lucide-react";
+import { X,Trash2, Pencil } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from "../Loader/Loader";
@@ -195,7 +195,7 @@ const CargoTypeManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add New Cargo Type
+            Add New Cargo Type ➕
           </button>
         </div>
       </div>
@@ -236,14 +236,14 @@ const CargoTypeManagement = () => {
                         className="action-btn edit-btn"
                         title="Edit cargo type"
                       >
-                        Edit
+                        <Pencil size={16}/>
                       </button>
                       <button 
                         onClick={() => handleDelete(ct.id, ct.typeName)}
                         className="action-btn delete-btn"
                         title="Delete cargo type"
                       >
-                        Delete
+                        <Trash2 size={16}/>
                       </button>
                     </div>
                   </td>
