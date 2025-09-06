@@ -6,10 +6,19 @@ import VehicleTypeManagement from "../../../components/Managements/VehicleTypeMa
 import UserManagement from "../../../components/Managements/UserManagement";
 import CompanyManagement from "../../../components/Managements/CompanyManagement";
 
-import { LogOut, Menu, X, Users, Building2, Package, Truck } from "lucide-react";
+import {
+  LogOut,
+  Menu,
+  X,
+  Users,
+  Building2,
+  Package,
+  Truck,
+  User,
+} from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import Profile from "../../../components/Profile/Profile";
 const SuperAdminDashboard = () => {
   const [activeComponent, setActiveComponent] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,9 +34,18 @@ const SuperAdminDashboard = () => {
     sidebarButtons: [
       { name: "Users", icon: Users, component: <UserManagement /> },
       { name: "Companies", icon: Building2, component: <CompanyManagement /> },
-      { name: "Cargo Types", icon: Package, component: <CargoTypeManagement /> },
-      { name: "Vehicle Types", icon: Truck, component: <VehicleTypeManagement /> }
-    ]
+      {
+        name: "Cargo Types",
+        icon: Package,
+        component: <CargoTypeManagement />,
+      },
+      {
+        name: "Vehicle Types",
+        icon: Truck,
+        component: <VehicleTypeManagement />,
+      },
+      { name: "Profile", icon: User, component: <Profile user={user} /> },
+    ],
   };
 
   const { sidebarButtons = [] } = dashboardConfig;
@@ -53,8 +71,14 @@ const SuperAdminDashboard = () => {
   };
 
   const getCurrentComponent = () => {
-    const currentConfig = sidebarButtons.find(btn => btn.name === activeComponent);
-    return currentConfig ? currentConfig.component : <p className="empty-state">Select an option from the sidebar.</p>;
+    const currentConfig = sidebarButtons.find(
+      (btn) => btn.name === activeComponent
+    );
+    return currentConfig ? (
+      currentConfig.component
+    ) : (
+      <p className="empty-state">Select an option from the sidebar.</p>
+    );
   };
 
   const handleLogout = () => {
@@ -65,7 +89,7 @@ const SuperAdminDashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Mobile Toggle Button */}
-      <button 
+      <button
         className="mobile-toggle"
         onClick={toggleSidebar}
         aria-label="Toggle navigation menu"
@@ -75,14 +99,14 @@ const SuperAdminDashboard = () => {
 
       {/* Sidebar Overlay for Mobile */}
       {isSidebarOpen && (
-        <div 
-          className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`}
+        <div
+          className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
           onClick={closeSidebar}
         />
       )}
 
       {/* Enhanced Sidebar */}
-      <aside className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <aside className={`dashboard-sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <h2 className="sidebar-title">Admin Panel</h2>
           <p className="sidebar-subtitle">Super Admin Dashboard</p>
@@ -105,8 +129,8 @@ const SuperAdminDashboard = () => {
           })}
         </nav>
 
-        <button 
-          className="logout-button" 
+        <button
+          className="logout-button"
           onClick={handleLogout}
           aria-label="Logout"
         >
@@ -124,13 +148,13 @@ const SuperAdminDashboard = () => {
             <span className="breadcrumb-current">{activeComponent}</span>
           </div>
           <div className="user-info">
-            <span className="user-greeting">Welcome back, {user?.firstName || 'Admin'}</span>
+            <span className="user-greeting">
+              Welcome back, {user?.firstName || "Admin"}
+            </span>
           </div>
         </div>
-        
-        <div className="main-content">
-          {getCurrentComponent()}
-        </div>
+
+        <div className="main-content">{getCurrentComponent()}</div>
       </main>
     </div>
   );

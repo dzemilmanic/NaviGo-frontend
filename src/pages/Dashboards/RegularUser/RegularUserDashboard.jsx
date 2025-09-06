@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import Profile from "../../../components/Profile/Profile";
 const RegularUserDashboard = () => {
   const [activeComponent, setActiveComponent] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -34,6 +34,7 @@ const RegularUserDashboard = () => {
       { name: "Payments", icon: CreditCard, component: <PaymentManagement /> },
       { name: "Pickup Changes", icon: CalendarClock, component: <PickupChangeManagement /> },
       { name: "Contracts", icon: FileText, component: <ContractManagement /> },
+      { name: "Profile", icon: User, component: <Profile user={user} /> },
     ]
   };
 

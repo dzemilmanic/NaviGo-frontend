@@ -14,22 +14,24 @@ import ShipmentDocumentManagement from "../../../components/Managements/Shipment
 import VehicleMaintenanceManagement from "../../../components/Managements/VehicleMaintenanceManagement";
 import ShipmentStatusHistoryManagement from "../../../components/Managements/ShipmentStatusHistoryManagement";
 import CarrierStats from "../../../components/Stats/CarrierStats";
-import { 
-  LogOut, 
-  Menu, 
-  X, 
-  Truck, 
-  Wrench, 
-  Package, 
-  Clock, 
-  UserCheck, 
-  Route, 
-  DollarSign, 
-  Handshake, 
-  FileText, 
-  CreditCard, 
+import Profile from "../../../components/Profile/Profile";
+import {
+  LogOut,
+  Menu,
+  X,
+  Truck,
+  Wrench,
+  Package,
+  Clock,
+  UserCheck,
+  Route,
+  DollarSign,
+  Handshake,
+  FileText,
+  CreditCard,
   CalendarClock,
-  Building2
+  Building2,
+  User,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -48,31 +50,90 @@ const CompanyAdminDashboard = ({ companyType }) => {
   const dashboardConfig = {
     Carrier: {
       sidebarButtons: [
-        { name: "Carrier Stats", icon: CalendarClock, component: <CarrierStats /> },
+        {
+          name: "Carrier Stats",
+          icon: CalendarClock,
+          component: <CarrierStats />,
+        },
         { name: "Vehicles", icon: Truck, component: <VehicleManagement /> },
-        { name: "Vehicle Maintenances", icon: Wrench, component: <VehicleMaintenanceManagement /> },
+        {
+          name: "Vehicle Maintenances",
+          icon: Wrench,
+          component: <VehicleMaintenanceManagement />,
+        },
         { name: "Shipments", icon: Package, component: <ShipmentManagement /> },
-        { name: "Shipment Status Histories", icon: Clock, component: <ShipmentStatusHistoryManagement /> },
+        {
+          name: "Shipment Status Histories",
+          icon: Clock,
+          component: <ShipmentStatusHistoryManagement />,
+        },
         { name: "Drivers", icon: UserCheck, component: <DriverManagement /> },
         { name: "Routes", icon: Route, component: <RouteManagement /> },
-        { name: "Route Prices", icon: DollarSign, component: <RoutePriceManagement /> },
-      ]
+        {
+          name: "Route Prices",
+          icon: DollarSign,
+          component: <RoutePriceManagement />,
+        },
+        {
+          name: "Profile",
+          icon: User,
+          component: <Profile user={user} />,
+        },
+      ],
     },
     Forwarder: {
       sidebarButtons: [
-        { name: "Forwarder Offers", icon: Handshake, component: <ForwarderOfferManagement /> },
-        { name: "Contracts", icon: FileText, component: <ContractManagement /> },
-        { name: "Payments", icon: CreditCard, component: <PaymentManagement /> },
-        { name: "Shipment Documents", icon: FileText, component: <ShipmentDocumentManagement /> },
-      ]
+        {
+          name: "Forwarder Offers",
+          icon: Handshake,
+          component: <ForwarderOfferManagement />,
+        },
+        {
+          name: "Contracts",
+          icon: FileText,
+          component: <ContractManagement />,
+        },
+        {
+          name: "Payments",
+          icon: CreditCard,
+          component: <PaymentManagement />,
+        },
+        {
+          name: "Shipment Documents",
+          icon: FileText,
+          component: <ShipmentDocumentManagement />,
+        },
+        {
+          name: "Profile",
+          icon: User,
+          component: <Profile user={user} />,
+        },
+      ],
     },
     Client: {
       sidebarButtons: [
-        { name: "Contracts", icon: FileText, component: <ContractManagement /> },
+        {
+          name: "Contracts",
+          icon: FileText,
+          component: <ContractManagement />,
+        },
         { name: "Shipments", icon: Package, component: <ShipmentManagement /> },
-        { name: "Payments", icon: CreditCard, component: <PaymentManagement /> },
-        { name: "Pickup Changes", icon: CalendarClock, component: <PickupChangeManagement /> },
-      ]
+        {
+          name: "Payments",
+          icon: CreditCard,
+          component: <PaymentManagement />,
+        },
+        {
+          name: "Pickup Changes",
+          icon: CalendarClock,
+          component: <PickupChangeManagement />,
+        },
+        {
+          name: "Profile",
+          icon: User,
+          component: <Profile user={user} />,
+        },
+      ],
     },
   };
 
@@ -99,8 +160,14 @@ const CompanyAdminDashboard = ({ companyType }) => {
   };
 
   const getCurrentComponent = () => {
-    const currentConfig = sidebarButtons.find(btn => btn.name === activeComponent);
-    return currentConfig ? currentConfig.component : <p className="empty-state">Select an option from the sidebar.</p>;
+    const currentConfig = sidebarButtons.find(
+      (btn) => btn.name === activeComponent
+    );
+    return currentConfig ? (
+      currentConfig.component
+    ) : (
+      <p className="empty-state">Select an option from the sidebar.</p>
+    );
   };
 
   const handleLogout = () => {
@@ -109,20 +176,28 @@ const CompanyAdminDashboard = ({ companyType }) => {
   };
 
   const getCompanyTypeTitle = () => {
-    switch(companyType) {
-      case 'Carrier': return 'Carrier Admin Panel';
-      case 'Forwarder': return 'Forwarder Admin Panel';
-      case 'Client': return 'Client Admin Panel';
-      default: return 'Company Admin Panel';
+    switch (companyType) {
+      case "Carrier":
+        return "Carrier Admin Panel";
+      case "Forwarder":
+        return "Forwarder Admin Panel";
+      case "Client":
+        return "Client Admin Panel";
+      default:
+        return "Company Admin Panel";
     }
   };
 
   const getCompanyTypeSubtitle = () => {
-    switch(companyType) {
-      case 'Carrier': return 'Carrier Dashboard';
-      case 'Forwarder': return 'Forwarder Dashboard';
-      case 'Client': return 'Client Dashboard';
-      default: return 'Company Dashboard';
+    switch (companyType) {
+      case "Carrier":
+        return "Carrier Dashboard";
+      case "Forwarder":
+        return "Forwarder Dashboard";
+      case "Client":
+        return "Client Dashboard";
+      default:
+        return "Company Dashboard";
     }
   };
 
@@ -139,14 +214,14 @@ const CompanyAdminDashboard = ({ companyType }) => {
 
       {/* Sidebar Overlay for Mobile */}
       {isSidebarOpen && (
-        <div 
-          className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`}
+        <div
+          className={`sidebar-overlay ${isSidebarOpen ? "open" : ""}`}
           onClick={closeSidebar}
         />
       )}
 
       {/* Enhanced Sidebar */}
-      <aside className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <aside className={`dashboard-sidebar ${isSidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <div className="flex items-center gap-2 mb-1">
             <Building2 size={20} className="text-blue-600" />
@@ -172,8 +247,8 @@ const CompanyAdminDashboard = ({ companyType }) => {
           })}
         </nav>
 
-        <button 
-          className="logout-button" 
+        <button
+          className="logout-button"
           onClick={handleLogout}
           aria-label="Logout"
         >
@@ -191,13 +266,13 @@ const CompanyAdminDashboard = ({ companyType }) => {
             <span className="breadcrumb-current">{activeComponent}</span>
           </div>
           <div className="user-info">
-            <span className="user-greeting">Welcome back, {user?.firstName || 'Admin'}</span>
+            <span className="user-greeting">
+              Welcome back, {user?.firstName || "Admin"}
+            </span>
           </div>
         </div>
-        
-        <div className="main-content">
-          {getCurrentComponent()}
-        </div>
+
+        <div className="main-content">{getCurrentComponent()}</div>
       </main>
     </div>
   );
