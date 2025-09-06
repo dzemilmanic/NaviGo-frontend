@@ -298,3 +298,70 @@
     font-size: 0.875rem;
   }
 }
+/* Container */
+.photo-file-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* Label kao dugme */
+.photo-file-input-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f9fafb;
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #475569;
+  font-size: 14px;
+}
+
+.photo-file-input-label:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* Kada postoji fajl */
+.photo-file-input-label.has-file {
+  border-style: solid;
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  color: #1e3a8a;
+}
+
+/* Upload indikator */
+.photo-uploading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Spinner */
+.photo-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: photo-spin 1s linear infinite;
+}
+
+@keyframes photo-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hint text */
+.photo-input-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
