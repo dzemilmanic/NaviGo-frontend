@@ -1853,3 +1853,16 @@
     justify-content: center;
   }
 }
+.page-size-select{
+  width: 100px;
+  height: 36px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  margin-right: 10px;
+}
