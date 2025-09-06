@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { companyService } from "../../services/CompanyService";
+import { companyService } from "../../services/companyService";
 import { toast } from "react-toastify";
 import { Image, Upload, FileText, X } from "lucide-react";
 const CompanyInfoModal = ({ company, onClose, onUpdate }) => {
