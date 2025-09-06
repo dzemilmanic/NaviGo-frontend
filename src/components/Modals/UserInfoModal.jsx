@@ -1,14 +1,29 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { userService } from "../../services/userService";
+import { toast } from "react-toastify";
 const UserInfoModal = ({ user, onClose, onUpdate }) => {
   const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName);
-
-  const handleSubmit = (e) => {
+  const [phoneNumber, setPhoneNumber] = useState(user.phoneNumber);
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // implementation for updating user information
-    onUpdate();
-    onClose();
+    try {
+      const response = await userService.update(user.id, {
+        firstName,
+        lastName,
+        phoneNumber,
+      });
+      if (!response.success) {
+        toast.error(`Failed to update user. Message: ${response.message}`);
+      }
+      toast.success(`User ${firstName} ${lastName} updated successfully!`);
+    } catch (err) {
+      toast.error(`Failed to update user. Message: ${err.message}`);
+    } finally {
+      onUpdate();
+      onClose();
+    }
   };
 
   return (
@@ -41,6 +56,16 @@ const UserInfoModal = ({ user, onClose, onUpdate }) => {
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="phoneNumber">Phone Number</label>
+                <input
+                  type="text"
+                  id="phoneNumber"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   required
                 />
               </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { companyService } from "../../services/CompanyService";
+import { companyService } from "../../services/companyService";
 import { userService } from "../../services/userService";
 import { User, Building2, Mail, MapPin, Globe, Phone } from "lucide-react";
 import "./Profile.css";

@@ -14,7 +14,9 @@ class UserService {
   async create(userData) {
     return apiService.post('/user', userData);
   }
-
+  async update (id, userData) {
+    return apiService.put(`/user/${id}`, userData);
+  }
   async updateStatus(id, status) {
     const statusValue = status === "Active" ? 1 : 0;
     return apiService.patch(`/user/activate/${id}`, {
