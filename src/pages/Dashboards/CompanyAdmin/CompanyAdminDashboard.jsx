@@ -108,6 +108,7 @@ const CompanyAdminDashboard = ({ companyType }) => {
           icon: FileText,
           component: <ShipmentDocumentManagement />,
         },
+        { name: "Vehicles", icon: Truck, component: <VehicleManagement /> },
         {
           name: "Profile",
           icon: User,

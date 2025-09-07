@@ -3,8 +3,8 @@ import { vehicleService } from "../../services/vehicleService";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
 import { companyService } from "../../services/companyService";
 import { locationService } from "../../services/locationService";
-import { X, Pencil, Trash2 } from "lucide-react";
-import { toast } from 'react-toastify';
+import { X, Pencil, Trash2, ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
+import { toast } from "react-toastify";
 import Loader from "../Loader/Loader";
 import { useAuth } from "../../contexts/AuthContext";
 import "./Managements.css";
@@ -22,8 +22,10 @@ const VehicleManagement = () => {
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [pictureUrl, setPictureUrl] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const { user } = useAuth();
-  
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -48,17 +50,17 @@ const VehicleManagement = () => {
   useEffect(() => {
     fetchData();
   }, []);
-  
+
   const openModal = (vehicle = null) => {
     setSelectedVehicle(vehicle);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedVehicle(null);
     setIsModalOpen(false);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   const handleDelete = async (id, vehicleName) => {
@@ -77,9 +79,9 @@ const VehicleManagement = () => {
       setLoading(true);
       try {
         const response = await vehicleService.delete(id);
-        if(response.success){
+        if (response.success) {
           toast.success(`Vehicle ${vehicleName} deleted successfully!`);
-        }else{
+        } else {
           toast.error(`Failed to delete vehicle. Message:${response.message}`);
         }
         await fetchData();
@@ -94,32 +96,35 @@ const VehicleManagement = () => {
     // Show confirmation toast
     toast.warn(
       <div>
-        <p>Are you sure you want to delete vehicle <strong>{vehicleName}</strong>?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <p>
+          Are you sure you want to delete vehicle <strong>{vehicleName}</strong>
+          ?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -178,18 +183,25 @@ const VehicleManagement = () => {
       };
 
       if (selectedVehicle) {
-        const response = await vehicleService.update(selectedVehicle.id, formData);
-        if(!response.success){
+        const response = await vehicleService.update(
+          selectedVehicle.id,
+          formData
+        );
+        if (!response.success) {
           toast.error(`Failed to update vehicle. Message:${response.message}`);
-        }else{
-          toast.success(`Vehicle ${formData.brand} ${formData.model} updated successfully!`);
+        } else {
+          toast.success(
+            `Vehicle ${formData.brand} ${formData.model} updated successfully!`
+          );
         }
       } else {
         const response = await vehicleService.create(formData);
-        if(!response.success){
+        if (!response.success) {
           toast.error(`Failed to create vehicle. Message:${response.message}`);
-        }else{
-          toast.success(`Vehicle ${formData.brand} ${formData.model} created successfully!`);
+        } else {
+          toast.success(
+            `Vehicle ${formData.brand} ${formData.model} created successfully!`
+          );
         }
       }
 
@@ -215,23 +227,43 @@ const VehicleManagement = () => {
           .includes(e.target.value.toLowerCase())
       );
     });
+    setCurrentPage(1);
     setFilteredVehicles(filtered);
   };
-  
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredVehicles.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedVehicles = filteredVehicles.slice(startIndex, endIndex);
+
+  // Reset to first page if current page is out of bounds
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
   const handleFileChange = (e) => {
     setPictureUrl(e.target.files[0]);
   };
-  
+
   if (loading && !isSubmitting) {
     return <Loader />;
   }
-  
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1);
+  };
   return (
     <div className="management-container">
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Vehicle Management</h2>
-          <p className="header-subtitle">Manage your fleet vehicles and their information</p>
+          <p className="header-subtitle">
+            Manage your fleet vehicles and their information
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -241,14 +273,26 @@ const VehicleManagement = () => {
             onChange={(e) => handleSearch(e)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
-            Add Vehicle ➕
-          </button>
+          <select
+            value={pageSize}
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            className="page-size-select"
+          >
+            <option value={5}>5 per page</option>
+            <option value={10}>10 per page</option>
+            <option value={25}>25 per page</option>
+            <option value={50}>50 per page</option>
+          </select>
+          {user.companyType === "Carrier" && (
+            <button onClick={() => openModal()} className="primary-btn">
+              Add Vehicle ➕
+            </button>
+          )}
         </div>
       </div>
 
       <div className="vehicles-grid">
-        {filteredVehicles.map((vehicle) => (
+        {paginatedVehicles.map((vehicle) => (
           <div key={vehicle.id} className="vehicle-card">
             <div className="vehicle-image-container">
               <img
@@ -331,35 +375,82 @@ const VehicleManagement = () => {
               </div>
             </div>
 
-            <div className="vehicle-actions">
-              <button
-                className="edit-button"
-                onClick={() => openModal(vehicle)}
-              >
-                <Pencil size={16} />
-              </button>
-              <button
-                className="delete-button"
-                onClick={() => handleDelete(vehicle.id, `${vehicle.brand} ${vehicle.model}`)}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
+            {user.companyType === "Carrier" && (
+              <div className="vehicle-actions">
+                <button
+                  className="edit-button"
+                  onClick={() => openModal(vehicle)}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  className="delete-button"
+                  onClick={() =>
+                    handleDelete(
+                      vehicle.id,
+                      `${vehicle.brand} ${vehicle.model}`
+                    )
+                  }
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
-      
+
       {filteredVehicles.length === 0 && !loading && (
         <div className="empty-state">
           <div className="empty-icon">🚗</div>
           <h3>No vehicles found</h3>
           <p>Start by adding your first vehicle to the fleet</p>
-          <button className="empty-add-button" onClick={() => openModal()}>
-            Add Vehicle
-          </button>
+          {user.companyType === "Carrier" && (
+            <button className="empty-add-button" onClick={() => openModal()}>
+              Add Vehicle
+            </button>
+          )}
         </div>
       )}
-
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pagination-container">
+          <div className="pagination-info">
+            <span>
+              Showing {paginatedVehicles.length === 0 ? 0 : startIndex + 1}-
+              {Math.min(endIndex, filteredVehicles.length)} of{" "}
+              {filteredVehicles.length} vehicles
+            </span>
+          </div>
+          <div className="pagination-controls">
+            <button
+              className="pagination-btn"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ArrowLeftIcon size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                className={`pagination-btn ${
+                  currentPage === i + 1 ? "pagination-active" : ""
+                }`}
+                onClick={() => handlePageChange(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              className="pagination-btn"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ArrowRightIcon size={16} />
+            </button>
+          </div>
+        </div>
+      )}
       {isModalOpen && (
         <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -509,7 +600,7 @@ const VehicleManagement = () => {
                     }
                   />
                 </div>
-                
+
                 <div className="file-input-wrapper">
                   <label htmlFor="vehiclePicture">
                     {pictureUrl
@@ -537,20 +628,26 @@ const VehicleManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button 
-                  type="button" 
-                  onClick={closeModal} 
+                <button
+                  type="button"
+                  onClick={closeModal}
                   className="cancel-btn"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="submit-btn"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? (selectedVehicle ? "Updating..." : "Creating...") : (selectedVehicle ? "Save Changes" : "Add Vehicle")}
+                  {isSubmitting
+                    ? selectedVehicle
+                      ? "Updating..."
+                      : "Creating..."
+                    : selectedVehicle
+                    ? "Save Changes"
+                    : "Add Vehicle"}
                 </button>
               </div>
             </form>
