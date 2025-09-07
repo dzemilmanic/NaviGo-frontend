@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-const ForwarderOfferDecisionModal = ({ onClose, onSubmit, forwarderOffer, isSubmitting }) => {
+const ForwarderOfferDecisionModal = ({
+  onClose,
+  onSubmit,
+  forwarderOffer,
+  isSubmitting,
+}) => {
   const [forwarderOfferStatus, setForwarderOfferStatus] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
@@ -15,7 +20,7 @@ const ForwarderOfferDecisionModal = ({ onClose, onSubmit, forwarderOffer, isSubm
     }
 
     onSubmit({
-      forwarderOfferStatus: forwarderOfferStatus === "" ? null : forwarderOfferStatus,
+      newStatus: forwarderOfferStatus === "" ? null : forwarderOfferStatus,
       rejectionReason: rejectionReason || null,
     });
   };
@@ -42,7 +47,11 @@ const ForwarderOfferDecisionModal = ({ onClose, onSubmit, forwarderOffer, isSubm
               <select
                 id="newStatus"
                 value={forwarderOfferStatus}
-                onChange={(e) => setForwarderOfferStatus(e.target.value ? parseInt(e.target.value) : "")}
+                onChange={(e) =>
+                  setForwarderOfferStatus(
+                    e.target.value ? parseInt(e.target.value) : ""
+                  )
+                }
               >
                 <option value="">-- Select --</option>
                 <option value={1}>Accept ✔</option>
