@@ -24,7 +24,7 @@ class ForwarderOfferService {
   }
 
   async updateStatus(id, statusData) {
-    return apiService.patch(`/forwarderoffer/${id}/status`, statusData);
+    return apiService.put(`/forwarderoffer/${id}/status`, statusData);
   }
 }
 

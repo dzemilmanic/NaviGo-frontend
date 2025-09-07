@@ -6,7 +6,8 @@ import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
 import Loader from "../Loader/Loader";
 import { toast } from "react-toastify";
-import { X, Trash2, Pencil, Trash } from "lucide-react";
+import { X, MessageCircleQuestionMark, Pencil, Trash } from "lucide-react";
+import ForwarderOfferDecisionModal from "../Modals/ForwarderOfferDecisionModal";
 const ForwarderOfferManagement = () => {
   const [offers, setOffers] = useState([]);
   const [search, setSearch] = useState("");
@@ -16,6 +17,7 @@ const ForwarderOfferManagement = () => {
   const [forwarders, setForwarders] = useState([]);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false);
   const fetchOffers = async () => {
     setLoading(true);
     try {
@@ -65,10 +67,17 @@ const ForwarderOfferManagement = () => {
     setSelectedOffer(offer);
     setIsModalOpen(true);
   };
-
+  const openDecisionModal = (offer = null) => {
+    setSelectedOffer(offer);
+    setIsDecisionModalOpen(true);
+  };
   const closeModal = () => {
     setSelectedOffer(null);
     setIsModalOpen(false);
+  };
+  const closeDecisionModal = () => {
+    setSelectedOffer(null);
+    setIsDecisionModalOpen(false);
   };
   const handleDelete = async (id) => {
     // Custom toast confirmation
@@ -155,7 +164,7 @@ const ForwarderOfferManagement = () => {
     setLoading(true);
     const form = e.target;
     const formData = {
-      routeId: Number(form.routeId.value),
+      routeId: selectedOffer.routeId,
       forwarderId: +user.companyId,
       commissionRate: Number(form.commissionRate.value),
       discountRate: Number(form.discountRate.value),
@@ -175,21 +184,30 @@ const ForwarderOfferManagement = () => {
             `Failed to update forwarder offer. Message: ${response.message}`
           );
         }
-      } else {
-        const response = await forwarderOfferService.create(formData);
-        if (response.success) {
-          toast.success("Forwarder offer created successfully!");
-        } else {
-          toast.error(
-            `Failed to create forwarder offer. Message: ${response.message}`
-          );
-        }
       }
       fetchOffers();
       closeModal();
     } catch (error) {
       console.error("Error saving offer:", error);
     } finally {
+      setLoading(false);
+    }
+  };
+  const handleDecisionSubmit = async (data) => {
+    setLoading(true);
+    console.log(data)
+    try{
+      const response = await forwarderOfferService.updateStatus(selectedOffer.id, data);
+      if(!response.success){
+        toast.error(`${response.message}`);
+        return;
+      }
+      toast.success("Forwarder offer updated successfuly.");
+       fetchOffers();
+      closeDecisionModal();
+    }catch(err){
+        toast.error(`${err.message}`);
+    }finally{
       setLoading(false);
     }
   };
@@ -228,9 +246,6 @@ const ForwarderOfferManagement = () => {
             className="search-input"
             onChange={(e) => setSearch(e.target.value)}
           />
-          <button onClick={() => openModal()} className="primary-btn">
-            Add Offer ➕
-          </button>
         </div>
       </div>
 
@@ -259,18 +274,30 @@ const ForwarderOfferManagement = () => {
               <td>{o.expiresAt?.split("T")[0]}</td>
               <td className="actions-cell">
                 <div className="action-buttons">
-                  <button
-                    className="action-btn activate-btn"
-                    onClick={() => openModal(o)}
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    className="action-btn delete-btn"
-                    onClick={() => handleDelete(o.id)}
-                  >
-                    <Trash size={16} />
-                  </button>
+                  {user.companyType === "Forwarder" && (
+                    <>
+                      <button
+                        className="action-btn activate-btn"
+                        onClick={() => openModal(o)}
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        className="action-btn delete-btn"
+                        onClick={() => handleDelete(o.id)}
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </>
+                  )}
+                  {user.companyType === "Carrier" && o.forwarderOfferStatus === "Pending" && (
+                    <button
+                      className="action-btn activate-btn"
+                      onClick={() => openDecisionModal(o)}
+                    >
+                      <MessageCircleQuestionMark size={16} />
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>
@@ -282,7 +309,7 @@ const ForwarderOfferManagement = () => {
         <div className="modal">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>{selectedOffer ? "Edit Offer" : "Add Offer"}</h3>
+              <h3>Edit Offer</h3>
               <button
                 type="button"
                 onClick={closeModal}
@@ -293,23 +320,6 @@ const ForwarderOfferManagement = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="user-form">
-              <div className="form-section">
-                <div className="form-group">
-                  <label htmlFor="routeId">Route</label>
-                  <select
-                    name="routeId"
-                    defaultValue={selectedOffer?.routeId || ""}
-                    required
-                  >
-                    <option value="">Select Route</option>
-                    {routes.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {`Route ${r.id}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
               <div className="form-section">
                 <div className="form-group">
                   <div className="form-section">
@@ -365,6 +375,13 @@ const ForwarderOfferManagement = () => {
             </form>
           </div>
         </div>
+      )}
+      {isDecisionModalOpen && (
+        <ForwarderOfferDecisionModal
+          onClose={closeDecisionModal}
+          onSubmit={handleDecisionSubmit}
+          forwarderOffer={selectedOffer}
+        />
       )}
     </div>
   );

@@ -85,6 +85,11 @@ const CompanyAdminDashboard = ({ companyType }) => {
           component: <ContractManagement />,
         },
         {
+          name:"Forwarder Offers",
+          icon:Handshake,
+          component:<ForwarderOfferManagement/>
+        },
+        {
           name: "Profile",
           icon: User,
           component: <Profile user={user} />,

@@ -15,6 +15,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "./RouteMap.css";
 import { useAuth } from "../../contexts/AuthContext";
+import ForwarderOfferModal from "../../components/BookingModal/ForwarderModal.jsx";
+import { forwarderOfferService } from "../../services/forwarderOfferService";
 // Fix za default marker ikone u Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -57,6 +59,31 @@ const formatDuration = (hours) => {
 };
 
 const RouteMap = () => {
+  const [isForwarderOfferModalOpen, setIsForwarderOfferModalOpen] =
+    useState(false);
+  const openForwarderModal = () => {
+    setIsForwarderOfferModalOpen(true);
+  };
+
+  const closeForwarderModal = () => {
+    setIsForwarderOfferModalOpen(false);
+  };
+  const handleSubmitForwarderOffer = async (data) => {
+    setLoading(true);
+    try{
+      const response = await forwarderOfferService.create({...data,routeId:selectedRoute.id, forwarderId:user.companyId});
+      if(!response.success){
+        toast.error(`Failed to create forwarder offer. ${response.message}`);
+        return;
+      }
+      toast.success("Forwarder offer created successfully!");
+      closeForwarderModal();  
+    }catch(err){
+      toast.error(`Failed to create forwarder offer. ${err.message}`);
+    }finally{
+      setLoading(false);
+    }
+  };
   const [routes, setRoutes] = useState([]);
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [routeCoords, setRouteCoords] = useState([]);
@@ -64,7 +91,6 @@ const RouteMap = () => {
   const [error, setError] = useState(null);
   const { user, token } = useAuth();
   const [bookingModal, setBookingModal] = useState(false);
-  console.log(user);
   // Paging i sortiranje
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -217,6 +243,16 @@ const RouteMap = () => {
                     Book Drive
                   </button>
                 )}
+                {user.role === "CompanyAdmin" &&
+                  user.companyId &&
+                  user.companyType === "Forwarder" && (
+                    <button
+                      className="action-btn edit-btn"
+                      onClick={() => openForwarderModal()}
+                    >
+                      Add Offer
+                    </button>
+                  )}
               </li>
             ))}
           </ul>
@@ -296,6 +332,13 @@ const RouteMap = () => {
       </div>
       {bookingModal && (
         <BookingModal onClose={handleClose} route={selectedRoute} />
+      )}
+      {isForwarderOfferModalOpen && (
+        <ForwarderOfferModal
+          onClose={closeForwarderModal}
+          onSubmit={handleSubmitForwarderOffer}
+          route={selectedRoute}
+        />
       )}
     </>
   );

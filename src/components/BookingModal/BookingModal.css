@@ -1,9 +1,8 @@
-/* Dugme za dodavanje shipment-a */
 .add-shipment-btn {
   display: inline-block;
   margin: 10px 0;
   padding: 8px 16px;
-  background-color: #4caf50; /* zelena boja */
+  background-color: #4caf50;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -16,12 +15,11 @@
   background-color: #45a049;
 }
 
-/* Dugme za uklanjanje shipment-a */
 .remove-shipment-btn {
   display: inline-block;
   margin: 10px 0 0 0;
   padding: 6px 12px;
-  background-color: #f44336; /* crvena boja */
+  background-color: #f44336;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -34,7 +32,6 @@
   background-color: #da190b;
 }
 
-/* Opcionalno: stavi malo razmaka između shipment sekcija */
 .shipment-section {
   border: 1px solid #ddd;
   padding: 15px;
@@ -43,3 +40,54 @@
   background-color: #fafafa;
   z-index: 99999;
 }
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background-color: #f7f8fa;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 1px 2px rgba(15,15,15,0.03);
+  margin-bottom: 12px;
+}
+
+.modal-info p {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-info p:first-child {
+  font-weight: 600;
+  font-size: 15px;
+  color: #111;
+}
+
+.modal-info p:last-child {
+  font-size: 13px;
+  color: #555;
+}
+
+.modal-info p > svg,
+.modal-info p > .icon {
+  display: inline-flex;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 480px) {
+  .modal-info {
+    padding: 10px;
+  }
+  .modal-info p { font-size: 13px; }
+  .modal-info p:first-child { font-size: 14px; }
+}
+
