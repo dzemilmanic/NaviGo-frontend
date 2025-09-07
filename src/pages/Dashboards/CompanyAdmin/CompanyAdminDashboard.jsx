@@ -75,6 +75,11 @@ const CompanyAdminDashboard = ({ companyType }) => {
           component: <RoutePriceManagement />,
         },
         {
+          name: "Payments",
+          icon: CreditCard,
+          component: <PaymentManagement />,
+        },
+        {
           name: "Profile",
           icon: User,
           component: <Profile user={user} />,

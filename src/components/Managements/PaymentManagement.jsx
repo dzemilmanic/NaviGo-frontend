@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { paymentService } from "../../services/paymentService";
 import { contractService } from "../../services/contractService";
 import { userService } from "../../services/userService";
-import { X, Trash2, Pencil } from "lucide-react";
-import { toast } from 'react-toastify';
+import { X, Trash2, Pencil, CheckCircle, CircleStop } from "lucide-react";
+import { toast } from "react-toastify";
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
 import Loader from "../Loader/Loader";
@@ -44,14 +44,14 @@ const PaymentManagement = () => {
   const openModal = (payment = null) => {
     setSelectedPayment(payment);
     setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
     setSelectedPayment(null);
     setIsModalOpen(false);
     setFileUrl(null);
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   const handleDelete = async (id) => {
@@ -88,31 +88,31 @@ const PaymentManagement = () => {
     toast.warn(
       <div>
         <p>Are you sure you want to delete this payment?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -135,7 +135,7 @@ const PaymentManagement = () => {
     e.preventDefault();
     let receiptUrl = selectedPayment?.receiptUrl || "";
     setLoading(true);
-    
+
     if (fileUrl) {
       try {
         const uploadResponse = await paymentService.uploadFile(fileUrl);
@@ -156,7 +156,10 @@ const PaymentManagement = () => {
 
     try {
       if (selectedPayment) {
-        const response = await paymentService.update(selectedPayment.id, formData);
+        const response = await paymentService.update(
+          selectedPayment.id,
+          formData
+        );
         if (response.success) {
           toast.success("Payment updated successfully!");
         } else {
@@ -170,7 +173,7 @@ const PaymentManagement = () => {
           toast.error(`Failed to create payment. Message: ${response.message}`);
         }
       }
-      
+
       await fetchData();
       closeModal();
     } catch (error) {
@@ -188,29 +191,114 @@ const PaymentManagement = () => {
   if (loading) {
     return <Loader />;
   }
-const filteredPayments = payments.filter((p) =>
-  [
-    p.contract,
-    p.amount?.toString(),
-    p.paymentDate,
-    p.paymentStatus,
-    p.receiptUrl,
-    p.client,
-    p.contractId?.toString(),
-    p.clientId?.toString()
-  ]
-    .filter(Boolean)
-    .some((field) =>
-      field.toString().toLowerCase().includes(search.toLowerCase())
-    )
-);
+  const filteredPayments = payments.filter((p) =>
+    [
+      p.contract,
+      p.amount?.toString(),
+      p.paymentDate,
+      p.paymentStatus,
+      p.receiptUrl,
+      p.client,
+      p.contractId?.toString(),
+      p.clientId?.toString(),
+    ]
+      .filter(Boolean)
+      .some((field) =>
+        field.toString().toLowerCase().includes(search.toLowerCase())
+      )
+  );
+  const handleVerificate = async (paymentId, decision) => {
+    // decision = true → Approve, false → Reject
+    const actionText = decision ? "approve" : "reject";
+
+    const confirmVerificate = () => {
+      toast.dismiss();
+      performVerificate();
+    };
+
+    const cancelVerificate = () => {
+      toast.dismiss();
+      toast.info(`Payment ${actionText} cancelled`);
+    };
+
+    const performVerificate = async () => {
+      setLoading(true);
+      try {
+        const response = await paymentService.update(paymentId, {
+          paymentStatus: decision ? 1 : 2, // 1 = Approved, 2 = Rejected
+        });
+
+        if (response.success) {
+          toast.success(`Payment ${actionText}d successfully!`);
+          await fetchData();
+        } else {
+          toast.error(
+            `Failed to ${actionText} payment. Message: ${response.message}`
+          );
+        }
+      } catch (error) {
+        toast.error(`Failed to ${actionText} payment. Please try again.`);
+        console.error(`Error during payment ${actionText}:`, error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Show confirmation toast
+    toast.warn(
+      <div>
+        <p>Are you sure you want to {actionText} this payment?</p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmVerificate}
+            style={{
+              background: decision ? "#16a34a" : "#dc2626", // green for approve, red for reject
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            {decision ? "Approve" : "Reject"}
+          </button>
+          <button
+            onClick={cancelVerificate}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
+  };
 
   return (
     <div className="management-container">
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Payment Management</h2>
-          <p className="header-subtitle">Manage payments and track financial transactions</p>
+          <p className="header-subtitle">
+            Manage payments and track financial transactions
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -272,20 +360,49 @@ const filteredPayments = payments.filter((p) =>
                   </td>
                   <td className="actions-cell">
                     <div className="action-buttons">
-                      <button 
-                        onClick={() => openModal(p)}
-                        className="action-btn activate-btn"
-                        title="Edit payment"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(p.id)}
-                        className="action-btn delete-btn"
-                        title="Delete payment"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {p.paymentStatus === "Pending" ? (
+                        user.companyType === "Client" ||
+                        user.role === "RegularUser" ? (
+                          <>
+                            <button
+                              onClick={() => openModal(p)}
+                              className="action-btn activate-btn"
+                              title="Edit payment"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="action-btn delete-btn"
+                              title="Delete payment"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        ) : user.companyType === "Carrier" ||
+                          user.companyType === "Forwarder" ? (
+                          <>
+                            <button
+                              onClick={() => handleVerificate(p.id, true)}
+                              className="action-btn activate-btn"
+                              title="Approve payment"
+                            >
+                              <CheckCircle size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleVerificate(p.id, false)}
+                              className="action-btn delete-btn"
+                              title="Reject payment"
+                            >
+                              <CircleStop size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <span>-</span>
+                        )
+                      ) : (
+                        <span>-</span>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -309,7 +426,7 @@ const filteredPayments = payments.filter((p) =>
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="user-form">
               <div className="form-group">
                 <label htmlFor="contractId">Contract:</label>
@@ -345,7 +462,11 @@ const filteredPayments = payments.filter((p) =>
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
