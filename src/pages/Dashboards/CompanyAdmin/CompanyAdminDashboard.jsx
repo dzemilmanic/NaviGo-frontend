@@ -80,6 +80,11 @@ const CompanyAdminDashboard = ({ companyType }) => {
           component: <PaymentManagement />,
         },
         {
+          name: "Contracts",
+          icon: FileText,
+          component: <ContractManagement />,
+        },
+        {
           name: "Profile",
           icon: User,
           component: <Profile user={user} />,

@@ -656,6 +656,7 @@
   padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
   border-bottom: 1px solid var(--gray-200);
   background: linear-gradient(135deg, var(--gray-100) 0%, var(--white) 100%);
+  z-index: 999999999;
 }
 
 .modal-header h3 {
