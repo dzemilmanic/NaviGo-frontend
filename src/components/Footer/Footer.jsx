@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Truck,
   Mail,
@@ -8,11 +8,98 @@ import {
   Twitter,
   Instagram,
   Linkedin,
+  Github,
+  ChevronDown,
 } from "lucide-react";
 import "./Footer.css";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const dropdownRef = useRef(null);
+
+  // Social media profiles data
+  const socialProfiles = {
+    facebook: {
+      dzemil: "https://facebook.com/dzemilmanic",
+      ilhan: "https://facebook.com/ilhan.basic.102"
+    },
+    github: {
+      dzemil: "https://github.com/dzemilmanic",
+      ilhan: "https://github.com/ilhanbasic"
+    },
+    instagram: {
+      dzemil: "https://instagram.com/dzemilmanic",
+      ilhan: "https://instagram.com/ilhanbasic"
+    },
+    linkedin: {
+      dzemil: "https://linkedin.com/in/dzemilmanic",
+      ilhan: "https://linkedin.com/in/ilhan-basic"
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSocialClick = (platform, e) => {
+    e.preventDefault();
+    setActiveDropdown(activeDropdown === platform ? null : platform);
+  };
+
+  const handleProfileClick = (url) => {
+    window.open(url, "_blank");
+    setActiveDropdown(null);
+  };
+
+  const renderSocialLink = (platform, Icon) => (
+    <div className="social-dropdown" ref={dropdownRef}>
+      <button
+        className={`social-link ${activeDropdown === platform ? 'active' : ''}`}
+        onClick={(e) => handleSocialClick(platform, e)}
+        aria-label={`${platform} profiles`}
+      >
+        <Icon size={20} />
+        <ChevronDown size={14} className="dropdown-icon" />
+      </button>
+      
+      {activeDropdown === platform && (
+        <div className="dropdown-menu">
+          <button
+            className="dropdown-item"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handleProfileClick(socialProfiles[platform].dzemil);
+            }}
+          >
+            <span className="profile-name">Džemil</span>
+            <span className="profile-username">@dzemilmanic</span>
+          </button>
+          <button
+            className="dropdown-item"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              handleProfileClick(socialProfiles[platform].ilhan);
+            }}
+          >
+            <span className="profile-name">Ilhan</span>
+            <span className="profile-username">@ilhanbasic</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -28,18 +115,10 @@ const Footer = () => {
               through innovative technological solutions.
             </p>
             <div className="footer-social">
-              <a href="#" className="social-link" aria-label="Facebook">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="social-link" aria-label="Twitter">
-                <Twitter size={20} />
-              </a>
-              <a href="#" className="social-link" aria-label="Instagram">
-                <Instagram size={20} />
-              </a>
-              <a href="#" className="social-link" aria-label="LinkedIn">
-                <Linkedin size={20} />
-              </a>
+              {renderSocialLink('facebook', Facebook)}
+              {renderSocialLink('github', Github)}
+              {renderSocialLink('instagram', Instagram)}
+              {renderSocialLink('linkedin', Linkedin)}
             </div>
           </div>
 
@@ -50,7 +129,7 @@ const Footer = () => {
                 <a href="#who-are-we">About Us</a>
               </li>
               <li>
-                <a href="#features">How we work</a>
+                <a href="#how-we-work">How we work</a>
               </li>
             </ul>
           </div>
@@ -93,7 +172,16 @@ const Footer = () => {
           <p className="footer-copyright">
             © 2025 NaviGo. All rights reserved.
           </p>
-          <p className="footer-design">Designed by <a target="blank" href="https://github.com/dzemilmanic">Dzemil</a> & <a target="blank" href="https://github.com/ilhanbasic">Ilhan</a></p>
+          <p className="footer-design">
+            Designed by{" "}
+            <a target="_blank" href="https://github.com/dzemilmanic" rel="noopener noreferrer">
+              Džemil
+            </a>{" "}
+            &{" "}
+            <a target="_blank" href="https://github.com/ilhanbasic" rel="noopener noreferrer">
+              Ilhan
+            </a>
+          </p>
         </div>
       </div>
     </footer>

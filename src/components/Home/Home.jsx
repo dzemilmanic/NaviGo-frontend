@@ -81,7 +81,7 @@ const Home = () => {
       </section>
 
       {/* How It Works Section */}
-      <section className="home-how-works">
+      <section id='how-we-work' className="home-how-works">
         <div className="home-container">
           <h2 className="home-section-title">How does our platform work?</h2>
           
