@@ -22,13 +22,28 @@ const VehicleMaintenanceManagement = () => {
     resolvedAt: "",
   });
 
+  // Helper function to get current date-time in local timezone for datetime-local input
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  };
+
+  // Helper function to get max allowed date (current date-time)
+  const getMaxDateTime = () => {
+    return getCurrentDateTime();
+  };
+
   // Fetch data
   const fetchVehicleMaintenances = async () => {
     setLoading(true);
     try {
       const response = await vehicleMaintenanceService.getAll();
-      setVehicleMaintenances(response.data);
-      //toast.success("Maintenance records loaded successfully!");
+      if (response.success) {
+        setVehicleMaintenances(response.data);
+      } else {
+        toast.error(response.message || "Failed to load maintenance records.");
+      }
     } catch (error) {
       toast.error("Failed to load maintenance records. Please try again.");
       console.error("Error fetching vehicle maintenances:", error);
@@ -41,7 +56,11 @@ const VehicleMaintenanceManagement = () => {
     setLoading(true);
     try {
       const response = await vehicleService.getAll();
-      setVehicles(response.data);
+      if (response.success) {
+        setVehicles(response.data);
+      } else {
+        toast.error(response.message || "Failed to load vehicles.");
+      }
     } catch (error) {
       toast.error("Failed to load vehicles. Please try again.");
       console.error("Error fetching vehicles:", error);
@@ -62,19 +81,37 @@ const VehicleMaintenanceManagement = () => {
 
   const closeModal = () => {
     setModalOpen(false);
+    setSelectedVehicleMaintenance(null);
+    setFormData({
+      vehicleId: "",
+      description: "",
+      severity: 0,
+      maintenanceType: 0,
+      repairCost: 0,
+      resolvedAt: "",
+    });
     document.body.style.overflow = 'auto';
   };
 
   // Edit
   const handleEdit = (vm) => {
     setSelectedVehicleMaintenance(vm);
+    
+    // Format resolvedAt for datetime-local input
+    let formattedResolvedAt = "";
+    if (vm.resolvedAt) {
+      const date = new Date(vm.resolvedAt);
+      date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+      formattedResolvedAt = date.toISOString().slice(0, 16);
+    }
+    
     setFormData({
       vehicleId: vm.vehicleId,
       description: vm.description,
       severity: severityEnumToValue(vm.severity),
       maintenanceType: maintenanceEnumToValue(vm.maintenanceType),
       repairCost: vm.repairCost,
-      resolvedAt: vm.resolvedAt || "",
+      resolvedAt: formattedResolvedAt,
     });
     setModalOpen(true);
     document.body.style.overflow = 'hidden';
@@ -98,10 +135,10 @@ const VehicleMaintenanceManagement = () => {
         const response = await vehicleMaintenanceService.delete(id);
         if (response.success) {
           toast.success("Maintenance record deleted successfully!");
+          await fetchVehicleMaintenances();
         } else {
-          toast.error(`Failed to delete maintenance record. Message: ${response.message}`);
+          toast.error(`Failed to delete maintenance record. ${response.message || ''}`);
         }
-        await fetchVehicleMaintenances();
       } catch (error) {
         toast.error("Failed to delete maintenance record. Please try again.");
         console.error("Error deleting vehicle maintenance:", error);
@@ -160,46 +197,63 @@ const VehicleMaintenanceManagement = () => {
   // Submit (Add / Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate resolved date is not in the future
+    if (formData.resolvedAt) {
+      const resolvedDate = new Date(formData.resolvedAt);
+      const now = new Date();
+      
+      if (resolvedDate > now) {
+        toast.error("Resolved date cannot be in the future!");
+        return;
+      }
+    }
+    
     setLoading(true);
     try {
       if (selectedVehicleMaintenance) {
-        const response = await vehicleMaintenanceService.update(selectedVehicleMaintenance.id, {
+        // Update
+        const updateData = {
           description: formData.description,
           severity: Number(formData.severity),
           maintenanceType: Number(formData.maintenanceType),
           repairCost: Number(formData.repairCost),
-          resolvedAt: formData.resolvedAt || new Date().toISOString(),
-        });
-        if(response.success){
+        };
+        
+        // Only add resolvedAt if it's provided
+        if (formData.resolvedAt) {
+          updateData.resolvedAt = new Date(formData.resolvedAt).toISOString();
+        }
+        
+        const response = await vehicleMaintenanceService.update(selectedVehicleMaintenance.id, updateData);
+        
+        if (response.success) {
           toast.success("Maintenance record updated successfully!");
-        }else{
-          toast.error(`Failed to update maintenance record. Message: ${response.message}`);
+          closeModal();
+          await fetchVehicleMaintenances();
+        } else {
+          toast.error(`Failed to update maintenance record. ${response.message || ''}`);
         }
       } else {
-        const response = await vehicleMaintenanceService.create({
+        // Create
+        const createData = {
           vehicleId: Number(formData.vehicleId),
           description: formData.description,
           severity: Number(formData.severity),
           maintenanceType: Number(formData.maintenanceType),
           repairCost: Number(formData.repairCost),
-        });
-        if(response.success){
+        };
+        
+        const response = await vehicleMaintenanceService.create(createData);
+        
+        if (response.success) {
           toast.success("Maintenance record created successfully!");
-        }else{
-          toast.error(`Failed to create maintenance record. Message: ${response.message}`);
+          closeModal();
+          await fetchVehicleMaintenances();
+        } else {
+          toast.error(`Failed to create maintenance record. ${response.message || ''}`);
         }
       }
-      setModalOpen(false);
-      setSelectedVehicleMaintenance(null);
-      setFormData({
-        vehicleId: "",
-        description: "",
-        severity: 0,
-        maintenanceType: 0,
-        repairCost: 0,
-        resolvedAt: "",
-      });
-      await fetchVehicleMaintenances();
     } catch (error) {
       toast.error("Failed to save maintenance record. Please try again.");
       console.error("Error saving vehicle maintenance:", error);
@@ -400,6 +454,7 @@ const VehicleMaintenanceManagement = () => {
                 <input
                   type="number"
                   step="0.01"
+                  min="0"
                   value={formData.repairCost}
                   onChange={(e) =>
                     setFormData({ ...formData, repairCost: e.target.value })
@@ -413,15 +468,16 @@ const VehicleMaintenanceManagement = () => {
                   <label>Resolved At</label>
                   <input
                     type="datetime-local"
-                    value={
-                      formData.resolvedAt
-                        ? formData.resolvedAt.substring(0, 16)
-                        : ""
-                    }
+                    value={formData.resolvedAt}
+                    max={getMaxDateTime()}
                     onChange={(e) =>
                       setFormData({ ...formData, resolvedAt: e.target.value })
                     }
+                    title="Cannot be in the future"
                   />
+                  <small style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>
+                    Leave empty if not yet resolved. Date cannot be in the future.
+                  </small>
                 </div>
               )}
 

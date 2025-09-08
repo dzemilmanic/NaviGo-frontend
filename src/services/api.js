@@ -121,36 +121,73 @@ class ApiService {
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-
+        // Pokušaj da parseš error response
         let errorMessage = "";
-
-        if (errorData.message) {
-          // Klasičan message
-          errorMessage = errorData.message;
-        } else if (errorData.errors) {
-          // ASP.NET ValidationProblemDetails
-          const fieldErrors = Object.entries(errorData.errors)
-            .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-            .join(" | ");
-          errorMessage = errorData.title
-            ? `${errorData.title} - ${fieldErrors}`
-            : fieldErrors;
-        } else {
-          // Fallback
+        try {
+          const errorData = await response.json();
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.errors) {
+            const fieldErrors = Object.entries(errorData.errors)
+              .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+              .join(" | ");
+            errorMessage = errorData.title
+              ? `${errorData.title} - ${fieldErrors}`
+              : fieldErrors;
+          } else {
+            errorMessage = `HTTP error! status: ${response.status}`;
+          }
+        } catch {
           errorMessage = `HTTP error! status: ${response.status}`;
         }
 
         throw new Error(errorMessage);
       }
 
-      if (response.status === 204) return { success: true, data: null };
+      // KRITIČNO: Proveri da li response ima content pre parsiranja JSON-a
+      const contentType = response.headers.get('content-type');
+      const contentLength = response.headers.get('content-length');
+      
+      // Ako je status 201 (Created) ili 204 (No Content), vrati success bez parsiranja
+      if (response.status === 201 || response.status === 204) {
+        return { success: true, data: null };
+      }
 
-      const data = await response.json();
-      return { success: true, data };
+      // Ako content length je 0 ili nema content, vrati success
+      if (contentLength === '0') {
+        return { success: true, data: null };
+      }
+
+      // Samo pokušaj da parseš JSON ako je content-type application/json
+      if (contentType && contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        
+        // Proveri da li je response prazan
+        if (!textResponse || textResponse.trim() === '') {
+          return { success: true, data: null };
+        }
+        
+        try {
+          const data = JSON.parse(textResponse);
+          return { success: true, data };
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError, 'Response:', textResponse);
+          // Ako parsiranje nije uspešno, vrati kao text
+          return { success: true, data: textResponse };
+        }
+      }
+
+      // Za druge content types, pokušaj da uzmeš kao text
+      const textResponse = await response.text();
+      return { success: true, data: textResponse || null };
+
     } catch (error) {
       console.error(`API request failed: ${endpoint}`, error);
-      return { success: false, message: error.message };
+      return { 
+        success: false, 
+        message: error.message,
+        data: null 
+      };
     }
   }
 

@@ -1,6 +1,16 @@
-import React from 'react';
-import { Truck, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
-import './Footer.css';
+import React from "react";
+import {
+  Truck,
+  Mail,
+  Phone,
+  MapPin,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+} from "lucide-react";
+import "./Footer.css";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -13,8 +23,9 @@ const Footer = () => {
               <h3>NaviGo</h3>
             </div>
             <p className="footer-description">
-              Leading digital platform for logistics and transport companies in the region. 
-              We connect all participants in the logistics chain through innovative technological solutions.
+              Leading digital platform for logistics and transport companies in
+              the region. We connect all participants in the logistics chain
+              through innovative technological solutions.
             </p>
             <div className="footer-social">
               <a href="#" className="social-link" aria-label="Facebook">
@@ -35,17 +46,27 @@ const Footer = () => {
           <div className="footer-column">
             <h4>Platform</h4>
             <ul className="footer-links">
-              <li><a href="#services">Services</a></li>
-              <li><a href="#features">Advanced Features</a></li>
+              <li>
+                <a href="#services">Services</a>
+              </li>
+              <li>
+                <a href="#features">Advanced Features</a>
+              </li>
             </ul>
           </div>
 
           <div className="footer-column">
             <h4>Company</h4>
             <ul className="footer-links">
-              <li><a href="/about">About Us</a></li>
-              <li><a href="/news">News</a></li>
-              <li><a href="#partners">Partners</a></li>
+              <li>
+                <a href="/about">About Us</a>
+              </li>
+              <li>
+                <a href="/news">News</a>
+              </li>
+              <li>
+                <a href="#partners">Partners</a>
+              </li>
             </ul>
           </div>
 
@@ -73,9 +94,9 @@ const Footer = () => {
             © 2025 NaviGo. All rights reserved.
           </p>
           <div className="footer-legal">
-            <a href="/privacy-policy">Privacy Policy</a>
-            <a href="/terms-of-service">Terms of Service</a>
-            <a href="/cookies">Cookies</a>
+            <Link to="/privacy-policy">Privacy Policy</Link>
+            <Link to="/terms-of-service">Terms of Service</Link>
+            <Link to="/cookies">Cookies</Link>
           </div>
         </div>
       </div>
