@@ -44,28 +44,28 @@ const Footer = () => {
           </div>
 
           <div className="footer-column">
-            <h4>Platform</h4>
+            <h4>Company</h4>
             <ul className="footer-links">
               <li>
-                <a href="#services">Services</a>
+                <a href="#who-are-we">About Us</a>
               </li>
               <li>
-                <a href="#features">Advanced Features</a>
+                <a href="#features">How we work</a>
               </li>
             </ul>
           </div>
 
           <div className="footer-column">
-            <h4>Company</h4>
+            <h4>Platform</h4>
             <ul className="footer-links">
               <li>
-                <a href="/about">About Us</a>
+                <Link to="/privacy-policy">Privacy Policy</Link>
               </li>
               <li>
-                <a href="/news">News</a>
+                <Link to="/terms-of-service">Terms of Service</Link>
               </li>
               <li>
-                <a href="#partners">Partners</a>
+                <Link to="/cookies">Cookies</Link>
               </li>
             </ul>
           </div>
@@ -93,11 +93,7 @@ const Footer = () => {
           <p className="footer-copyright">
             © 2025 NaviGo. All rights reserved.
           </p>
-          <div className="footer-legal">
-            <Link to="/privacy-policy">Privacy Policy</Link>
-            <Link to="/terms-of-service">Terms of Service</Link>
-            <Link to="/cookies">Cookies</Link>
-          </div>
+          <p className="footer-design">Designed by <a target="blank" href="https://github.com/dzemilmanic">Dzemil</a> & <a target="blank" href="https://github.com/ilhanbasic">Ilhan</a></p>
         </div>
       </div>
     </footer>

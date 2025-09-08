@@ -7,7 +7,7 @@
 
 .support-chat-wrapper {
   position: fixed;
-  bottom: 20px;
+  bottom: 50px;
   right: 20px;
   z-index: 1000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -27,6 +27,8 @@
   gap: 8px;
   font-weight: 500;
   min-width: 140px;
+  position: relative;
+  overflow: visible;
 }
 
 .chat-toggle-button:hover {
@@ -35,15 +37,139 @@
   background: linear-gradient(135deg, var(--primary-medium) 0%, var(--primary-dark) 100%);
 }
 
+
+.chat-toggle-button:hover .truck-icon {
+  animation: truckBounce 0.6s ease-in-out;
+}
+
+.chat-toggle-button:hover .wheel {
+  animation: wheelSpin 0.8s linear infinite;
+}
+
+.chat-toggle-button:hover .smoke {
+  opacity: 1;
+  animation: smokeFloat 1.5s ease-out infinite;
+}
+
 .toggle-content {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 
+
+.truck-icon-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.truck-icon {
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.truck-wheels {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 1;
+}
+
+.wheel {
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.wheel-1 {
+  margin-left: -2px;
+}
+
+.wheel-2 {
+  margin-right: -2px;
+}
+
+.truck-exhaust {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.smoke {
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.smoke-1 {
+  animation-delay: 0s;
+}
+
+.smoke-2 {
+  animation-delay: 0.3s;
+}
+
+.smoke-3 {
+  animation-delay: 0.6s;
+}
 .toggle-text {
   font-size: 14px;
   font-weight: 500;
+}
+
+/* Truck Animations */
+@keyframes truckBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-2px) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-1px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-2px) rotate(1deg);
+  }
+}
+
+@keyframes wheelSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes smokeFloat {
+  0% {
+   transform: translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-8px) scale(1.2);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-15px) scale(0.8);
+    opacity: 0;
+  }
 }
 
 .support-chat {

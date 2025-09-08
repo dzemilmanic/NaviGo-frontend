@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
-import './SupportChat.css';
+import React, { useState, useEffect, useRef } from "react";
+import { MessageCircle, X, Send, Truck } from "lucide-react";
+import "./SupportChat.css";
 
-const SupportChat = ({ userEmail = 'user' }) => {
+const SupportChat = ({ userEmail = "user" }) => {
   const apiKey = import.meta.env.VITE_AI_API_KEY;
-  
+
   const [messages, setMessages] = useState([
     {
       message: `Hello ${userEmail}! Welcome to NaviGo - your comprehensive logistics platform. I'm here to help you with fleet management, route planning, shipment tracking, booking transport, and all your logistics needs. How can I assist you today?`,
@@ -13,8 +13,8 @@ const SupportChat = ({ userEmail = 'user' }) => {
       timestamp: new Date().toISOString(),
     },
   ]);
-  
-  const [input, setInput] = useState('');
+
+  const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const messagesEndRef = useRef(null);
@@ -84,15 +84,15 @@ INSTRUCTIONS:
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const autoResize = (textarea) => {
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    textarea.style.height = "auto";
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + "px";
   };
 
   const handleInputChange = (e) => {
@@ -110,24 +110,28 @@ INSTRUCTIONS:
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
     setIsTyping(true);
-    
+
     if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = "auto";
     }
 
     try {
       await getAIResponse(userMessage.message);
     } catch (error) {
-      console.error('Error:', error);
-      setMessages(prev => [...prev, {
-        message: "I apologize, but I'm experiencing technical difficulties at the moment. Please try again in a few moments, or contact our support team directly at +381 11 123 4567 or info@navigo.rs for immediate assistance.",
-        sender: "NaviGo Assistant",
-        direction: "incoming",
-        timestamp: new Date().toISOString(),
-      }]);
+      console.error("Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          message:
+            "I apologize, but I'm experiencing technical difficulties at the moment. Please try again in a few moments, or contact our support team directly at +381 11 123 4567 or info@navigo.rs for immediate assistance.",
+          sender: "NaviGo Assistant",
+          direction: "incoming",
+          timestamp: new Date().toISOString(),
+        },
+      ]);
     } finally {
       setIsTyping(false);
     }
@@ -137,22 +141,25 @@ INSTRUCTIONS:
     setIsTyping(true);
 
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "mistralai/mixtral-8x7b-instruct",
-          messages: [
-            { role: "system", content: systemMessage.content },
-            { role: "user", content: userMessage },
-          ],
-          max_tokens: 1000,
-          temperature: 0.7,
-        }),
-      });
+      const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "mistralai/mixtral-8x7b-instruct",
+            messages: [
+              { role: "system", content: systemMessage.content },
+              { role: "user", content: userMessage },
+            ],
+            max_tokens: 1000,
+            temperature: 0.7,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
 
@@ -172,7 +179,8 @@ INSTRUCTIONS:
     } catch (error) {
       console.error(error);
       const errorReply = {
-        message: "I'm sorry, but I encountered an error while processing your request. Please try again or contact our support team at info@navigo.rs for direct assistance.",
+        message:
+          "I'm sorry, but I encountered an error while processing your request. Please try again or contact our support team at info@navigo.rs for direct assistance.",
         sender: "NaviGo Assistant",
         direction: "incoming",
         timestamp: new Date().toISOString(),
@@ -184,7 +192,7 @@ INSTRUCTIONS:
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -202,17 +210,36 @@ INSTRUCTIONS:
     <div className="support-chat-wrapper">
       <button className="chat-toggle-button" onClick={toggleChat}>
         <div className="toggle-content">
-          {isOpen ? <X size={20} /> : <MessageCircle size={20} />}
-          <span className="toggle-text">{isOpen ? 'Close Chat' : 'NaviGo Help'}</span>
+          {isOpen ? (
+            <X size={20} />
+          ) : (
+            <div className="truck-icon-container">
+              <Truck size={20} className="truck-icon" />
+              <div className="truck-wheels">
+                <div className="wheel wheel-1"></div>
+                <div className="wheel wheel-2"></div>
+              </div>
+              <div className="truck-exhaust">
+                <div className="smoke smoke-1"></div>
+                <div className="smoke smoke-2"></div>
+                <div className="smoke smoke-3"></div>
+              </div>
+            </div>
+          )}
+          <span className="toggle-text">
+            {isOpen ? "Close Chat" : "NaviGo Help"}
+          </span>
         </div>
       </button>
 
-      <div className={`support-chat ${isOpen ? 'open' : ''}`}>
+      <div className={`support-chat ${isOpen ? "open" : ""}`}>
         <div className="chat-header">
           <div className="header-content">
             <div className="header-info">
               <span className="header-title">NaviGo Assistant</span>
-              <span className="header-subtitle">Logistics & Transportation Support</span>
+              <span className="header-subtitle">
+                Logistics & Transportation Support
+              </span>
             </div>
             <button className="chat-close-button" onClick={closeChat}>
               <X size={18} />
@@ -222,10 +249,7 @@ INSTRUCTIONS:
 
         <div className="chat-messages">
           {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`chat-message ${msg.direction}`}
-            >
+            <div key={index} className={`chat-message ${msg.direction}`}>
               <div className="message-bubble">
                 <div className="message-text">{msg.message}</div>
                 <div className="message-time">{formatTime(msg.timestamp)}</div>
@@ -240,7 +264,9 @@ INSTRUCTIONS:
                   <span></span>
                   <span></span>
                   <span></span>
-                  <span className="typing-text">NaviGo Assistant is typing...</span>
+                  <span className="typing-text">
+                    NaviGo Assistant is typing...
+                  </span>
                 </div>
               </div>
             </div>
@@ -271,7 +297,9 @@ INSTRUCTIONS:
 
         <div className="chat-footer">
           <div className="footer-links">
-            <span className="footer-contact">Need direct help? Call +381 11 123 4567</span>
+            <span className="footer-contact">
+              Need direct help? Call +381 11 123 4567
+            </span>
           </div>
         </div>
       </div>

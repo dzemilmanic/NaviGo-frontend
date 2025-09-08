@@ -145,6 +145,39 @@
 .footer-legal a:hover {
   color: var(--white);
 }
+.footer-design {
+  color: var(--gray-300);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.footer-design a {
+  color: var(--primary-light);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.footer-design a:hover {
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.footer-design a::after {
+ content: '';
+  position: absolute;
+  width: 0;
+ height: 2px;
+  bottom: -2px;
+  left: 0;
+  background: var(--primary-medium);
+transition: width 0.3s ease;
+}
+
+.footer-design a:hover::after {
+  width: 100%;
+}
 
 @media (max-width: 1024px) {
   .footer-content {
