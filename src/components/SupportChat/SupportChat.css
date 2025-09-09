@@ -217,12 +217,12 @@
   gap: 2px;
 }
 
-.header-title {
+.chat-header-title {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 24px;
 }
 
-.header-subtitle {
+.chat-header-subtitle {
   font-size: 12px;
   opacity: 0.9;
   font-weight: 400;
@@ -511,11 +511,11 @@
     font-size: 13px;
   }
   
-  .header-title {
+  .chat-header-title {
     font-size: 15px;
   }
   
-  .header-subtitle {
+  .chat-header-subtitle {
     font-size: 11px;
   }
 }

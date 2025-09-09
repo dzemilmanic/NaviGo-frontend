@@ -236,8 +236,8 @@ INSTRUCTIONS:
         <div className="chat-header">
           <div className="header-content">
             <div className="header-info">
-              <span className="header-title">NaviGo Assistant</span>
-              <span className="header-subtitle">
+              <span className="chat-header-title">NaviGo Assistant</span>
+              <span className="chat-header-subtitle">
                 Logistics & Transportation Support
               </span>
             </div>

@@ -4,7 +4,7 @@ import SupportChat from "../SupportChat/SupportChat";
 import { ArrowRight, Truck, Users, BarChart3 } from 'lucide-react';
 import './Home.css';
 import logo from "../../assets/logo.png";
-
+import Partners from "../Partners/Partners";
 const Home = () => {
   return (
     <>
@@ -155,6 +155,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+            <Partners/>
 
       {/* CTA Section */}
       <section className="home-cta-section">
