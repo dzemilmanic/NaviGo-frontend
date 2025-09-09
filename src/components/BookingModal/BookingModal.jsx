@@ -4,6 +4,7 @@ import { routePriceService } from "../../services/routePriceService";
 import { toast } from "react-toastify";
 import { forwarderOfferService } from "../../services/forwarderOfferService";
 import { cargoTypeService } from "../../services/cargoTypeService";
+import {contractService} from "../../services/contractService";
 import "../Managements/Managements.css";
 import "./BookingModal.css";
 
@@ -25,24 +26,33 @@ const BookingModal = ({ route, onClose }) => {
       description: "",
       scheduledDeparture: "",
       scheduledArrival: "",
-      maxPenaltyPercent: 0,
-      PenaltyRatePerHour: 0,
     },
   ]);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!selectedPriceId) return;
 
     setLoading(true);
-    console.log("Booking submitted:", {
-      routeId: route.id,
-      routePriceId: selectedPriceId,
-      forwarderOfferId: selectedForwarderOfferId,
-      shipments,
-    });
-    setLoading(false);
-    onClose();
+    try{
+      const response = await contractService.createClientContract({
+        routePriceId: selectedPriceId,
+        forwarderOfferId: selectedForwarderOfferId,
+        maxPenaltyPercent: maxPenaltyPercent,
+        penaltyRatePerHour: penaltyRatePerHour,
+        shipments
+      });
+      if(!response.success){
+        toast.error(`Failed to create contract. Message: ${response.message}`);
+        return;
+      }
+      toast.success("Contract created successfully!");
+    }catch(error){
+      toast.error(`Failed to create contract. ${error.message}`);
+    }finally{
+      setLoading(false);
+      onClose();
+    }
   };
 
   const fetchData = async () => {
