@@ -150,6 +150,7 @@ const RoutePriceManagement = () => {
         routeId: Number(form.routeId.value),
         vehicleTypeId: Number(form.vehicleTypeId.value),
         pricePerKm: Number(form.pricePerKm.value),
+        pricePerKg: Number(form.pricePerKg.value),
         minimumPrice: Number(form.minimumPrice.value),
       };
 
@@ -216,8 +217,8 @@ const RoutePriceManagement = () => {
             className="search-input"
           />
           <button onClick={() => openModal()} className="primary-btn">
-            Add Route Price
-➕          </button>
+            Add Route Price ➕{" "}
+          </button>
         </div>
       </div>
 
@@ -229,6 +230,7 @@ const RoutePriceManagement = () => {
               <th>Route</th>
               <th>Vehicle Type</th>
               <th>Price per Km</th>
+              <th>Price per Kg</th>
               <th>Minimum Price</th>
               <th>Actions</th>
             </tr>
@@ -251,6 +253,7 @@ const RoutePriceManagement = () => {
                     <span className="role-badge">{rp.vehicleTypeName}</span>
                   </td>
                   <td className="price-cell">${rp.pricePerKm}</td>
+                  <td className="price-cell">${rp.pricePerKg}</td>
                   <td className="price-cell">${rp.minimumPrice}</td>
                   <td className="actions-cell">
                     <div className="action-buttons">
@@ -344,6 +347,22 @@ const RoutePriceManagement = () => {
                       required
                     />
                   </div>
+                  <div className="form-group">
+                    <label htmlFor="pricePerKg">Price per Kg:</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="pricePerKg"
+                      placeholder="Price per Kg"
+                      defaultValue={selectedRoutePrice?.pricePerKg || ""}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <div className="form-row">
                   <div className="form-group">
                     <label htmlFor="minimumPrice">Minimum Price:</label>
                     <input
