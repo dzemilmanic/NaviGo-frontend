@@ -2,42 +2,32 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import "./BookingModal.css"; 
 import { toast } from "react-toastify";
+
 const CarrierModal = ({ contract, onClose, onSubmit }) => {
   const [accepted, setAccepted] = useState(false);
-  const [shipmentIndex, setShipmentIndex] = useState(0); 
-  const [assignments, setAssignments] = useState([
-    { driverId: "", vehicleId: "" },
-    { driverId: "", vehicleId: "" },
-    { driverId: "", vehicleId: "" }
-  ]);
+  const [driverId, setDriverId] = useState("");
+  const [vehicleId, setVehicleId] = useState("");
 
   const drivers = ["Driver A", "Driver B", "Driver C"];
   const vehicles = ["Truck 1", "Truck 2", "Truck 3"];
 
   const handleAccept = () => setAccepted(true);
   const handleBack = () => setAccepted(false);
-  const handlePrevShipment = () => setShipmentIndex((i) => Math.max(i - 1, 0));
-const handleNextShipment = () => {
-  const current = assignments[shipmentIndex];
-  if (!current.driverId || !current.vehicleId) {
-    toast.error("Please select a driver and vehicle for each shipment.");
-    return;
-  }
-  setShipmentIndex((i) => Math.min(i + 1, assignments.length - 1));
-};
-
-
-  const handleAssignmentChange = (field, value) => {
-    setAssignments((prev) =>
-      prev.map((a, index) =>
-        index === shipmentIndex ? { ...a, [field]: value } : a
-      )
-    );
-  };
 
   const handleStartTransport = () => {
+    if (!driverId || !vehicleId) {
+      toast.error("Please select both a driver and a vehicle.");
+      return;
+    }
+
+    // napravi assignments za sve shipmente
+    const assignments = Array.from({ length: contract.TotalShipments || 3 }, () => ({
+      driverId,
+      vehicleId,
+    }));
+
     console.log("Transport started with assignments:", assignments);
-    onSubmit();
+    onSubmit(assignments);
   };
 
   return (
@@ -57,12 +47,14 @@ const handleNextShipment = () => {
 
         {!accepted ? (
           <div className="form-section user-form">
+            <div className="contract-info">
             <p><strong>Route:</strong> {contract.Route?.startLocationName} → {contract.Route?.endLocationName}</p>
             <p><strong>Client:</strong> {contract.Client?.CompanyName || contract.Client?.Name}</p>
             <p><strong>Max Penalty Percent:</strong> 3 %</p>
             <p><strong>Penalty Rate Per Hour:</strong> 2 %</p>
-            <p><strong>Total Shipments:</strong> 3</p>
+            <p><strong>Total Shipments:</strong> {contract.TotalShipments || 3}</p>
             <p>Do you accept this contract?</p>
+            </div>
             <div className="modal-actions">
               <button type="button" className="cancel-btn" onClick={onClose}>Reject</button>
               <button type="button" className="submit-btn" onClick={handleAccept}>Accept</button>
@@ -70,14 +62,14 @@ const handleNextShipment = () => {
           </div>
         ) : (
           <div className="form-section shipment-section">
-            <h4>Shipment #{shipmentIndex + 1}</h4>
+            <h4>Assign Driver & Vehicle</h4>
 
             <div className="form-group">
               <label className="form-label">Driver:</label>
               <select
                 className="form-input"
-                value={assignments[shipmentIndex].driverId}
-                onChange={(e) => handleAssignmentChange("driverId", e.target.value)}
+                value={driverId}
+                onChange={(e) => setDriverId(e.target.value)}
               >
                 <option value="">-- Select Driver --</option>
                 {drivers.map((d) => (
@@ -90,8 +82,8 @@ const handleNextShipment = () => {
               <label className="form-label">Vehicle:</label>
               <select
                 className="form-input"
-                value={assignments[shipmentIndex].vehicleId}
-                onChange={(e) => handleAssignmentChange("vehicleId", e.target.value)}
+                value={vehicleId}
+                onChange={(e) => setVehicleId(e.target.value)}
               >
                 <option value="">-- Select Vehicle --</option>
                 {vehicles.map((v) => (
@@ -102,11 +94,9 @@ const handleNextShipment = () => {
 
             <div className="modal-actions" style={{ justifyContent: "space-between" }}>
               <button type="button" className="cancel-btn" onClick={handleBack}>Back</button>
-              <div>
-                {shipmentIndex > 0 && <button type="button" className="cancel-btn" onClick={handlePrevShipment}>Previous Shipment</button>}
-                {shipmentIndex < assignments.length - 1 && <button type="button" className="submit-btn" onClick={handleNextShipment}>Next Shipment</button>}
-                {shipmentIndex === assignments.length - 1 && <button type="button" className="submit-btn" onClick={handleStartTransport}>Start Transport</button>}
-              </div>
+              <button type="button" className="submit-btn" onClick={handleStartTransport}>
+                Start Transport
+              </button>
             </div>
           </div>
         )}
@@ -120,7 +110,8 @@ CarrierModal.defaultProps = {
   contract: {
     ContractNumber: "1234",
     Route: { startLocationName: "Belgrade", endLocationName: "Vienna" },
-    Client: { CompanyName: "ACME Corp." }
+    Client: { CompanyName: "ACME Corp." },
+    TotalShipments: 3
   }
 };
 

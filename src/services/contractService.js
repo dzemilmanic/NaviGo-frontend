@@ -15,8 +15,15 @@ class ContractService {
     return apiService.post('/contract', contractData);
   }
 
+  async createClientContract(contractData) {
+    return apiService.post('/contract/client', contractData);
+  }
+
   async update(id, contractData) {
     return apiService.put(`/contract/${id}`, contractData);
+  }
+  async updateContractStatusCarrier(id, contractData) {
+    return apiService.put(`/contract/carrier/${id}/status`, contractData);
   }
 
   async delete(id) {

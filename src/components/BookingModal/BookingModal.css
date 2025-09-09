@@ -91,3 +91,26 @@
   .modal-info p:first-child { font-size: 14px; }
 }
 
+/* Contract info styling */
+.form-section.user-form .contract-info {
+  background-color: #f9fafb; /* svetlosiva pozadina */
+  border: 1px solid #e5e7eb; /* suptilna ivica */
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #374151; /* tamno siva za tekst */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.form-section.user-form .contract-info p {
+  margin: 6px 0;
+}
+
+.form-section.user-form .contract-info p strong {
+  display: inline-block;
+  width: 180px; /* poravnanje labela */
+  font-weight: 600;
+  color: #111827; /* malo tamnija boja za label */
+}
