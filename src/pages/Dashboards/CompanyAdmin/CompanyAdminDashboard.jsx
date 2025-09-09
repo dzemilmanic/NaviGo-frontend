@@ -15,6 +15,7 @@ import VehicleMaintenanceManagement from "../../../components/Managements/Vehicl
 import ShipmentStatusHistoryManagement from "../../../components/Managements/ShipmentStatusHistoryManagement";
 import CarrierStats from "../../../components/Stats/CarrierStats";
 import Profile from "../../../components/Profile/Profile";
+import Loader from "../../../components/Loader/Loader";
 import {
   LogOut,
   Menu,
@@ -32,16 +33,17 @@ import {
   CalendarClock,
   Building2,
   User,
+  Map,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import { toast } from "react-toastify";
 const CompanyAdminDashboard = ({ companyType }) => {
   const [activeComponent, setActiveComponent] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (!user) navigate("/");
   }, [user]);
@@ -85,9 +87,9 @@ const CompanyAdminDashboard = ({ companyType }) => {
           component: <ContractManagement />,
         },
         {
-          name:"Forwarder Offers",
-          icon:Handshake,
-          component:<ForwarderOfferManagement/>
+          name: "Forwarder Offers",
+          icon: Handshake,
+          component: <ForwarderOfferManagement />,
         },
         {
           name: "Profile",
@@ -186,9 +188,20 @@ const CompanyAdminDashboard = ({ companyType }) => {
     );
   };
 
-  const handleLogout = () => {
-    logout();
-    setIsSidebarOpen(false);
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      const result = await logout();
+      if (!result.success) {
+        toast.error(result.message);
+      }
+      toast.success(result.message);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+      setIsSidebarOpen(false);
+    }
   };
 
   const getCompanyTypeTitle = () => {
@@ -216,7 +229,9 @@ const CompanyAdminDashboard = ({ companyType }) => {
         return "Company Dashboard";
     }
   };
-
+  if (loading) {
+    return <Loader />;
+  }
   return (
     <div className="dashboard-container">
       {/* Mobile Toggle Button */}
@@ -262,7 +277,14 @@ const CompanyAdminDashboard = ({ companyType }) => {
             );
           })}
         </nav>
-
+        <button
+          className="logout-button"
+          onClick={() => navigate("/routes")}
+          aria-label="Logout"
+        >
+          <Map className="menu-icon" />
+          <span>Route Map</span>
+        </button>
         <button
           className="logout-button"
           onClick={handleLogout}

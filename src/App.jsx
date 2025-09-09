@@ -9,8 +9,8 @@ import {
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute.jsx";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Navbar from "./components/Navbar/Navbar.jsx";
 import Footer from "./components/Footer/Footer.jsx";
@@ -30,51 +30,71 @@ import CompanyAdminLayout from "./components/Layouts/CompanyAdmin/CompanyAdminLa
 import CompanyAdminDashboard from "./pages/Dashboards/CompanyAdmin/CompanyAdminDashboard.jsx";
 import RegularUserLayout from "./components/Layouts/RegularUser/RegularUserLayout.jsx";
 import RegularUserDashboard from "./pages/Dashboards/RegularUser/RegularUserDashboard.jsx";
-
-import Error from './pages/Error/Error.jsx'
-
-const UnauthorizedPage = () => (
-  <div style={{ minHeight: "100vh", backgroundColor: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <div style={{ backgroundColor: "#fff", padding: "20px", borderRadius: "10px", boxShadow: "0 0 10px rgba(0,0,0,0.1)" }}>
-      <h1 style={{ fontSize: "24px", fontWeight: "bold", color: "#ff0000", marginBottom: "16px" }}>Unauthorized</h1>
-      <p style={{ color: "#666" }}>
-        You don't have permission to access this page.
-      </p>
-        <a href="/">Go to back</a>
-    </div>
-  </div>
-);
+import Unauthorized from "./pages/Unauthorized/Unauthorized.jsx";
+import Error from "./pages/Error/Error.jsx";
 
 const AppRoutes = () => {
   const { isAuthenticated, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-useEffect(() => {
-  if (!loading && isAuthenticated && user) {
-    const currentPath = location.pathname;
+  useEffect(() => {
+    if (!loading && isAuthenticated && user) {
+      const currentPath = location.pathname;
 
-    if (user.role === "SuperAdmin") {
-      if (!currentPath.startsWith("/superadmin")) {
-        if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
-          navigate("/superadmin", { replace: true });
+      if (user.role === "SuperAdmin") {
+        if (!currentPath.startsWith("/superadmin")) {
+          if (
+            currentPath === "/" ||
+            currentPath === "/login" ||
+            currentPath === "/register"
+          ) {
+            navigate("/superadmin", { replace: true });
+          }
+        }
+      } else if (user.role === "CompanyAdmin") {
+        if (!currentPath.startsWith("/companyadmin")) {
+          if (
+            currentPath === "/" ||
+            currentPath === "/login" ||
+            currentPath === "/register"
+          ) {
+            navigate("/companyadmin", { replace: true });
+          }
+        }
+      } else if (user.role === "RegularUser") {
+        if (!currentPath.startsWith("/regularuser")) {
+          if (
+            currentPath === "/" ||
+            currentPath === "/login" ||
+            currentPath === "/register"
+          ) {
+            navigate("/regularuser", { replace: true });
+          }
         }
       }
     }
-    else if (user.role === "CompanyAdmin") {
-      if (!currentPath.startsWith("/companyadmin")) {
-        if (currentPath === "/" || currentPath === "/login" || currentPath === "/register") {
-          navigate("/companyadmin", { replace: true });
-        }
-      }
-    }
-  }
-}, [isAuthenticated, user, loading, navigate, location.pathname]);
+  }, [isAuthenticated, user, loading, navigate, location.pathname]);
 
-    if (loading) {
+  if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ animation: "spin 1s ease-in-out infinite", borderRadius: "50%", height: "32px", width: "32px", border: "2px solid #3498db" }} />
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            animation: "spin 1s ease-in-out infinite",
+            borderRadius: "50%",
+            height: "32px",
+            width: "32px",
+            border: "2px solid #3498db",
+          }}
+        />
       </div>
     );
   }
@@ -96,8 +116,15 @@ useEffect(() => {
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfServices />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
-        <Route path="/routes" element={<RouteMap />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+        <Route  
+          path="/routes"
+          element={
+            <ProtectedRoute>
+              <RouteMap />
+            </ProtectedRoute>
+          }
+        />
 
         {/* SuperAdmin Routes */}
         <Route
@@ -130,7 +157,10 @@ useEffect(() => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<CompanyAdminDashboard companyType={user?.companyType} />} />
+          <Route
+            index
+            element={<CompanyAdminDashboard companyType={user?.companyType} />}
+          />
         </Route>
 
         {/* Manual redirect route (fallback) */}
@@ -159,7 +189,7 @@ useEffect(() => {
 
       {/* Only show Footer if user is not SuperAdmin or CompanyAdmin */}
       {!isSuperAdmin && !isCompanyAdmin && !isRegularUser && <Footer />}
-      
+
       {/* Toast Container */}
       <ToastContainer
         position="top-right"

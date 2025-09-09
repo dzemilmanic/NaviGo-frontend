@@ -10,7 +10,7 @@
   --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.2);
   
   display: flex;
-  height: 90vh;
+  height: 100%;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -208,4 +208,29 @@
   .paging-controls {
     justify-content: center;
   }
+}
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6; /* svetla siva pozadina */
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  margin-bottom: 1rem;
+}
+
+.back-btn:hover {
+  background-color: #e5e7eb; /* tamnija siva pri hoveru */
+  transform: translateX(-2px);
+}
+
+.back-btn:active {
+  transform: translateX(0);
+}
+
+.back-btn svg {
+  color: #4f46e5; /* boja ikone (indigo) */
 }

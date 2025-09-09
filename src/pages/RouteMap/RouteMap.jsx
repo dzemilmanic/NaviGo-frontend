@@ -17,6 +17,8 @@ import "./RouteMap.css";
 import { useAuth } from "../../contexts/AuthContext";
 import ForwarderOfferModal from "../../components/BookingModal/ForwarderModal.jsx";
 import { forwarderOfferService } from "../../services/forwarderOfferService";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 // Fix za default marker ikone u Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -59,6 +61,7 @@ const formatDuration = (hours) => {
 };
 
 const RouteMap = () => {
+  const navigate = useNavigate();
   const [isForwarderOfferModalOpen, setIsForwarderOfferModalOpen] =
     useState(false);
   const openForwarderModal = () => {
@@ -166,6 +169,10 @@ const RouteMap = () => {
       <div className="route-map-wrapper">
         {/* Sidebar */}
         <div className="routes-sidebar">
+          <button className="back-btn" onClick={() => navigate(-1)}>
+            <ArrowLeft size={20} />
+            Back
+          </button>
           <h2>Routes ({filteredRoutes.length})</h2>
 
           {/* Search */}

@@ -1,0 +1,169 @@
+/* Unauthorized.css */
+.unauthorized-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.unauthorized-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.unauthorized-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  transform: translateY(0);
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.unauthorized-title {
+  color: #2d3748;
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin: 0 0 20px 0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.unauthorized-message {
+  color: #4a5568;
+  font-size: 1.2rem;
+  margin: 0 0 40px 0;
+  line-height: 1.6;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.unauthorized-link {
+  display: inline-block;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  text-decoration: none;
+  padding: 15px 35px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.unauthorized-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.unauthorized-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a6fd8, #6b4190);
+}
+
+.unauthorized-link:hover::before {
+  left: 100%;
+}
+
+.unauthorized-link:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Responzivni dizajn */
+@media (max-width: 768px) {
+  .unauthorized-container {
+    padding: 15px;
+  }
+  
+  .unauthorized-content {
+    padding: 40px 25px;
+    border-radius: 15px;
+  }
+  
+  .unauthorized-title {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+  }
+  
+  .unauthorized-message {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+  }
+  
+  .unauthorized-link {
+    padding: 12px 25px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .unauthorized-content {
+    padding: 30px 20px;
+  }
+  
+  .unauthorized-title {
+    font-size: 2rem;
+  }
+  
+  .unauthorized-message {
+    font-size: 1rem;
+  }
+  
+  .unauthorized-link {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Dodatni efekti za moderan izgled */
+.unauthorized-content:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
