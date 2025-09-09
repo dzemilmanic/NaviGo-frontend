@@ -31,7 +31,6 @@ const Register = () => {
     userType: null,
   });
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [pageLoading, setPageLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validations, setValidations] = useState({});
@@ -258,17 +257,8 @@ const Register = () => {
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
-
-  // Handle page loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (pageLoading) {
+  
+  if (isRegistering) {
     return <Loader message="Loading..." />;
   }
 

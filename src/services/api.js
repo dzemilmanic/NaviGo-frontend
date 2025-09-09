@@ -149,7 +149,7 @@ class ApiService {
       const contentLength = response.headers.get('content-length');
       
       // Ako je status 201 (Created) ili 204 (No Content), vrati success bez parsiranja
-      if (response.status === 201 || response.status === 204) {
+      if (response.status === 204) {
         return { success: true, data: null };
       }
 

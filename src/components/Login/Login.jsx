@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Eye, EyeOff, Truck, Shield, AlertCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -9,7 +9,6 @@ import ForgotPassword from "../ForgotPassword/ForgotPassword";
 import { toast } from 'react-toastify';
 
 const Login = () => {
-  const [pageLoading, setPageLoading] = useState(true);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,14 +20,6 @@ const Login = () => {
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
-  // Handle page loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -108,6 +99,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = async (credentialResponse) => {
+    setLoading(true);
     try {
       const idToken = credentialResponse.credential;
       const result = await googleLogin(idToken);
@@ -129,11 +121,13 @@ const Login = () => {
     } catch (err) {
       console.error("Google login error:", err.message);
       toast.error("Google login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   // Show loader while page is loading
-  if (pageLoading) {
+  if (loading) {
     return <Loader message="Loading..." />;
   }
 
