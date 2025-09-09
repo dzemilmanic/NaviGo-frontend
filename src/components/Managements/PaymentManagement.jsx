@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { paymentService } from "../../services/paymentService";
 import { contractService } from "../../services/contractService";
 import { userService } from "../../services/userService";
-import { X, Trash2, Pencil, CheckCircle, CircleStop } from "lucide-react";
+import { X, Trash2, Pencil, CheckCircle, CircleStop,Eye } from "lucide-react";
 import { toast } from "react-toastify";
 import "./Managements.css";
 import { useAuth } from "../../contexts/AuthContext";
@@ -352,7 +352,7 @@ const PaymentManagement = () => {
                         rel="noopener noreferrer"
                         className="receipt-link"
                       >
-                        View
+                        <Eye size={16} />
                       </a>
                     ) : (
                       "N/A"

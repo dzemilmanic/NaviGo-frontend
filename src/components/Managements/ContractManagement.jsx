@@ -12,6 +12,7 @@ import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
 import { jsPDF } from "jspdf";
+import { shipmentService } from "../../services/shipmentService";
 
 const ContractManagement = () => {
   const [contracts, setContracts] = useState([]);
@@ -21,22 +22,36 @@ const ContractManagement = () => {
   const [routes, setRoutes] = useState([]);
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [shipments, setShipments] = useState([]);
+  const [allShipments, setAllShipments] = useState([]);
 
+  // Main data fetch - only runs once on component mount
   const fetchData = async () => {
     setLoading(true);
     try {
-      const contractsResponse = await contractService.getAll();
-      const [routesData] = await Promise.all([
+      const [
+        contractsResponse,
+        routesData,
+        shipmentsData,
+        companiesCarrier,
+        users,
+        companiesForwarder,
+        routePrices,
+        forwarderOffers,
+      ] = await Promise.all([
+        contractService.getAll(),
+        routeService.getAll(),
+        shipmentService.getAll(),
         companyService.getAll({ companyType: 1 }),
         userService.getAll(),
         companyService.getAll({ companyType: 2 }),
         routePriceService.getAll(),
         forwarderOfferService.getAll(),
-        routeService.getAll(),
       ]);
 
       setContracts(contractsResponse.data);
       setRoutes(routesData.data);
+      setAllShipments(shipmentsData.data);
     } catch (error) {
       toast.error("Failed to load contracts. Please try again.");
       console.error("Error fetching data:", error);
@@ -45,9 +60,22 @@ const ContractManagement = () => {
     }
   };
 
+  // Initial data fetch
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Filter shipments when selectedContract changes
+  useEffect(() => {
+    if (selectedContract && allShipments.length > 0) {
+      const filteredShipments = allShipments.filter(
+        (shipment) => shipment.contractId === selectedContract.id
+      );
+      setShipments(filteredShipments);
+    } else {
+      setShipments([]);
+    }
+  }, [selectedContract, allShipments]);
 
   const generateContractPDF = (contract) => {
     const doc = new jsPDF();
@@ -129,12 +157,15 @@ The payment terms, liability, and obligations are detailed below.`;
         const response = await contractService.delete(id);
         if (response.success) {
           toast.success("Contract deleted successfully!");
+          // Update local state instead of refetching all data
+          setContracts((prevContracts) =>
+            prevContracts.filter((contract) => contract.id !== id)
+          );
         } else {
           toast.error(
             `Failed to delete contract. Message: ${response.message}`
           );
         }
-        await fetchData();
       } catch (error) {
         toast.error("Failed to delete contract. Please try again.");
         console.error("Error deleting contract:", error);
@@ -193,13 +224,151 @@ The payment terms, liability, and obligations are detailed below.`;
     );
   };
 
-  const handleSubmit = async () => {
-    closeModal();
+  const handleSubmit = async (data) => {
+    try {
+      const response = await contractService.updateContractStatusCarrier(
+        selectedContract.id,
+        { ...data }
+      );
+      if (!response.success) {
+        toast.error(`Failed to accept contract. Message: ${response.message}`);
+        return;
+      }
+      toast.success("Contract has been accepted successfully!");
+      closeModal();
+
+      // Update local state instead of refetching all data
+      setContracts((prevContracts) =>
+        prevContracts.map((contract) =>
+          contract.id === selectedContract.id
+            ? { ...contract, contractStatus: "Active" }
+            : contract
+        )
+      );
+    } catch (error) {
+      toast.error(`Error accepting contract. ${error.message}`);
+    }
+  };
+
+  const handleReject = async (contract) => {
+    try {
+      const response = await contractService.updateContractStatusCarrier(
+        selectedContract.id,
+        { ...contract }
+      );
+      if (!response.success) {
+        toast.error(`Failed to reject contract. Message: ${response.message}`);
+        return;
+      }
+
+      toast.success("Contract has been rejected successfully!");
+      closeModal();
+
+      // Update local state instead of refetching all data
+      setContracts((prevContracts) =>
+        prevContracts.map((c) =>
+          c.id === selectedContract.id
+            ? { ...c, contractStatus: "Rejected" }
+            : c
+        )
+      );
+    } catch (error) {
+      toast.error(`Error rejecting contract. ${error.message}`);
+    }
+  };
+
+  const finishContract = async (c) => {
+    setSelectedContract(c);
+    const confirmFinish = async () => {
+      toast.dismiss();
+      setLoading(true);
+      try {
+        const response = await contractService.update(selectedContract.id, {
+          contractStatus: 2,
+        });
+
+        if (!response.success) {
+          toast.error(
+            `Failed to finish contract. Message: ${response.message}`
+          );
+          return;
+        }
+
+        toast.success("Contract has been finished successfully!");
+
+        // Update local state instead of refetching all data
+        setContracts((prevContracts) =>
+          prevContracts.map((contract) =>
+            contract.id === selectedContract.id
+              ? { ...contract, contractStatus: 2 }
+              : contract
+          )
+        );
+      } catch (err) {
+        toast.error(`Error finishing contract. ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const cancelFinish = () => {
+      toast.dismiss();
+      toast.info("Finish operation cancelled");
+    };
+
+    toast.warn(
+      <div>
+        <p>
+          Are you sure you want to finish contract{" "}
+          <strong>#{selectedContract.contractNumber}</strong>?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
+            onClick={confirmFinish}
+            style={{
+              background: "#16a34a",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Finish
+          </button>
+          <button
+            onClick={cancelFinish}
+            style={{
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>,
+      {
+        position: "top-center",
+        autoClose: false,
+        hideProgressBar: true,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        closeButton: false,
+      }
+    );
   };
 
   if (loading) {
     return <Loader />;
   }
+
   const filteredContracts = contracts.filter((c) =>
     [
       c.clientId?.toString(),
@@ -246,7 +415,6 @@ The payment terms, liability, and obligations are detailed below.`;
         <table className="management-table">
           <thead>
             <tr>
-              {/* <th>ID</th> */}
               <th>Contract Number</th>
               <th>Client</th>
               <th>Forwarder</th>
@@ -258,7 +426,7 @@ The payment terms, liability, and obligations are detailed below.`;
           <tbody>
             {filteredContracts.length === 0 ? (
               <tr>
-                <td colSpan="7" className="empty-row">
+                <td colSpan="6" className="empty-row">
                   <div className="empty-state">
                     <p>No contracts found matching your search criteria.</p>
                   </div>
@@ -267,36 +435,59 @@ The payment terms, liability, and obligations are detailed below.`;
             ) : (
               filteredContracts.map((c) => (
                 <tr key={c.id} className="table-row">
-                  {/* <td>{c.id}</td> */}
                   <td>{c.contractNumber}</td>
                   <td>{c.clientFullName}</td>
                   <td>{c.forwarderCompanyName}</td>
                   <td>{c.routeId}</td>
                   <td>{c.contractStatus}</td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => openModal(c)}
-                        className="action-btn activate-btn"
-                        title="Edit contract"
-                      >
-                        <FileCheck2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(c.id, c.contractNumber)}
-                        className="action-btn delete-btn"
-                        title="Delete contract"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                     {c.contractStatus !== "Pending" && <button
-                        onClick={() => generateContractPDF(c)}
-                        className="action-btn download-btn"
-                        title="Download contract PDF"
-                      >
-                        <Download size={16} />
-                      </button>}
-                    </div>
+                    {user.role === "CompanyAdmin" &&
+                      user.companyType === "Carrier" && (
+                        <div className="action-buttons">
+                          {/* Finish button */}
+                          {c.contractStatus === "Active" && (
+                            <button
+                              onClick={() => finishContract(c)}
+                              className="action-btn view-btn"
+                              title="Finish contract"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                          )}
+
+                          {/* Edit/Delete buttons only for Pending */}
+                          {c.contractStatus === "Pending" && (
+                            <>
+                              <button
+                                onClick={() => openModal(c)}
+                                className="action-btn activate-btn"
+                                title="Edit contract"
+                              >
+                                <FileCheck2 size={16} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDelete(c.id, c.contractNumber)
+                                }
+                                className="action-btn delete-btn"
+                                title="Delete contract"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                          {c.contractStatus !== "Pending" &&
+                            c.contractStatus !== "Cancelled" && (
+                              <button
+                                onClick={() => generateContractPDF(c)}
+                                className="action-btn download-btn"
+                                title="Download contract PDF"
+                              >
+                                <Download size={16} />
+                              </button>
+                            )}
+                        </div>
+                      )}
                   </td>
                 </tr>
               ))
@@ -308,8 +499,10 @@ The payment terms, liability, and obligations are detailed below.`;
       {isModalOpen && (
         <CarrierModal
           contract={selectedContract}
+          shipments={shipments}
           onClose={closeModal}
           onSubmit={handleSubmit}
+          onReject={handleReject}
         />
       )}
     </div>

@@ -28,7 +28,7 @@ const ShipmentManagement = () => {
       const vehicleResponse = await vehicleService.getAll();
       const driverResponse = await driverService.getAll();
       const cargoTypeResponse = await cargoTypeService.getAll();
-
+      console.log("shipment response data: ",shipmentResponse.data);
       setShipments(shipmentResponse.data);
       setContracts(contractResponse.data);
       setVehicles(vehicleResponse.data);
@@ -200,18 +200,21 @@ const ShipmentManagement = () => {
   if (loading) {
     return <Loader />;
   }
-  const filteredShipments = shipments.filter((s) =>
-    [
-      s.contractName,
-      s.vehicleName,
-      s.driverName,
-      s.cargoTypeName,
-      s.description,
-      s.status,
-    ]
-      .filter(Boolean) // izbaci null/undefined vrednosti
-      .some((field) => field.toLowerCase().includes(search.toLowerCase()))
+const filteredShipments = shipments.filter((s) => {
+  const fields = [
+    s.contractName,
+    s.vehicleName ?? "", // ako je null, zameni praznim stringom
+    s.driverName ?? "",
+    s.cargoTypeName ?? "",
+    s.description ?? "",
+    s.status != null ? s.status.toString() : "", // enum u string
+  ];
+
+  return fields.some((field) =>
+    field.toLowerCase().includes(search.toLowerCase())
   );
+});
+
   return (
     <div className="management-container">
       <div className="management-header">
@@ -266,8 +269,8 @@ const ShipmentManagement = () => {
                 <tr key={s.id} className="table-row">
                   {/* <td>{s.id}</td> */}
                   <td>{s.contractName}</td>
-                  <td>{s.vehicleName}</td>
-                  <td>{s.driverName}</td>
+                  <td>{s.vehicleName ?? "N/A"}</td>
+                  <td>{s.driverName ?? "N/A"}</td>
                   <td>{s.cargoTypeName}</td>
                   <td>{s.weightKg}</td>
                   <td>{s.priority}</td>

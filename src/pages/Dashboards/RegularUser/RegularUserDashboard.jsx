@@ -33,8 +33,8 @@ const RegularUserDashboard = () => {
   // Enhanced dashboard configuration with icons
   const dashboardConfig = {
     sidebarButtons: [
-      { name: "Shipments", icon: Package, component: <ShipmentManagement /> },
       { name: "Payments", icon: CreditCard, component: <PaymentManagement /> },
+      { name: "Shipments", icon: Package, component: <ShipmentManagement /> },
       {
         name: "Pickup Changes",
         icon: CalendarClock,
