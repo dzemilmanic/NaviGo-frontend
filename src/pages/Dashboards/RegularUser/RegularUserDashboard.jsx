@@ -4,6 +4,7 @@ import ShipmentManagement from "../../../components/Managements/ShipmentManageme
 import PaymentManagement from "../../../components/Managements/PaymentManagement";
 import PickupChangeManagement from "../../../components/Managements/PickupChangeManagement";
 import ContractManagement from "../../../components/Managements/ContractManagement";
+import CompanyManagement from "../../../components/Managements/CompanyManagement";
 import {
   LogOut,
   Menu,
@@ -14,6 +15,7 @@ import {
   FileText,
   User,
   Map,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -41,6 +43,7 @@ const RegularUserDashboard = () => {
         component: <PickupChangeManagement />,
       },
       { name: "Contracts", icon: FileText, component: <ContractManagement /> },
+      {name:"Companies",icon:Building2,component:<CompanyManagement/>},
       { name: "Profile", icon: User, component: <Profile user={user} /> },
     ],
   };

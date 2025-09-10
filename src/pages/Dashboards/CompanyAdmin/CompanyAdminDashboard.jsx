@@ -13,6 +13,7 @@ import PickupChangeManagement from "../../../components/Managements/PickupChange
 import ShipmentDocumentManagement from "../../../components/Managements/ShipmentDocumentManagement";
 import VehicleMaintenanceManagement from "../../../components/Managements/VehicleMaintenanceManagement";
 import ShipmentStatusHistoryManagement from "../../../components/Managements/ShipmentStatusHistoryManagement";
+import CompanyManagement from "../../../components/Managements/CompanyManagement";
 import CarrierStats from "../../../components/Stats/CarrierStats";
 import Profile from "../../../components/Profile/Profile";
 import Loader from "../../../components/Loader/Loader";
@@ -64,6 +65,11 @@ const CompanyAdminDashboard = ({ companyType }) => {
           component: <VehicleMaintenanceManagement />,
         },
         { name: "Shipments", icon: Package, component: <ShipmentManagement /> },
+        {
+          name: "Shipment Documents",
+          icon: FileText,
+          component: <ShipmentDocumentManagement />,
+        },
         {
           name: "Shipment Status Histories",
           icon: Clock,
@@ -120,6 +126,11 @@ const CompanyAdminDashboard = ({ companyType }) => {
           icon: FileText,
           component: <ShipmentDocumentManagement />,
         },
+        {
+          name: "Shipment Status Histories",
+          icon: Clock,
+          component: <ShipmentStatusHistoryManagement />,
+        },
         { name: "Vehicles", icon: Truck, component: <VehicleManagement /> },
         {
           name: "Profile",
@@ -145,6 +156,11 @@ const CompanyAdminDashboard = ({ companyType }) => {
           name: "Pickup Changes",
           icon: CalendarClock,
           component: <PickupChangeManagement />,
+        },
+        {
+          name: "Companies",
+          icon: Building2,
+          component: <CompanyManagement />,
         },
         {
           name: "Profile",
