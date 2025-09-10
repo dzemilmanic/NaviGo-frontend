@@ -11,7 +11,7 @@ const CarrierModal = ({ contract, shipments, onClose, onSubmit, onReject }) => {
   const [vehicleId, setVehicleId] = useState("");
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  useEffect(() => {
+  useEffect(() => { 
     driverService.getAll().then((response) => {
       setDrivers(response.data);
     });

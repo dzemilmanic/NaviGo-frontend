@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
-import { X, Trash2, Pencil } from "lucide-react";
+import { X, Trash2, Pencil, User } from "lucide-react";
 import { toast } from 'react-toastify';
 import "./Managements.css";
 import Loader from '../Loader/Loader';
+import { useAuth } from "../../contexts/AuthContext";
 
 const VehicleTypeManagement = () => {
   const [vehicleTypes, setVehicleTypes] = useState([]);
@@ -12,7 +13,7 @@ const VehicleTypeManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const {user}=useAuth();
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -176,9 +177,9 @@ const VehicleTypeManagement = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
+         {user.role==="SuperAdmin" && <button onClick={() => openModal()} className="primary-btn">
             Add New Vehicle Type ➕
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -212,7 +213,7 @@ const VehicleTypeManagement = () => {
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
+                   {user.role==="SuperAdmin" ? <div className="action-buttons">
                       <button 
                         onClick={() => openModal(t)}
                         className="action-btn edit-btn"
@@ -227,7 +228,7 @@ const VehicleTypeManagement = () => {
                       >
                         <Trash2 size={16} />
                       </button>
-                    </div>
+                    </div>:"/"}
                   </td>
                 </tr>
               ))

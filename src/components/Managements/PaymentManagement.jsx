@@ -14,7 +14,6 @@ const PaymentManagement = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [contracts, setContracts] = useState([]);
-  const [clients, setClients] = useState([]);
   const { user } = useAuth();
   const [fileUrl, setFileUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -24,11 +23,8 @@ const PaymentManagement = () => {
     try {
       const paymentsResponse = await paymentService.getAll();
       const contractsResponse = await contractService.getAll();
-      const clientsResponse = await userService.getAll();
-
       setPayments(paymentsResponse.data);
       setContracts(contractsResponse.data);
-      setClients(clientsResponse.data);
     } catch (error) {
       toast.error("Failed to load payments. Please try again.");
       console.error("Error fetching data:", error);
@@ -308,9 +304,9 @@ const PaymentManagement = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
+          {(user.role === "RegularUser" || (user.role==="CompanyAdmin" && user.companyType==="Client") )&& <button onClick={() => openModal()} className="primary-btn">
             Add Payment ➕
-          </button>
+          </button>}
         </div>
       </div>
 

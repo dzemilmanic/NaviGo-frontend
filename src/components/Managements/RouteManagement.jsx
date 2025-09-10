@@ -676,33 +676,38 @@ const RouteManagement = () => {
                   <td>{formatDateTime(r.availableFrom)}</td>
                   <td>{formatDateTime(r.availableTo)}</td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => openMapModal(r)}
-                        className="action-btn view-btn"
-                        title="View route on map"
-                        style={{
-                          backgroundColor: "#10b981",
-                          color: "white",
-                        }}
-                      >
-                        <Map size={16} />
-                      </button>
-                      <button
-                        onClick={() => openModal(r)}
-                        className="action-btn activate-btn"
-                        title="Edit route"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(r.id)}
-                        className="action-btn delete-btn"
-                        title="Delete route"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {user.role === "CompanyAdmin" &&
+                    user.companyType === "Carrier" ? (
+                      <div className="action-buttons">
+                        <button
+                          onClick={() => openMapModal(r)}
+                          className="action-btn view-btn"
+                          title="View route on map"
+                          style={{
+                            backgroundColor: "#10b981",
+                            color: "white",
+                          }}
+                        >
+                          <Map size={16} />
+                        </button>
+                        <button
+                          onClick={() => openModal(r)}
+                          className="action-btn activate-btn"
+                          title="Edit route"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(r.id)}
+                          className="action-btn delete-btn"
+                          title="Delete route"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      "/"
+                    )}
                   </td>
                 </tr>
               ))

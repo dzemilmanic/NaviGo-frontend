@@ -2,16 +2,18 @@ import React, { useState, useEffect } from "react";
 import { vehicleMaintenanceService } from "../../services/vehicleMaintenanceService";
 import { vehicleService } from "../../services/vehicleService";
 import { X, Trash2, Pencil } from "lucide-react";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+import { useAuth } from "../../contexts/AuthContext";
 
 const VehicleMaintenanceManagement = () => {
   const [vehicleMaintenances, setVehicleMaintenances] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedVehicleMaintenance, setSelectedVehicleMaintenance] = useState(null);
+  const [selectedVehicleMaintenance, setSelectedVehicleMaintenance] =
+    useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     vehicleId: "",
@@ -21,7 +23,7 @@ const VehicleMaintenanceManagement = () => {
     repairCost: 0,
     resolvedAt: "",
   });
-
+  const { user } = useAuth();
   // Helper function to get current date-time in local timezone for datetime-local input
   const getCurrentDateTime = () => {
     const now = new Date();
@@ -76,7 +78,7 @@ const VehicleMaintenanceManagement = () => {
 
   const openModal = () => {
     setModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
@@ -90,13 +92,13 @@ const VehicleMaintenanceManagement = () => {
       repairCost: 0,
       resolvedAt: "",
     });
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   // Edit
   const handleEdit = (vm) => {
     setSelectedVehicleMaintenance(vm);
-    
+
     // Format resolvedAt for datetime-local input
     let formattedResolvedAt = "";
     if (vm.resolvedAt) {
@@ -104,7 +106,7 @@ const VehicleMaintenanceManagement = () => {
       date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
       formattedResolvedAt = date.toISOString().slice(0, 16);
     }
-    
+
     setFormData({
       vehicleId: vm.vehicleId,
       description: vm.description,
@@ -114,11 +116,11 @@ const VehicleMaintenanceManagement = () => {
       resolvedAt: formattedResolvedAt,
     });
     setModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   // Delete with custom toast confirmation
-  const handleDelete = async (id, maintenanceDescription) => {
+  const handleDelete = async (id) => {
     const confirmDelete = () => {
       toast.dismiss();
       performDelete();
@@ -137,7 +139,9 @@ const VehicleMaintenanceManagement = () => {
           toast.success("Maintenance record deleted successfully!");
           await fetchVehicleMaintenances();
         } else {
-          toast.error(`Failed to delete maintenance record. ${response.message || ''}`);
+          toast.error(
+            `Failed to delete maintenance record. ${response.message || ""}`
+          );
         }
       } catch (error) {
         toast.error("Failed to delete maintenance record. Please try again.");
@@ -151,31 +155,31 @@ const VehicleMaintenanceManagement = () => {
     toast.warn(
       <div>
         <p>Are you sure you want to delete this maintenance record?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -197,18 +201,18 @@ const VehicleMaintenanceManagement = () => {
   // Submit (Add / Update)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate resolved date is not in the future
     if (formData.resolvedAt) {
       const resolvedDate = new Date(formData.resolvedAt);
       const now = new Date();
-      
+
       if (resolvedDate > now) {
         toast.error("Resolved date cannot be in the future!");
         return;
       }
     }
-    
+
     setLoading(true);
     try {
       if (selectedVehicleMaintenance) {
@@ -219,20 +223,25 @@ const VehicleMaintenanceManagement = () => {
           maintenanceType: Number(formData.maintenanceType),
           repairCost: Number(formData.repairCost),
         };
-        
+
         // Only add resolvedAt if it's provided
         if (formData.resolvedAt) {
           updateData.resolvedAt = new Date(formData.resolvedAt).toISOString();
         }
-        
-        const response = await vehicleMaintenanceService.update(selectedVehicleMaintenance.id, updateData);
-        
+
+        const response = await vehicleMaintenanceService.update(
+          selectedVehicleMaintenance.id,
+          updateData
+        );
+
         if (response.success) {
           toast.success("Maintenance record updated successfully!");
           closeModal();
           await fetchVehicleMaintenances();
         } else {
-          toast.error(`Failed to update maintenance record. ${response.message || ''}`);
+          toast.error(
+            `Failed to update maintenance record. ${response.message || ""}`
+          );
         }
       } else {
         // Create
@@ -243,15 +252,17 @@ const VehicleMaintenanceManagement = () => {
           maintenanceType: Number(formData.maintenanceType),
           repairCost: Number(formData.repairCost),
         };
-        
+
         const response = await vehicleMaintenanceService.create(createData);
-        
+
         if (response.success) {
           toast.success("Maintenance record created successfully!");
           closeModal();
           await fetchVehicleMaintenances();
         } else {
-          toast.error(`Failed to create maintenance record. ${response.message || ''}`);
+          toast.error(
+            `Failed to create maintenance record. ${response.message || ""}`
+          );
         }
       }
     } catch (error) {
@@ -283,7 +294,9 @@ const VehicleMaintenanceManagement = () => {
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Vehicle Maintenance Management</h2>
-          <p className="header-subtitle">Track and manage vehicle maintenance records</p>
+          <p className="header-subtitle">
+            Track and manage vehicle maintenance records
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -293,9 +306,11 @@ const VehicleMaintenanceManagement = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
-            Add Vehicle Maintenance ➕
-          </button>
+          {user.role === "CompanyAdmin" && user.companyType === "Carrier" && (
+            <button onClick={() => openModal()} className="primary-btn">
+              Add Vehicle Maintenance ➕
+            </button>
+          )}
         </div>
       </div>
 
@@ -319,7 +334,10 @@ const VehicleMaintenanceManagement = () => {
               <tr>
                 <td colSpan="9" className="empty-row">
                   <div className="empty-state">
-                    <p>No vehicle maintenance records found matching your search criteria.</p>
+                    <p>
+                      No vehicle maintenance records found matching your search
+                      criteria.
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -329,7 +347,9 @@ const VehicleMaintenanceManagement = () => {
                   <td>{vm.vehicleName}</td>
                   <td>{vm.description}</td>
                   <td>
-                    <span className={`status-badge severity-${vm.severity.toLowerCase()}`}>
+                    <span
+                      className={`status-badge severity-${vm.severity.toLowerCase()}`}
+                    >
                       {vm.severity}
                     </span>
                   </td>
@@ -337,26 +357,33 @@ const VehicleMaintenanceManagement = () => {
                   <td>${vm.repairCost}</td>
                   <td>{new Date(vm.reportedAt).toLocaleString()}</td>
                   <td>
-                    {vm.resolvedAt ? new Date(vm.resolvedAt).toLocaleString() : "—"}
+                    {vm.resolvedAt
+                      ? new Date(vm.resolvedAt).toLocaleString()
+                      : "—"}
                   </td>
                   <td>{vm.reportedByUserEmail}</td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
-                      <button 
-                        onClick={() => handleEdit(vm)}
-                        className="action-btn activate-btn"
-                        title="Edit maintenance record"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(vm.id, vm.description)}
-                        className="action-btn delete-btn"
-                        title="Delete maintenance record"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {user.role === "CompanyAdmin" &&
+                    user.companyType === "Carrier" ? (
+                      <div className="action-buttons">
+                        <button
+                          onClick={() => handleEdit(vm)}
+                          className="action-btn activate-btn"
+                          title="Edit maintenance record"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(vm.id, vm.description)}
+                          className="action-btn delete-btn"
+                          title="Delete maintenance record"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      "/"
+                    )}
                   </td>
                 </tr>
               ))
@@ -383,7 +410,7 @@ const VehicleMaintenanceManagement = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="user-form">
               {!selectedVehicleMaintenance && (
                 <div className="form-group">
@@ -404,7 +431,7 @@ const VehicleMaintenanceManagement = () => {
                   </select>
                 </div>
               )}
-              
+
               <div className="form-group">
                 <label>Description</label>
                 <textarea
@@ -416,7 +443,7 @@ const VehicleMaintenanceManagement = () => {
                   required
                 />
               </div>
-              
+
               <div className="form-group">
                 <label>Severity</label>
                 <select
@@ -432,13 +459,16 @@ const VehicleMaintenanceManagement = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="form-group">
                 <label>Maintenance Type</label>
                 <select
                   value={formData.maintenanceType}
                   onChange={(e) =>
-                    setFormData({ ...formData, maintenanceType: e.target.value })
+                    setFormData({
+                      ...formData,
+                      maintenanceType: e.target.value,
+                    })
                   }
                 >
                   {maintenanceOptions.map((m, i) => (
@@ -448,7 +478,7 @@ const VehicleMaintenanceManagement = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="form-group">
                 <label>Repair Cost</label>
                 <input
@@ -462,7 +492,7 @@ const VehicleMaintenanceManagement = () => {
                   placeholder="Enter repair cost"
                 />
               </div>
-              
+
               {selectedVehicleMaintenance && (
                 <div className="form-group">
                   <label>Resolved At</label>
@@ -475,14 +505,25 @@ const VehicleMaintenanceManagement = () => {
                     }
                     title="Cannot be in the future"
                   />
-                  <small style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>
-                    Leave empty if not yet resolved. Date cannot be in the future.
+                  <small
+                    style={{
+                      color: "#666",
+                      fontSize: "12px",
+                      marginTop: "4px",
+                    }}
+                  >
+                    Leave empty if not yet resolved. Date cannot be in the
+                    future.
                   </small>
                 </div>
               )}
 
               <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="cancel-btn">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="cancel-btn"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">

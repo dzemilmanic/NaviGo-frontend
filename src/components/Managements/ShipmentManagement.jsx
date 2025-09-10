@@ -28,7 +28,7 @@ const ShipmentManagement = () => {
       const vehicleResponse = await vehicleService.getAll();
       const driverResponse = await driverService.getAll();
       const cargoTypeResponse = await cargoTypeService.getAll();
-      console.log("shipment response data: ",shipmentResponse.data);
+      console.log("shipment response data: ", shipmentResponse.data);
       setShipments(shipmentResponse.data);
       setContracts(contractResponse.data);
       setVehicles(vehicleResponse.data);
@@ -200,20 +200,20 @@ const ShipmentManagement = () => {
   if (loading) {
     return <Loader />;
   }
-const filteredShipments = shipments.filter((s) => {
-  const fields = [
-    s.contractName,
-    s.vehicleName ?? "", // ako je null, zameni praznim stringom
-    s.driverName ?? "",
-    s.cargoTypeName ?? "",
-    s.description ?? "",
-    s.status != null ? s.status.toString() : "", // enum u string
-  ];
+  const filteredShipments = (shipments ?? []).filter((s) => {
+    const fields = [
+      s.contractName ?? "",
+      s.vehicleName ?? "N/A",
+      s.driverName ?? "N/A",
+      s.cargoTypeName ?? "",
+      s.description ?? "",
+      s.status != null ? s.status.toString() : "",
+    ];
 
-  return fields.some((field) =>
-    field.toLowerCase().includes(search.toLowerCase())
-  );
-});
+    return fields.some((field) =>
+      field.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
   return (
     <div className="management-container">
@@ -232,9 +232,9 @@ const filteredShipments = shipments.filter((s) => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
+          {/* <button onClick={() => openModal()} className="primary-btn">
             Add Shipment ➕
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -252,7 +252,7 @@ const filteredShipments = shipments.filter((s) => {
               <th>Description</th>
               <th>Scheduled Departure</th>
               <th>Scheduled Arrival</th>
-              <th>Actions</th>
+              {/* <th>Actions</th> */}
             </tr>
           </thead>
           <tbody>
@@ -269,15 +269,15 @@ const filteredShipments = shipments.filter((s) => {
                 <tr key={s.id} className="table-row">
                   {/* <td>{s.id}</td> */}
                   <td>{s.contractName}</td>
-                  <td>{s.vehicleName ?? "N/A"}</td>
-                  <td>{s.driverName ?? "N/A"}</td>
+                  <td>{s.vehicleName.length > 0 ? s.vehicleName : "N/A"}</td>
+                  <td>{s.driverName.length > 0 ? s.driverName : "N/A"}</td>
                   <td>{s.cargoTypeName}</td>
                   <td>{s.weightKg}</td>
                   <td>{s.priority}</td>
                   <td>{s.description}</td>
                   <td>{new Date(s.scheduledDeparture).toLocaleString()}</td>
                   <td>{new Date(s.scheduledArrival).toLocaleString()}</td>
-                  <td className="actions-cell">
+                  {/* <td className="actions-cell">
                     <div className="action-buttons">
                       <button
                         onClick={() => openModal(s)}
@@ -294,7 +294,7 @@ const filteredShipments = shipments.filter((s) => {
                         <Trash2 size={16} />
                       </button>
                     </div>
-                  </td>
+                  </td> */}
                 </tr>
               ))
             )}

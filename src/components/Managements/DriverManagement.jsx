@@ -218,9 +218,9 @@ const DriverManagement = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
+          {(user.role==="CompanyAdmin" && user.companyType==="Carrier") && <button onClick={() => openModal()} className="primary-btn">
             Add Driver ➕
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -278,7 +278,7 @@ const DriverManagement = () => {
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
+                    {(user.role==="CompanyAdmin" && user.companyType==="Carrier") ?<div className="action-buttons">
                       <button
                         onClick={() => openModal(d)}
                         className="action-btn activate-btn"
@@ -295,7 +295,7 @@ const DriverManagement = () => {
                       >
                         <Trash2 size={16} />
                       </button>
-                    </div>
+                    </div>:"/"}
                   </td>
                 </tr>
               ))

@@ -5,6 +5,7 @@ import "./Managements.css";
 import Loader from "../Loader/Loader";
 import { toast } from "react-toastify";
 import { Trash2, Pencil, X } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 const ShipmentDocumentManagement = () => {
   const [documents, setDocuments] = useState([]);
   const [shipments, setShipments] = useState([]);
@@ -28,7 +29,7 @@ const ShipmentDocumentManagement = () => {
       setLoading(false);
     }
   };
-
+  const {user}= useAuth();
   useEffect(() => {
     fetchData();
   }, []);
@@ -252,7 +253,7 @@ const ShipmentDocumentManagement = () => {
                 </a>{" "}
               </td>
               <td className="actions-cell">
-                <div className="action-buttons">
+               {(user.companyType==="Carrier" || user.companyType==="Forwarder") ? <div className="action-buttons">
                   <button
                     className="action-btn activate-btn"
                     onClick={() => openModal(doc)}
@@ -265,7 +266,7 @@ const ShipmentDocumentManagement = () => {
                   >
                     <Trash2 size={16} />
                   </button>
-                </div>
+                </div>:"/"}
               </td>
             </tr>
           ))}

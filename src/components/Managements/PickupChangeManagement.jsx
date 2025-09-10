@@ -5,6 +5,7 @@ import { X, Trash2, Pencil, Pen } from "lucide-react";
 import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+import { useAuth } from "../../contexts/AuthContext";
 
 const PickupChangeManagement = () => {
   const [pickupChanges, setPickupChanges] = useState([]);
@@ -13,7 +14,7 @@ const PickupChangeManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [shipments, setShipments] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const { user } = useAuth();
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -204,9 +205,13 @@ const PickupChangeManagement = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
-            Add Pickup Change ➕
-          </button>
+          {(user.role === "RegularUser" ||
+            (user.role === "CompanyAdmin" &&
+              user.companyType === "Client")) && (
+            <button onClick={() => openModal()} className="primary-btn">
+              Add Pickup Change ➕
+            </button>
+          )}
         </div>
       </div>
 
@@ -250,22 +255,28 @@ const PickupChangeManagement = () => {
                   <td>{p.additionalFee}</td>
                   <td>{p.pickupChangesStatus}</td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => openModal(p)}
-                        className="action-btn activate-btn"
-                        title="Edit pickup change"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="action-btn delete-btn"
-                        title="Delete pickup change"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {user.role === "RegularUser" ||
+                    (user.role === "CompanyAdmin" &&
+                      user.companyType === "Client") ? (
+                      <div className="action-buttons">
+                        <button
+                          onClick={() => openModal(p)}
+                          className="action-btn activate-btn"
+                          title="Edit pickup change"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          className="action-btn delete-btn"
+                          title="Delete pickup change"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      "/"
+                    )}
                   </td>
                 </tr>
               ))

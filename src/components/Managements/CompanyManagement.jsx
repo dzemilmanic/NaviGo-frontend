@@ -12,6 +12,7 @@ import {
 import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+import { useAuth } from "../../contexts/AuthContext";
 
 const CompanyManagement = ({ userType }) => {
   const [companies, setCompanies] = useState([]);
@@ -22,7 +23,7 @@ const CompanyManagement = ({ userType }) => {
   const [newStatus, setNewStatus] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-
+  const { user } = useAuth();
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -473,24 +474,28 @@ const CompanyManagement = ({ userType }) => {
                       <ProofFileLink url={company.proofFileUrl} />
                     </td>
                     <td className="actions-cell">
-                      <div className="action-buttons">
-                        <button
-                          className="action-btn activate-btn"
-                          onClick={() => openStatusModal(company)}
-                          title="Change status"
-                        >
-                          <RotateCcw size={16} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleDelete(company.id, company.companyName)
-                          }
-                          className="action-btn delete-btn"
-                          title="Delete company"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
+                      {user.role === "SuperAdmin" ? (
+                        <div className="action-buttons">
+                          <button
+                            className="action-btn activate-btn"
+                            onClick={() => openStatusModal(company)}
+                            title="Change status"
+                          >
+                            <RotateCcw size={16} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDelete(company.id, company.companyName)
+                            }
+                            className="action-btn delete-btn"
+                            title="Delete company"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        "/"
+                      )}
                     </td>
                   </tr>
                 ))

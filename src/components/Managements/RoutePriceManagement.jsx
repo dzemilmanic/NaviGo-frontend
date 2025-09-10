@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { routePriceService } from "../../services/routePriceService";
 import { routeService } from "../../services/routeService";
 import { vehicleTypeService } from "../../services/vehicleTypeService";
-import { X, Trash2, Pencil } from "lucide-react";
+import { X, Trash2, Pencil, User } from "lucide-react";
 import Loader from "../Loader/Loader";
 import "./Managements.css";
 import { toast } from "react-toastify";
+import { useAuth } from "../../contexts/AuthContext";
 const RoutePriceManagement = () => {
   const [routePrices, setRoutePrices] = useState([]);
   const [routes, setRoutes] = useState([]);
@@ -14,7 +15,7 @@ const RoutePriceManagement = () => {
   const [selectedRoutePrice, setSelectedRoutePrice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const {user} = useAuth();
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -216,9 +217,9 @@ const RoutePriceManagement = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
+         { (user.role === "CompanyAdmin" && user.companyType==="Carrier") && <button onClick={() => openModal()} className="primary-btn">
             Add Route Price ➕{" "}
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -256,7 +257,7 @@ const RoutePriceManagement = () => {
                   <td className="price-cell">${rp.pricePerKg}</td>
                   <td className="price-cell">${rp.minimumPrice}</td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
+                    {(user.role === "CompanyAdmin" && user.companyType==="Carrier") ? <div className="action-buttons">
                       <button
                         onClick={() => openModal(rp)}
                         className="action-btn activate-btn"
@@ -271,7 +272,7 @@ const RoutePriceManagement = () => {
                       >
                         <Trash2 size={16} />
                       </button>
-                    </div>
+                    </div>:"/"}
                   </td>
                 </tr>
               ))

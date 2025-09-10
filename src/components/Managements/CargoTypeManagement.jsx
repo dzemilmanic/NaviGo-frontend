@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { cargoTypeService } from "../../services/cargoTypeService";
-import { X,Trash2, Pencil } from "lucide-react";
-import { toast } from 'react-toastify';
+import { X, Trash2, Pencil } from "lucide-react";
+import { toast } from "react-toastify";
 import "./Managements.css";
 import Loader from "../Loader/Loader";
+import { useAuth } from "../../contexts/AuthContext";
 
 const CargoTypeManagement = () => {
   const [cargoTypes, setCargoTypes] = useState([]);
@@ -17,7 +18,7 @@ const CargoTypeManagement = () => {
   });
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { user } = useAuth();
   const fetchCargoTypes = async () => {
     setLoading(true);
     try {
@@ -57,7 +58,7 @@ const CargoTypeManagement = () => {
       });
     }
     setModalOpen(true);
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
   };
 
   const closeModal = () => {
@@ -68,7 +69,7 @@ const CargoTypeManagement = () => {
       description: "",
       requiresSpecialEquipment: false,
     });
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   };
 
   const handleDelete = async (id, typeName) => {
@@ -87,10 +88,12 @@ const CargoTypeManagement = () => {
       setLoading(true);
       try {
         const response = await cargoTypeService.delete(id);
-        if(response.success){
+        if (response.success) {
           toast.success(`Cargo type ${typeName} deleted successfully!`);
-        }else{
-          toast.error(`Failed to delete cargo type. Message:${response.message}`);
+        } else {
+          toast.error(
+            `Failed to delete cargo type. Message:${response.message}`
+          );
         }
         await fetchCargoTypes();
       } catch (error) {
@@ -104,32 +107,35 @@ const CargoTypeManagement = () => {
     // Show confirmation toast
     toast.warn(
       <div>
-        <p>Are you sure you want to delete cargo type <strong>{typeName}</strong>?</p>
-        <div style={{ marginTop: '10px', display: 'flex', gap: '8px' }}>
-          <button 
+        <p>
+          Are you sure you want to delete cargo type <strong>{typeName}</strong>
+          ?
+        </p>
+        <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+          <button
             onClick={confirmDelete}
             style={{
-              background: '#dc2626',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#dc2626",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Delete
           </button>
-          <button 
+          <button
             onClick={cancelDelete}
             style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px'
+              background: "#6b7280",
+              color: "white",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "12px",
             }}
           >
             Cancel
@@ -154,11 +160,18 @@ const CargoTypeManagement = () => {
     setLoading(true);
     try {
       if (selectedCargoType) {
-        const response = await cargoTypeService.update(selectedCargoType.id, formData);
-        if(!response.success){
-          toast.error(`Failed to update cargo type. Message:${response.message}`);
-        }else{
-          toast.success(`Cargo type ${formData.typeName} updated successfully!`);
+        const response = await cargoTypeService.update(
+          selectedCargoType.id,
+          formData
+        );
+        if (!response.success) {
+          toast.error(
+            `Failed to update cargo type. Message:${response.message}`
+          );
+        } else {
+          toast.success(
+            `Cargo type ${formData.typeName} updated successfully!`
+          );
         }
       } else {
         await cargoTypeService.create(formData);
@@ -184,7 +197,9 @@ const CargoTypeManagement = () => {
       <div className="management-header">
         <div className="header-content">
           <h2 className="header-title">Cargo Type Management</h2>
-          <p className="header-subtitle">Manage cargo types and their requirements</p>
+          <p className="header-subtitle">
+            Manage cargo types and their requirements
+          </p>
         </div>
         <div className="header-actions">
           <input
@@ -194,9 +209,11 @@ const CargoTypeManagement = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-          <button onClick={() => openModal()} className="primary-btn">
-            Add New Cargo Type ➕
-          </button>
+          {user.role === "SuperAdmin" && (
+            <button onClick={() => openModal()} className="primary-btn">
+              Add New Cargo Type ➕
+            </button>
+          )}
         </div>
       </div>
 
@@ -225,27 +242,37 @@ const CargoTypeManagement = () => {
                   <td className="name-cell">{ct.typeName}</td>
                   <td>{ct.description}</td>
                   <td>
-                    <span className={`status-badge ${ct.requiresSpecialEquipment ? 'status-active' : 'status-inactive'}`}>
+                    <span
+                      className={`status-badge ${
+                        ct.requiresSpecialEquipment
+                          ? "status-active"
+                          : "status-inactive"
+                      }`}
+                    >
                       {ct.requiresSpecialEquipment ? "Yes" : "No"}
                     </span>
                   </td>
                   <td className="actions-cell">
-                    <div className="action-buttons">
-                      <button 
-                        onClick={() => openModal(ct)}
-                        className="action-btn edit-btn"
-                        title="Edit cargo type"
-                      >
-                        <Pencil size={16}/>
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(ct.id, ct.typeName)}
-                        className="action-btn delete-btn"
-                        title="Delete cargo type"
-                      >
-                        <Trash2 size={16}/>
-                      </button>
-                    </div>
+                    {user.role === "SuperAdmin" ? (
+                      <div className="action-buttons">
+                        <button
+                          onClick={() => openModal(ct)}
+                          className="action-btn edit-btn"
+                          title="Edit cargo type"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(ct.id, ct.typeName)}
+                          className="action-btn delete-btn"
+                          title="Delete cargo type"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      "/"
+                    )}
                   </td>
                 </tr>
               ))
@@ -258,7 +285,9 @@ const CargoTypeManagement = () => {
         <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{selectedCargoType ? "Edit Cargo Type" : "Add New Cargo Type"}</h3>
+              <h3>
+                {selectedCargoType ? "Edit Cargo Type" : "Add New Cargo Type"}
+              </h3>
               <button
                 type="button"
                 onClick={closeModal}
@@ -268,7 +297,7 @@ const CargoTypeManagement = () => {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="user-form">
               <div className="form-section">
                 <div className="form-group">
@@ -312,7 +341,7 @@ const CargoTypeManagement = () => {
                           requiresSpecialEquipment: e.target.checked,
                         })
                       }
-                      style={{ marginRight: '8px' }}
+                      style={{ marginRight: "8px" }}
                     />
                     Requires Special Equipment
                   </label>
@@ -320,20 +349,26 @@ const CargoTypeManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button 
-                  type="button" 
-                  onClick={closeModal} 
+                <button
+                  type="button"
+                  onClick={closeModal}
                   className="cancel-btn"
                   disabled={isSubmitting}
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="submit-btn"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? (selectedCargoType ? "Updating..." : "Creating...") : (selectedCargoType ? "Update Cargo Type" : "Create Cargo Type")}
+                  {isSubmitting
+                    ? selectedCargoType
+                      ? "Updating..."
+                      : "Creating..."
+                    : selectedCargoType
+                    ? "Update Cargo Type"
+                    : "Create Cargo Type"}
                 </button>
               </div>
             </form>

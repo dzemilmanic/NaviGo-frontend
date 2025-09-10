@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { contractService } from "../../services/contractService";
-import { companyService } from "../../services/companyService";
-import { forwarderOfferService } from "../../services/forwarderOfferService";
-import { routePriceService } from "../../services/routePriceService";
 import { routeService } from "../../services/routeService";
-import { userService } from "../../services/userService";
 import { useAuth } from "../../contexts/AuthContext";
 import CarrierModal from "../BookingModal/CarrierModal.jsx";
 import { Download, Trash2, Pencil, FileCheck2 } from "lucide-react";
@@ -33,20 +29,10 @@ const ContractManagement = () => {
         contractsResponse,
         routesData,
         shipmentsData,
-        companiesCarrier,
-        users,
-        companiesForwarder,
-        routePrices,
-        forwarderOffers,
       ] = await Promise.all([
         contractService.getAll(),
         routeService.getAll(),
-        shipmentService.getAll(),
-        companyService.getAll({ companyType: 1 }),
-        userService.getAll(),
-        companyService.getAll({ companyType: 2 }),
-        routePriceService.getAll(),
-        forwarderOfferService.getAll(),
+        shipmentService.getAll()
       ]);
 
       setContracts(contractsResponse.data);
@@ -157,7 +143,6 @@ The payment terms, liability, and obligations are detailed below.`;
         const response = await contractService.delete(id);
         if (response.success) {
           toast.success("Contract deleted successfully!");
-          // Update local state instead of refetching all data
           setContracts((prevContracts) =>
             prevContracts.filter((contract) => contract.id !== id)
           );
@@ -173,8 +158,6 @@ The payment terms, liability, and obligations are detailed below.`;
         setLoading(false);
       }
     };
-
-    // Show confirmation toast
     toast.warn(
       <div>
         <p>
@@ -225,6 +208,7 @@ The payment terms, liability, and obligations are detailed below.`;
   };
 
   const handleSubmit = async (data) => {
+    setLoading(true);
     try {
       const response = await contractService.updateContractStatusCarrier(
         selectedContract.id,
@@ -236,8 +220,6 @@ The payment terms, liability, and obligations are detailed below.`;
       }
       toast.success("Contract has been accepted successfully!");
       closeModal();
-
-      // Update local state instead of refetching all data
       setContracts((prevContracts) =>
         prevContracts.map((contract) =>
           contract.id === selectedContract.id
@@ -247,10 +229,13 @@ The payment terms, liability, and obligations are detailed below.`;
       );
     } catch (error) {
       toast.error(`Error accepting contract. ${error.message}`);
+    }finally{
+      setLoading(false);
     }
   };
 
   const handleReject = async (contract) => {
+    setLoading(true);
     try {
       const response = await contractService.updateContractStatusCarrier(
         selectedContract.id,
@@ -263,8 +248,6 @@ The payment terms, liability, and obligations are detailed below.`;
 
       toast.success("Contract has been rejected successfully!");
       closeModal();
-
-      // Update local state instead of refetching all data
       setContracts((prevContracts) =>
         prevContracts.map((c) =>
           c.id === selectedContract.id
@@ -274,6 +257,8 @@ The payment terms, liability, and obligations are detailed below.`;
       );
     } catch (error) {
       toast.error(`Error rejecting contract. ${error.message}`);
+    }finally{
+      setLoading(false);
     }
   };
 
@@ -295,8 +280,6 @@ The payment terms, liability, and obligations are detailed below.`;
         }
 
         toast.success("Contract has been finished successfully!");
-
-        // Update local state instead of refetching all data
         setContracts((prevContracts) =>
           prevContracts.map((contract) =>
             contract.id === selectedContract.id
