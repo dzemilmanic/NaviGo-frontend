@@ -218,9 +218,11 @@ const DriverManagement = () => {
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
           />
-          {(user.role==="CompanyAdmin" && user.companyType==="Carrier") && <button onClick={() => openModal()} className="primary-btn">
-            Add Driver ➕
-          </button>}
+          {user.role === "CompanyAdmin" && user.companyType === "Carrier" && (
+            <button onClick={() => openModal()} className="primary-btn">
+              Add Driver ➕
+            </button>
+          )}
         </div>
       </div>
 
@@ -278,24 +280,29 @@ const DriverManagement = () => {
                     </span>
                   </td>
                   <td className="actions-cell">
-                    {(user.role==="CompanyAdmin" && user.companyType==="Carrier") ?<div className="action-buttons">
-                      <button
-                        onClick={() => openModal(d)}
-                        className="action-btn activate-btn"
-                        title="Edit driver"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(d.id, `${d.firstName} ${d.lastName}`)
-                        }
-                        className="action-btn delete-btn"
-                        title="Delete driver"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>:"/"}
+                    {user.role === "CompanyAdmin" &&
+                    user.companyType === "Carrier" ? (
+                      <div className="action-buttons">
+                        <button
+                          onClick={() => openModal(d)}
+                          className="action-btn activate-btn"
+                          title="Edit driver"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(d.id, `${d.firstName} ${d.lastName}`)
+                          }
+                          className="action-btn delete-btn"
+                          title="Delete driver"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      "/"
+                    )}
                   </td>
                 </tr>
               ))
@@ -389,20 +396,31 @@ const DriverManagement = () => {
                     <label htmlFor="licenseExpiry">License Expiry</label>
                     <input
                       type="date"
+                      id="licenseExpiry"
                       name="licenseExpiry"
                       defaultValue={
                         selectedDriver?.licenseExpiry?.split("T")[0] || ""
                       }
+                      min={
+                        new Date(Date.now() + 24 * 60 * 60 * 1000)
+                          .toISOString()
+                          .split("T")[0]
+                      }
+                      required
                     />
                   </div>
+
                   <div className="form-group">
                     <label htmlFor="hireDate">Hire Date</label>
                     <input
                       type="date"
+                      id="hireDate"
                       name="hireDate"
                       defaultValue={
                         selectedDriver?.hireDate?.split("T")[0] || ""
                       }
+                      max={new Date().toISOString().split("T")[0]} // danas ili prošlost, budućnost zabranjena
+                      required
                     />
                   </div>
                 </div>

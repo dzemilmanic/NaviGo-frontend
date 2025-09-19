@@ -325,9 +325,11 @@ const PickupChangeManagement = () => {
                 <label htmlFor="newTime">New Time:</label>
                 <input
                   type="datetime-local"
+                  id="newTime"
                   name="newTime"
                   defaultValue={selectedPickupChange?.newTime || ""}
                   required
+                  min={new Date().toISOString().slice(0, 16)}
                 />
               </div>
 

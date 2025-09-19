@@ -4,7 +4,7 @@ import { routePriceService } from "../../services/routePriceService";
 import { toast } from "react-toastify";
 import { forwarderOfferService } from "../../services/forwarderOfferService";
 import { cargoTypeService } from "../../services/cargoTypeService";
-import {contractService} from "../../services/contractService";
+import { contractService } from "../../services/contractService";
 import "../Managements/Managements.css";
 import "./BookingModal.css";
 
@@ -34,22 +34,22 @@ const BookingModal = ({ route, onClose }) => {
     if (!selectedPriceId) return;
 
     setLoading(true);
-    try{
+    try {
       const response = await contractService.createClientContract({
         routePriceId: selectedPriceId,
         forwarderOfferId: selectedForwarderOfferId,
         maxPenaltyPercent: maxPenaltyPercent,
         penaltyRatePerHour: penaltyRatePerHour,
-        shipments
+        shipments,
       });
-      if(!response.success){
+      if (!response.success) {
         toast.error(`Failed to create contract. Message: ${response.message}`);
         return;
       }
       toast.success("Contract created successfully!");
-    }catch(error){
+    } catch (error) {
       toast.error(`Failed to create contract. ${error.message}`);
-    }finally{
+    } finally {
       setLoading(false);
       onClose();
     }
@@ -194,6 +194,7 @@ const BookingModal = ({ route, onClose }) => {
               </select>
             </div>
           </div>
+
           <div className="form-group">
             <label htmlFor="maxPenaltyPercent" className="form-label">
               Max Penalty Percent (%):
@@ -203,10 +204,14 @@ const BookingModal = ({ route, onClose }) => {
               id="maxPenaltyPercent"
               name="maxPenaltyPercent"
               placeholder="0%"
+              min={0}
+              max={100}
               value={maxPenaltyPercent}
               onChange={(e) => setMaxPenaltyPercent(e.target.value)}
+              required
             />
           </div>
+
           <div className="form-group">
             <label htmlFor="penaltyRatePerHour" className="form-label">
               Penalty Rate Per Hour (%):
@@ -216,14 +221,19 @@ const BookingModal = ({ route, onClose }) => {
               id="penaltyRatePerHour"
               name="penaltyRatePerHour"
               placeholder="0%"
+              min={0}
+              max={100}
               value={penaltyRatePerHour}
               onChange={(e) => setPenaltyRatePerHour(e.target.value)}
+              required
             />
           </div>
+
           {/* SHIPMENTS */}
           {shipments.map((shipment, index) => (
             <div key={index} className="form-section shipment-section">
               <h4>Shipment #{index + 1}</h4>
+
               <div className="form-group">
                 <label htmlFor={`cargoTypeId-${index}`} className="form-label">
                   Cargo Type:
@@ -257,9 +267,11 @@ const BookingModal = ({ route, onClose }) => {
                   name={`weightKg-${index}`}
                   placeholder="WeightKg"
                   value={shipment.weightKg}
+                  min={1}
                   onChange={(e) =>
                     handleShipmentChange(index, "weightKg", e.target.value)
                   }
+                  required
                 />
               </div>
 
@@ -291,6 +303,10 @@ const BookingModal = ({ route, onClose }) => {
                   id={`scheduledDeparture-${index}`}
                   name={`scheduledDeparture-${index}`}
                   value={shipment.scheduledDeparture}
+                  min={new Date().toISOString().slice(0, 16)}
+                  max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .slice(0, 16)}
                   onChange={(e) =>
                     handleShipmentChange(
                       index,
@@ -298,6 +314,7 @@ const BookingModal = ({ route, onClose }) => {
                       e.target.value
                     )
                   }
+                  required
                 />
               </div>
 
@@ -313,6 +330,10 @@ const BookingModal = ({ route, onClose }) => {
                   id={`scheduledArrival-${index}`}
                   name={`scheduledArrival-${index}`}
                   value={shipment.scheduledArrival}
+                  min={new Date().toISOString().slice(0, 16)}
+                  max={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .slice(0, 16)}
                   onChange={(e) =>
                     handleShipmentChange(
                       index,
@@ -320,6 +341,7 @@ const BookingModal = ({ route, onClose }) => {
                       e.target.value
                     )
                   }
+                  required
                 />
               </div>
 

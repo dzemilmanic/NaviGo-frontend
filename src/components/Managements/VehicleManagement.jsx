@@ -574,7 +574,6 @@ const VehicleManagement = () => {
                     ))}
                   </select>
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="lastInspectionDate">
                     Last Inspection Date
@@ -586,9 +585,13 @@ const VehicleManagement = () => {
                     defaultValue={
                       selectedVehicle?.lastInspectionDate?.split("T")[0] || ""
                     }
+                    max={
+                      new Date(Date.now() - 60 * 60 * 1000)
+                        .toISOString()
+                        .split("T")[0]
+                    }
                   />
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="insuranceExpiry">Insurance Expiry</label>
                   <input
@@ -597,6 +600,11 @@ const VehicleManagement = () => {
                     name="insuranceExpiry"
                     defaultValue={
                       selectedVehicle?.insuranceExpiry?.split("T")[0] || ""
+                    }
+                    min={
+                      new Date(Date.now() + 60 * 60 * 1000)
+                        .toISOString()
+                        .split("T")[0]
                     }
                   />
                 </div>

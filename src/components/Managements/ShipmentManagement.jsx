@@ -397,6 +397,7 @@ const ShipmentManagement = () => {
                       type="datetime-local"
                       name="scheduledDeparture"
                       required
+                      min={new Date().toISOString().slice(0, 16)}
                     />
                   </div>
 
@@ -406,6 +407,7 @@ const ShipmentManagement = () => {
                       type="datetime-local"
                       name="scheduledArrival"
                       required
+                      min={selectedShipment.scheduledDeparture || new Date().toISOString().slice(0, 16)}
                     />
                   </div>
                 </>
@@ -445,6 +447,7 @@ const ShipmentManagement = () => {
                       type="datetime-local"
                       name="actualDeparture"
                       defaultValue={selectedShipment.actualDeparture || ""}
+                      min={selectedShipment.scheduledDeparture || new Date().toISOString().slice(0, 16)}
                     />
                   </div>
 
@@ -454,6 +457,7 @@ const ShipmentManagement = () => {
                       type="datetime-local"
                       name="actualArrival"
                       defaultValue={selectedShipment.actualArrival || ""}
+                      min={selectedShipment.actualDeparture || selectedShipment.scheduledDeparture || new Date().toISOString().slice(0, 16)}
                     />
                   </div>
                 </>

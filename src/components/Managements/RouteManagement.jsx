@@ -983,22 +983,30 @@ const RouteManagement = () => {
                     <label htmlFor="availableFrom">Available From:</label>
                     <input
                       type="datetime-local"
+                      id="availableFrom"
                       name="availableFrom"
                       defaultValue={
                         selectedRoute?.availableFrom?.slice(0, 16) || ""
                       }
                       required
+                      min={new Date().toISOString().slice(0, 16)}
                     />
                   </div>
+
                   <div className="form-group">
                     <label htmlFor="availableTo">Available To:</label>
                     <input
                       type="datetime-local"
+                      id="availableTo"
                       name="availableTo"
                       defaultValue={
                         selectedRoute?.availableTo?.slice(0, 16) || ""
                       }
                       required
+                      min={
+                        selectedRoute?.availableFrom?.slice(0, 16) ||
+                        new Date().toISOString().slice(0, 16)
+                      }
                     />
                   </div>
                 </div>

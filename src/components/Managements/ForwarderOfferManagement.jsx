@@ -351,6 +351,7 @@ const ForwarderOfferManagement = () => {
                       <input
                         type="date"
                         name="expiresAt"
+                        min={new Date().toISOString().split("T")[0]}
                         defaultValue={
                           selectedOffer?.expiresAt?.split("T")[0] || ""
                         }
