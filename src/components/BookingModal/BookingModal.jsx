@@ -17,6 +17,7 @@ const BookingModal = ({ route, onClose }) => {
   const [selectedForwarderOfferId, setSelectedForwarderOfferId] = useState("");
   const [maxPenaltyPercent, setMaxPenaltyPercent] = useState(0);
   const [penaltyRatePerHour, setPenaltyRatePerHour] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
   // State za više shipmenata
   const [shipments, setShipments] = useState([
     {
@@ -108,6 +109,63 @@ const BookingModal = ({ route, onClose }) => {
     const updatedShipments = shipments.filter((_, i) => i !== index);
     setShipments(updatedShipments);
   };
+useEffect(() => {
+  if (!selectedPriceId || !selectedForwarderOfferId) {
+    setTotalPrice(0);
+    return;
+  }
+
+  const selectedPrice = routePrices.find(
+    (price) => price.id.toString() === selectedPriceId.toString()
+  );
+  const selectedOffer = forwarderOffers.find(
+    (offer) => offer.id.toString() === selectedForwarderOfferId.toString()
+  );
+
+  if (!selectedPrice || !selectedOffer) {
+    setTotalPrice(0);
+    return;
+  }
+
+  const distance = Number(route.distanceKm || 0);
+  const commissionRate = Number(selectedOffer.commissionRate || 0) / 100;
+
+  // Cena po km računa se jednom
+  const distanceCost = distance * Number(selectedPrice.pricePerKm || 0);
+
+  let weightCost = 0;
+
+  shipments.forEach((shipment) => {
+    let shipmentCost = Number(shipment.weightKg || 0) * Number(selectedPrice.pricePerKg || 0);
+
+    // Prioritet High = +20% samo na težinu
+    if (shipment.priority === "1" || shipment.priority === 1) {
+      shipmentCost *= 1.2;
+    }
+
+    weightCost += shipmentCost;
+  });
+
+  // Ukupno = distanceCost + weightCost
+  let total = distanceCost + weightCost;
+
+  // Dodaj proviziju
+  total *= 1 + commissionRate;
+
+  // Minimalna cena
+  const minPrice = Number(selectedPrice.minimumPrice || 0);
+  if (total < minPrice) total = minPrice;
+
+  setTotalPrice(total);
+}, [
+  shipments,
+  selectedPriceId,
+  selectedForwarderOfferId,
+  routePrices,
+  forwarderOffers,
+  route.distanceKm,
+]);
+
 
   return (
     <div className="modal">
@@ -376,6 +434,11 @@ const BookingModal = ({ route, onClose }) => {
               )}
             </div>
           ))}
+          <div className="form-section total-price-section">
+            <p className="total-price">
+              Total Price: € {totalPrice.toFixed(2)}
+            </p>
+          </div>
 
           <button
             type="button"

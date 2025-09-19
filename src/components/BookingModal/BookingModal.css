@@ -114,3 +114,9 @@
   font-weight: 600;
   color: #111827; /* malo tamnija boja za label */
 }
+.total-price-section {
+  margin-top: 20px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: right;
+}
