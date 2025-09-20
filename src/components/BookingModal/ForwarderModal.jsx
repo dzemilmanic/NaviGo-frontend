@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 const Forwarder = ({ onClose, onSubmit, route }) => {
-  const [commisionRate, setCommisionRate] = useState(0);
+  const [commissionRate, setCommissionRate] = useState(0);
   const [discountRate, setDiscountRate] = useState(0);
   const [expiresAt, setExpiresAt] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    onSubmit({ commisionRate, discountRate, expiresAt });
+    onSubmit({ commissionRate, discountRate, expiresAt });
   };
   return (
     <>
@@ -42,13 +42,13 @@ const Forwarder = ({ onClose, onSubmit, route }) => {
           <form onSubmit={handleSubmit} className="user-form">
             <div className="form-section">
               <div className="form-group">
-                <label htmlFor="commisionRate">Commision Rate</label>
+                <label htmlFor="commissionRate">Commision Rate</label>
                 <input
                   type="text"
-                  id="commisionRate"
+                  id="commissionRate"
                   placeholder="Commision Rate (%)"
-                  value={commisionRate}
-                  onChange={(e) => setCommisionRate(e.target.value)}
+                  value={commissionRate}
+                  onChange={(e) => setCommissionRate(e.target.value)}
                   required
                 />
               </div>
