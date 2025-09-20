@@ -1,0 +1,59 @@
+Projekat za Digitalnu Platformu za Logističke i Transportne Kompanije
+Ovaj informacioni sistem omogućava transportnim kompanijama, špediterima i klijentima koji traže prevoz robe lako upravljanje procesima transporta, praćenje pošiljaka i transparentnu komunikaciju.
+Transportne kompanije
+Imaju mogućnost pohranjivanja podataka o vozilima u svom voznom parku:
+
+Registracija, nosivost, tip vozila (kamion, kombi, prikolica), status ispravnosti, trenutno stanje (na putu, u servisu, slobodno)
+
+Vozači: lični podaci, kategorije vozačke dozvole, trenutno angažovani na ruti ili slobodni
+
+Evidencija ruta i planiranih pošiljaka: polazna i krajnja destinacija, datum i vreme polaska i dolaska, tip robe, težina, prioritet
+
+Kompanija može evidentirati kvar na vozilu, planirati servis i preusmeriti pošiljku na drugo vozilo ukoliko je potrebno.
+
+Prilikom unosa nove rute, kreira se cenovnik prevoza za tu rutu na osnovu distance, tipa vozila i robe, koji je fiksiran za trajanje ugovorene rute.
+
+U slučaju kašnjenja isporuke, za svaki sat kašnjenja, klijentu se automatski umanjuje cena po unapred definisanom pravilniku.
+
+Špediteri (agencije za posredovanje)
+Mogu pregledati sve raspoložive rute i slobodna vozila raznih kompanija.
+
+Ako im neka ruta odgovara, šalju zahtev transportnoj kompaniji za rezervaciju prevoza, uz predlog provizije.
+
+Transportna kompanija može prihvatiti ili odbiti zahtev; odbijanje mora biti uz obrazloženje.
+
+Špediter ima uvid u sve ugovore sa klijentima i status isporuke robe.
+
+Ne može menjati cenovnik transportne kompanije, ali može ponuditi dodatni popust krajnjem klijentu iz svog udela, uz ograničenje definisano pravilnikom.
+
+Za posebne pošiljke ili hitne slučajeve može tražiti dodatni popust ili prioritetnu obradu uz objašnjenje.
+
+Klijenti (korisnici platforme)
+Mogu pretraživati dostupne transportne kompanije, špeditere i trenutne ponude.
+
+Mogu filtrirati pošiljke po kriterijumima: destinacija, tip robe, datum isporuke, cena.
+
+Po odabiru rute i ponuđača, korisnik sklapa predugovor sa jasno definisanom cenom, rokovima i penalima za kašnjenje.
+
+Svaku uplatu korisnik potvrđuje uploadom uplatnice, koju špediter ili kompanija verifikuje pre pokretanja transporta.
+
+Klijent može najviše dva puta promeniti vreme preuzimanja pošiljke bez dodatnih troškova; treća promena se dodatno naplaćuje.
+
+Klijent može rezervisati vozilo za prevoz robe najviše 7 dana unapred; u isto vreme može imati samo jednu rezervaciju za istu destinaciju.
+
+Custom Middleware
+Opis funkcionalnosti:
+
+Geo-Location Validation:
+
+Svaki zahtev ka API-ju proverava geo-lokaciju korisnika na osnovu IP adrese ili GPS podataka (ako je dostupno).
+
+Ukoliko korisnik pokuša da pristupi sistemu iz zabranjene regije ili zemlje (npr. zbog logističkih ili pravnih ograničenja), pristup se odbija uz odgovarajuću poruku.
+
+Loguje se svaka pokušana sumnjiva ili neautorizovana lokacija sa detaljima o korisniku i pokušaju pristupa.
+
+Session Lock:
+
+Ukoliko se iz jedne sesije detektuje pristup sa više različitih geo-lokacija u kratkom vremenskom intervalu (npr. 5 minuta), sistem zaključava korisnički nalog i traži dodatnu verifikaciju (npr. SMS kod ili email potvrdu).
+
+Ova zaštita sprečava zloupotrebu naloga u slučaju krađe podataka ili deljenja lozinke.

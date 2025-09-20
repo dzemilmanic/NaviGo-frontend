@@ -1,0 +1,210 @@
+Pretpostavićemo da radimo sa bazom podataka za online prodavnicu. Definišemo sledeće relacije:
+Customers (Kupci)
+customer_id (primarni ključ)
+name
+email
+date_of_birth
+Products (Proizvodi)
+product_id (primarni ključ)
+name
+description
+price
+Orders (Narudžbine)
+order_id (primarni ključ)
+customer_id (spoljni ključ koji referencira Customers.customer_id)
+order_date
+OrderDetails (Detalji narudžbine)
+order_detail_id (primarni ključ)
+order_id (spoljni ključ koji referencira Orders.order_id)
+product_id (spoljni ključ koji referencira Products.product_id)
+quantity
+
+Kreiraj pogled koji prikazuje mesečni izveštaj o prodaji, uključujući broj prodanih artikala, ukupnu vrednost prodaje po proizvodu, i prosečnu cenu po narudžbini.
+Transakcija koja kreira novu narudžbinu i ažurira stanje na skladištu, sa proverom da li ima dovoljno zaliha pre umetanja narudžbine.
+Okidač koji se aktivira pre umetanja nove narudžbine, proverava kreditni limit kupca i sprečava umetanje ako je limit premašen.
+Funkcija koja izračunava prosečnu vrednost narudžbine za određenog kupca u određenom vremenskom periodu.
+Stored procedure koja kreira novu narudžbinu, ažurira stanje na skladištu
+Da li navedeni upit može da se optimizuje i kako:
+SELECT p.product_id, p.name, p.price, od.quantity, o.order_date
+FROM Products p
+JOIN OrderDetails od ON p.product_id = od.product_id
+JOIN Orders o ON od.order_id = o.order_id
+WHERE p.price > 100;
+
+
+Zadaci od 1. do 3. su za prvi kolokvijum.
+Zadaci od 4. do 6. su za drugi kolokvijum.
+Svaki zadat nosi po 5 poena.
+
+--prvi
+CREATE VIEW MesecniIzvestajOProdaji AS
+SELECT 
+    YEAR(o.order_date) AS sale_year,
+    MONTH(o.order_date) AS sale_month,
+    p.product_id,
+    p.name AS product_name,
+    SUM(od.quantity) AS total_quantity_sold,
+    SUM(od.quantity * p.price) AS total_sales_value,
+    AVG(order_totals.total_order_value) AS avg_order_value
+FROM Products p
+JOIN OrderDetails od ON p.product_id = od.product_id
+JOIN Orders o ON od.order_id = o.order_id
+JOIN (
+    SELECT od.order_id, SUM(od.quantity * p.price) AS total_order_value
+    FROM OrderDetails od
+    JOIN Products p ON od.product_id = p.product_id
+    GROUP BY od.order_id
+) AS order_totals ON order_totals.order_id = o.order_id
+GROUP BY YEAR(o.order_date), MONTH(o.order_date), p.product_id, p.name;
+
+
+--drugi 
+BEGIN TRANSACTION;
+
+DECLARE @cust_id INT = 1;    
+DECLARE @prod_id INT = 2;    
+DECLARE @qty INT = 5;
+DECLARE @available_qty INT;
+DECLARE @new_order_id INT;
+
+SELECT @available_qty = stock_quantity
+FROM Products
+WHERE product_id = @prod_id;
+
+IF @available_qty IS NULL
+BEGIN
+    ROLLBACK TRANSACTION;
+    print'Proizvod ne postoji';
+    RETURN;
+END
+
+IF @available_qty < @qty
+BEGIN
+    ROLLBACK TRANSACTION;
+    print'Nema dovoljno zaliha';
+    RETURN;
+END
+
+INSERT INTO Orders(customer_id, order_date)
+VALUES (@cust_id, GETDATE());
+
+SET @new_order_id = SCOPE_IDENTITY();
+
+INSERT INTO OrderDetails(order_id, product_id, quantity)
+VALUES (@new_order_id, @prod_id, @qty);
+
+UPDATE Products
+SET stock_quantity = stock_quantity - @qty
+WHERE product_id = @prod_id;
+
+COMMIT TRANSACTION;
+
+--treci 
+CREATE TRIGGER trg_ProveriLimit
+ON Orders
+INSTEAD OF INSERT
+AS
+BEGIN
+    DECLARE @cust_id INT;
+    DECLARE @total_order_value DECIMAL(10,2);
+
+    SELECT @cust_id = customer_id FROM inserted;
+
+    SELECT @total_order_value = SUM(od.quantity * p.price)
+    FROM inserted i
+    JOIN OrderDetails od ON i.order_id = od.order_id
+    JOIN Products p ON od.product_id = p.product_id;
+
+    IF EXISTS (
+        SELECT 1
+        FROM Customers c
+        WHERE c.customer_id = @cust_id
+        AND c.current_credit + @total_order_value > c.credit_limit
+    )
+    BEGIN
+        print'Kreditni limit kupca je premasen';
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
+
+    INSERT INTO Orders(customer_id, order_date)
+    SELECT customer_id, order_date
+    FROM inserted;
+END
+
+--cetvrti
+CREATE FUNCTION dbo.ProsecnaVrednostNarudzbine
+(
+    @cust_id INT,
+    @start_date DATE,
+    @end_date DATE
+)
+RETURNS DECIMAL(18,2)
+AS
+BEGIN
+    DECLARE @avg_value DECIMAL(18,2);
+
+    SELECT @avg_value = AVG(total_order_value)
+    FROM (
+        SELECT o.order_id, SUM(od.quantity * p.price) AS total_order_value
+        FROM Orders o
+        JOIN OrderDetails od ON o.order_id = od.order_id
+        JOIN Products p ON od.product_id = p.product_id
+        WHERE o.customer_id = @cust_id
+          AND o.order_date BETWEEN @start_date AND @end_date
+        GROUP BY o.order_id
+    ) AS sub;
+
+    RETURN @avg_value;
+END
+
+--peti
+CREATE PROCEDURE dbo.KreirajNarudzbinu
+    @cust_id INT,
+    @prod_id INT,
+    @qty INT
+AS
+BEGIN
+    DECLARE @available_qty INT;
+    DECLARE @new_order_id INT;
+
+    SELECT @available_qty = stock_quantity
+    FROM Inventory
+    WHERE product_id = @prod_id;
+
+    IF @available_qty < @qty
+    BEGIN
+        print'Nema dovoljno zaliha!';
+        RETURN;
+    END
+
+    BEGIN TRANSACTION;
+
+    INSERT INTO Orders (customer_id, order_date)
+    VALUES (@cust_id, GETDATE());
+
+    SET @new_order_id = SCOPE_IDENTITY();
+
+    INSERT INTO OrderDetails (order_id, product_id, quantity)
+    VALUES (@new_order_id, @prod_id, @qty);
+
+    UPDATE Inventory
+    SET stock_quantity = stock_quantity - @qty
+    WHERE product_id = @prod_id;
+
+    COMMIT TRANSACTION;
+END
+
+--sesti 
+--/1
+SELECT p.product_id, p.name, p.price, od.quantity, o.order_date
+FROM (SELECT * FROM Products WHERE price > 100) p
+JOIN OrderDetails od ON p.product_id = od.product_id
+JOIN Orders o ON od.order_id = o.order_id;
+--/2
+CREATE INDEX IX_Products_Price_ProductID ON Products(price, product_id);
+CREATE INDEX IX_OrderDetails_ProductID_OrderID ON OrderDetails(product_id, order_id);
+CREATE INDEX IX_Orders_OrderID ON Orders(order_id);
+
+
+
