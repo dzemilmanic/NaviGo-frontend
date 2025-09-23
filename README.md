@@ -1,9 +1,5 @@
 # 🚚 NaviGo Frontend
 
-[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-Latest-646CFF.svg)](https://vitejs.dev/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
 **NaviGo Frontend** is a modern **React-based client application** for the **Digital Logistics & Transportation Platform**.  
 It provides intuitive dashboards and tools for **transport companies, freight forwarders, and clients**, enabling them to manage routes, shipments, and contracts with real-time interaction.
 
@@ -238,7 +234,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 🐛 Bug Reports & Feature Requests
 
-Use [GitHub Issues](https://github.com/IlhanBasic/navigo-frontend/issues) for:
+Use [GitHub Issues](https://github.com/DzemilManic/navigo-frontend/issues) for:
 - 🐛 **Bug reports**
 - 💡 **Feature requests**
 - ❓ **Code questions**
@@ -277,7 +273,7 @@ See the [LICENSE](LICENSE) file for details.
 
 **© 2025 NaviGo Team. All rights reserved.**
 
-[![GitHub](https://img.shields.io/badge/GitHub-NaviGo-black.svg)](https://github.com/IlhanBasic/navigo-frontend)
-[![Website](https://img.shields.io/badge/Website-NaviGo.com-blue.svg)](https://navigo.com)
+[![GitHub](https://img.shields.io/badge/GitHub-NaviGo-black.svg)](https://github.com/DzemilManic/navigo-frontend)
+[![Website](https://img.shields.io/badge/Website-NaviGo.com-blue.svg)](https://navigo.up.railway.app/)
 
 *Built with ❤️ for the logistics industry by Dzemil & Ilhan*
